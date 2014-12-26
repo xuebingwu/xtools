@@ -4,6 +4,8 @@
 #include "utility.h"
 #include "text.h"
 
+#include <boost/algorithm/string.hpp>
+
 /*
 to compile:
 
@@ -14,96 +16,100 @@ g++ -std=c++11 -I /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/ seqlib.h stat.h posit
 
 void print_help()
 {
-    cout << endl;
-    cout << "PKA: Positional Kmer Analysis (version 0.3)" << endl;
-    cout << endl;
-    cout << "   -by Xuebing Wu (wuxbl@wi.mit.edu)" << endl;
-    cout << "       Bartel lab, Whitehead Institute" << endl;
-    cout << endl;
-    cout << "   Identify statistically enriched short sequences of length k \
-		(kmer) at every position in a set of aligned sequences, compared to \
-			background sequences, shuffled sequences, or a background markov model. \
-				Degenerate nucleotides and shift in positions can be allowed" << endl;
-    cout << endl;
-    cout << "Usage: PKA input.fa [options]" << endl;
-    cout << endl;
-    cout << "   example usage:" << endl;
-    cout << endl;
-    cout << "       PKA input-fixed-length.fa " << endl; 
-    cout << "       PKA input-fixed-length.fa -b background.fa" << endl;
-    cout << "       PKA input-variable-length.fa -first 60 " << endl;
-    cout << endl;
-    cout << "Options" << endl;
-    cout << endl;
-    cout << "Input/foreground" << endl;
-    cout << "   -alphabet <ACGT>     alphabet for generating kmers, default=ACGT, case insensitive" << endl;
-    cout << "   -first <n>           take the first n bases of each input sequence" << endl;
-    cout << "   -last <n>            take the last n bases of each input sequence" << endl;
-    cout << "Background" << endl;
-    cout << "   -markov <N>          N-th order markov model trained from input or background (with -b)" << endl;
-    cout << "                        N=0,1,or 2. Default N=1: first order captures upto di-nucleotide bias" << endl;
-    cout << "   -b <background.fa>   background sequences in a FASTA file" << endl;
-    cout << "   -shuffle <N,M>       shuffle input N times, preserving M-nucleotide frequency" << endl;
-    cout << "   -save <filename>     save shuffled sequences or the learned markov model to a file" << endl;
-    cout << "   -no_bg_trim          no background sequence trimming. valid with -markov and -b" << endl;
-    cout << "Kmer counting" << endl;
-    cout << "   -upto <K>            consider all kmers of length 1,2,...,K. default=4 " << endl;
-    cout << "   -k <K>               use fixed kmer length (K)" << endl;
-    cout << "   -shift <0>           max shift (to right) allowed for kmer positions, default=0" << endl;
-    cout << "   -degenerate          allow IUPAC degenerate nucleoties in kmer. Only work for DNA/RNA" <<endl;
-    cout << "Statistics & output" << endl;
-    cout << "   -o <output-prefix>   prefix for all output files, default=PKA_output" << endl;
-    cout << "   -pCutoff <p>         raw p-value cut-off, default=0.01" << endl;
-    cout << "   -pCutoff_B <p>       Bonferoni corrected p-value cut-off, default=0.05" << endl;
-	cout << "	-zCutoff <z>		 z-score cutoff, default=2.0" << endl;
-    cout << "   -topN <N>            output top N enriched kmers at each position, default=1" << endl;
-    cout << "   -startPos <n>        set position n (0,1,2,3,..) to be the start position (0) in the output" << endl;
-    cout << "   -highlight <l,r>     highlight the region [l,r] in the plot (after adjusting -startPos) " << endl;
-    cout << "   -pseudo <f>          pseudocount added to background counts. default=1e-9. Ignored by -markov" << endl;
-//    cout << "   -plot <n>            column to plot as y-axis for top enriched kmers (default=5, see output)" << endl;
-    cout << endl;
-    cout << "Outout" << endl;
-    cout << endl;
-    cout << "   The following files have the same format (*: output prefix specified using -o; N: top N kmers at each position specified using -topN) " << endl;
-    cout << "   1. *.binomial.significant.txt: all kmer-posiiton combinations that pass raw p-value cutoff " << endl;
-    cout << "   2. *.binomial.significant.txt.non-overlapping: non-overlapping kmers" << endl;
-    cout << "   3. *.top.1.per.position.txt: the top N enriched kmers at each position " << endl;
-    cout << endl;
-    cout << "   Columns are:" << endl;
-    cout << "   1. kmer: kmer sequence, if degenerate will be IUPAC format" << endl;
-    cout << "   2. regex: kmer in regex format, i.e. GHG will be G[ACT]G"<<endl;
-    cout << "   3. position: kmer position, 1-based" << endl;
-    cout << "   4. frac1: fraction of foreground sequence with the kmer at this position"<< endl;
-    cout << "   5. frac2: fraction of background sequence with the kmer at this position"<< endl;
-    cout << "   6. ratio: frequency ratio, foreground/background"<< endl;
-    cout << "   7. local_r: ratio of counts at this position over the mean counts at other positions, foreground only"<< endl;
-    cout << "   8. z_score: z-score from nomal approximation of binomial distribution" << endl;
-    cout << "   9. p: p-value, binomial test"<< endl;
-    cout << "   10. Bonferoni: p-value after Bonferoni correction (conservative)"<< endl;
-    cout << "   11. FDR: q-value (FDR-adjusted p-value, less cconservative)"<< endl;
-    cout << endl;
-    cout << "   *.Bonferoni.significant.frequency.txt"<< endl;
-    cout << "       kmer:position followed by frequency at each position" << endl;
-    cout << "       only include kmer pass Bonferoni corrected p-value cutoff" << endl;
-    cout << endl;
-    cout << "   *.meme: MEME format motif file for each Bonferoni significant kmers" << endl;
-    cout << "   *.top.1.per.position.pdf: plot position as x and -log10(p) as y" << endl;
-    cout << "   *.top.1.per.position.logo.pdf: plot sequence logo of kmer extend 3 bases each side" << endl;
-    cout << "   *.Bonferoni.significant.frequency.pdf: plot position as x and frequency as y" << endl;
-    cout << endl;
-    cout << "How does PKA work" << endl;
-    cout << endl;
-    cout << "A binomial test is used to calculate p-value for each kmer at each position: " << endl;
-    cout << "   1. the number of trials: total number of input sequences "<< endl;
-    cout << "   2. the number of success: number of sequences with this kmer at this position"<<endl;
-    cout << "   3. probability of success: background probability of this kmer at this position" << endl;
-    cout << "The background probability can be estimated in several ways" << endl;
-    cout << "   1. (default) a first-order markov model capturing di-nucleotide bias in input. This is the default and no option needed. " << endl;
-    cout << "   2. markov model learned from background sequences: -b filename -markov 1 (or 0 or 2). " << endl;
-    cout << "   3. frequency in background sequences: -b filename only " << endl;
-    cout << "   4. frequency in shuffled input sequences preserving certain order of nucleotide bias: -shuffle N,M" << endl;
-    cout << endl;
-    exit(0);
+    string txt = "\n"
+    "PKA: Positional Kmer Analysis (version 0.3)\n"
+    "\n"
+    "   -by Xuebing Wu (wuxbl@wi.mit.edu)\n"
+    "       Bartel lab, Whitehead Institute\n"
+    "\n"
+    "   Identify statistically enriched short sequences of length k (kmer)\n"
+	"   at every position in a set of aligned sequences, compared to \n"
+	"   background sequences, shuffled sequences, or a background markov model. \n"
+	"   Degenerate nucleotides and shift in positions can be allowed\n"
+    "\n"
+    "Usage: PKA input.fa [options]\n"
+    "\n"
+    "   example usage:\n"
+    "\n"
+    "       PKA input-fixed-length.fa \n" 
+    "       PKA input-fixed-length.fa -b background.fa\n"
+    "       PKA input-variable-length.fa -first 60 \n"
+    "\n"
+    "Options\n"
+    "\n"
+    "Input/foreground\n"
+    "   -alphabet <ACGT>     alphabet for generating kmers, default=ACGT, case insensitive\n"
+    "                        note: 'dna' is equivalent to 'ACGT', \n"
+	"                              'protein' is equivalent to 'ACDEFGHIJKLMNOPQRSTUVWY'\n"
+    "   -first <n>           take the first n bases of each input sequence\n"
+    "   -last <n>            take the last n bases of each input sequence\n"
+    "Background\n"
+    "   -markov <N>          N-th order markov model trained from input or background (with -b)\n"
+    "                        N=0,1,or 2. Default N=1: first order captures upto di-nucleotide bias\n"
+    "   -b <background.fa>   background sequences in a FASTA file\n"
+    "   -shuffle <N,M>       shuffle input N times, preserving M-nucleotide frequency\n"
+    "   -save <filename>     save shuffled sequences or the learned markov model to a file\n"
+    "   -no_bg_trim          no background sequence trimming. valid with -markov and -b\n"
+    "Kmer counting\n"
+    "   -upto <K>            consider all kmers of length 1,2,...,K. default=4 \n"
+    "   -k <K>               use fixed kmer length (K)\n"
+    "   -shift <0>           max shift (to right) allowed for kmer positions, default=0\n"
+	"   -degenerate <ACGTRYMKWSBDHVN> Alphabet to use for degenerate kmers. By default \n"
+	"                        all IUPAC letters (ACGTRYMKWSBDHVN) are used. One can use \n"
+	"                        ACGTN to search gapped-kmers. Only work for DNA/RNA\n"
+    "Statistics & output\n"
+    "   -o <output-prefix>   prefix for all output files, default=PKA_output\n"
+    "   -pCutoff <p>         raw p-value cut-off, default=0.01\n"
+    "   -pCutoff_B <p>       Bonferoni corrected p-value cut-off, default=0.05\n"
+	"	-zCutoff <z>		 z-score cutoff, default=2.0\n"
+    "   -topN <N>            output top N enriched kmers at each position, default=1\n"
+    "   -startPos <n>        set position n (0,1,2,3,..) to be the start position (0) in the output\n"
+    "   -highlight <l,r>     highlight the region [l,r] in the plot (after adjusting -startPos) \n"
+    "   -pseudo <f>          pseudocount added to background counts. default=1e-9. Ignored by -markov\n"
+//    "   -plot <n>            column to plot as y-axis for top enriched kmers (default=5, see output)\n"
+    "\n"
+    "Outout\n"
+    "\n"
+    "   The following files have the same format (*: output prefix specified using -o; N: top N kmers at each position specified using -topN) \n"
+    "   1. *.binomial.significant.txt: all kmer-posiiton combinations that pass raw p-value cutoff \n"
+    "   2. *.binomial.significant.txt.non-overlapping: non-overlapping kmers\n"
+    "   3. *.top.1.per.position.txt: the top N enriched kmers at each position \n"
+    "\n"
+    "   Columns are:\n"
+    "   1. kmer: kmer sequence, if degenerate will be IUPAC format\n"
+    "   2. regex: kmer in regex format, i.e. GHG will be G[ACT]G\n"
+    "   3. position: kmer position, 1-based\n"
+    "   4. frac1: fraction of foreground sequence with the kmer at this position\n"
+    "   5. frac2: fraction of background sequence with the kmer at this position\n"
+    "   6. ratio: frequency ratio, foreground/background\n"
+    "   7. local_r: ratio of counts at this position over the mean counts at other positions, foreground only\n"
+    "   8. z_score: z-score from nomal approximation of binomial distribution\n"
+    "   9. p: p-value, binomial test\n"
+    "   10. Bonferoni: p-value after Bonferoni correction (conservative)\n"
+    "   11. FDR: q-value (FDR-adjusted p-value, less cconservative)\n"
+    "\n"
+    "   *.Bonferoni.significant.frequency.txt\n"
+    "       kmer:position followed by frequency at each position\n"
+    "       only include kmer pass Bonferoni corrected p-value cutoff\n"
+    "\n"
+    "   *.meme: MEME format motif file for each Bonferoni significant kmers\n"
+    "   *.top.1.per.position.pdf: plot position as x and -log10(p) as y\n"
+    "   *.top.1.per.position.logo.pdf: plot sequence logo of kmer extend 3 bases each side\n"
+    "   *.Bonferoni.significant.frequency.pdf: plot position as x and frequency as y\n"
+    "\n"
+    "How does PKA work\n"
+    "\n"
+    "A binomial test is used to calculate p-value for each kmer at each position: \n"
+    "   1. the number of trials: total number of input sequences \n"
+    "   2. the number of success: number of sequences with this kmer at this position\n"
+    "   3. probability of success: background probability of this kmer at this position\n"
+    "The background probability can be estimated in several ways\n"
+    "   1. (default) a first-order markov model capturing di-nucleotide bias in input. This is the default and no option needed. \n"
+    "   2. markov model learned from background sequences: -b filename -markov 1 (or 0 or 2). \n"
+    "   3. frequency in background sequences: -b filename only \n"
+    "   4. frequency in shuffled input sequences preserving certain order of nucleotide bias: -shuffle N,M\n"
+    "\n";
+	cout << txt;
 }
 
  
@@ -117,6 +123,13 @@ int main(int argc, char* argv[]) {
     int max_k = 0;  // upto max_k
     int shift=0; // no shift, i.e. exact position
     bool degenerate = false;    // no degenerate bases allowed by default
+	string degenerate_alphabet = "ACGTRYMKWSBDHVN"; // if degenerate allowed, default to use all IUPAC bases. to look at gappmer only, use ACGTN
+	/*
+	string protein = "ACDEFGHIJKLMNOPQRSTUVWY";
+	string dna = "ACGT";
+	string DNA_gap = "ACGTN";
+	string DNA_all = "ACGTRYMKWSBDHVN";
+	*/
     int first=-1; //    no 3' trim
     int last=-1; //     no 5' trim
     bool no_bg_trim = false;    // only valid when -b and -markov used
@@ -131,16 +144,31 @@ int main(int argc, char* argv[]) {
     string left="0";
     string right="0";
 	
+	bool build_model = false;
 
     string seqfile1,seqfile2,save_to_file,str;
 
     /*******        part 2: get commandline arguments   */
 
-    if (argc < 2) print_help(); // if only type PKA, print help and exit
+    if (argc < 2) 
+	{
+		print_help(); // if only type PKA, print help and exit
+		exit(1);
+	}
 
     seqfile1 = argv[1]; // the first argument is input sequence file
 
-    if (seqfile1 == "-h" || seqfile1 == "--help" ) print_help(); // PKA -h or PKA --help: print help and exit
+    if (seqfile1 == "-h" || seqfile1 == "--help" ) 
+	{
+		print_help(); // PKA -h or PKA --help: print help and exit
+		exit(0);
+	}
+	else if (seqfile1[0] == '-')
+	{
+		print_help();
+		message("ERROR: the first argument needs to be input file name! ");
+		exit(1);
+	}
 
     // other arguments
     for (int i = 2; i < argc; i++) { 
@@ -166,6 +194,8 @@ int main(int argc, char* argv[]) {
                 i=i+1;
             } else if (str == "-degenerate") {
                 degenerate = true;
+				degenerate_alphabet = argv[i+1];
+				i=i+1;
             } else if (str == "-first") {
                 first = atoi(argv[i + 1]);
                 i=i+1;
@@ -207,12 +237,16 @@ int main(int argc, char* argv[]) {
             } else if (str == "-save") {
                 save_to_file = argv[i + 1];
                 i=i+1;
+            } else if (str == "-build_model") {
+                build_model = true;
             } else {
-                message("Unknown options: "+str);
+                message("ERROR: Unknown options: "+str);
                 print_help();
+				exit(1);
             }
         }
     }
+	
 	
 
     // cant shift degenerate motifs
@@ -221,6 +255,9 @@ int main(int argc, char* argv[]) {
         message("WARNING: currently no support for shifted degenerate kmers! i.e. when -degenerate is set, shift must be 0");
         exit(0);
     }
+	
+	if(boost::algorithm::to_lower_copy(alphabet) == "dna") alphabet="ACGT";
+	else if (boost::algorithm::to_lower_copy(alphabet) == "protein") alphabet = "ACDEFGHIJKLMNOPQRSTUVWY";
 
     // determine the length of k-mer
     int min_k = 1;
@@ -279,7 +316,8 @@ int main(int argc, char* argv[]) {
         message("   kmer from   :   " + to_string(min_k) );
         message("   kmer upto   :   " + to_string(max_k) );
         message("   shift       :   " + to_string( shift) );
-        message("   degenerate  :   " + to_string(degenerate) );
+		if (degenerate)
+        message("   degenerate  :   " + degenerate_alphabet );
         message("   pCutoff     :   " + to_string(pCutoff ));
         message("   pCutoff_B   :   " + to_string(pCutoff_B ));
         message("   top N       :   " + to_string(topN ));
@@ -301,7 +339,9 @@ int main(int argc, char* argv[]) {
     // trim if -first or -last specified, note that too short sequences will be discarded
     if (first >  0) seqs1 = first_n_bases(seqs1,first);
     else if (last > 0) seqs1 = last_n_bases(seqs1,last);
-	if (first >0 || last > 0) message(to_string(seqs1.size()) + " sequences remain after trimming back to " + to_string( seqs1.begin()->second.size() ) + " bases ");
+	if (first >0 || last > 0) message(to_string(seqs1.size()) + 
+		" sequences remain after trimming back to " + 
+			to_string( seqs1.begin()->second.size() ) + " bases ");
 
     //debug
     //WriteFasta(seqs1,"trimmed.fa");
@@ -436,11 +476,11 @@ WriteFasta(seqs1,"implanted.fa");
     vector<string> dkmers;
     if (degenerate)
     {
-	    dkmers = degenerate_kmer(min_k);
+	    dkmers = degenerate_kmer(min_k,degenerate_alphabet);
 		nTest = dkmers.size() * (seq_len1 - min_k + 1);
 		for (k = min_k+1; k <= max_k; k++)
 		{
-			vector<string> tmp = degenerate_kmer(k);	
+			vector<string> tmp = degenerate_kmer(k,degenerate_alphabet);	
 			dkmers += tmp;
 			nTest += tmp.size() * (seq_len1 - k + 1);
 		}		
@@ -521,8 +561,11 @@ WriteFasta(seqs1,"implanted.fa");
 
         message("sorting significant kmers by p-value then by z-scores...");
         // -g: allow expoential such as 1.3e-4
-        system_run("sort -k9,9g -k8,8gr "+outtmp+" >> "+out);
+		system_run("cp "+out+" "+out+".enriched.and.depleted");
+        system_run("sort -k9,9g -k8,8gr "+outtmp+" >> "+out+".enriched.and.depleted");
 
+        // from now on only enriched motifs
+		system_run("awk '$8>0' " + out+".enriched.and.depleted > "+out);
 
         // non-overlapping motifs
         // note this is not perfect, two motif could be overlapping yet distinct
@@ -582,13 +625,13 @@ WriteFasta(seqs1,"implanted.fa");
     }
 
     // make logo for top N motif passing corrected p-value cutoff
-    if(nSig[1]>0)
+    if(nSig[1]>0 && alphabet == "ACGT")
     {
         message("creating motif logo for the top "+to_string(topN)+" kmers for each position...");
         create_logo_for_topN_sig_kmer_per_position(seqs1,output+".top."+to_string(topN)+".per.position.txt",3, pCutoff_B,startPos,output);
 
         // merge individual motif pdf file to a single pdf file, remove intermediate files
-        system_run("gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile="+output+".top."+to_string(topN)+".per.position.logo.pdf *meme.pdf");
+        system_run("gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile="+output+".top."+to_string(topN)+".per.position.logo.pdf "+output+"*meme.pdf");
         system_run("rm *meme.pdf;rm *.eps");
 
         message("plot the frequency profile of kmers passing corrected p-value cutoff");
@@ -596,17 +639,35 @@ WriteFasta(seqs1,"implanted.fa");
 
     }
 
+	/*
 	vector<string> sig_kmers;
 	vector<int> sig_positions;
 	read_significant_positional_kmer_from_file(out, sig_kmers, sig_positions);
 	significant_feature_matrix(seqs1, sig_kmers, sig_positions, output + ".sig.feature.txt", "pos",false, shift);
 	if (seqs2.size()>0)
 		significant_feature_matrix(seqs2, sig_kmers, sig_positions, output + ".sig.feature.txt", "neg",true, shift);
-
+*/
 	//save_feature_matrix(seqs1,kmers, output + ".feature.txt", "1", false, shift);
 	//if (seqs2.size()>0)
 	//	save_feature_matrix(seqs2,kmers, output + ".feature.txt", "0", true, shift);
 		
+	// build model
+	if(build_model == false) return 0;
+	
+	vector<positional_kmer> ranked_kmers = build_model_from_PKA_output(out);
+	message(to_string(ranked_kmers.size())+" significant positional kmers are used to build the model");
+	
+	// save the model to file
+	save_model_to_file(ranked_kmers, output+".model.txt");	
+	/*
+	message("scoring sequences using the model...");
+	//load_weighted_sequences_to_vectors(inputfile,seqs,weights,skip,cSeq,cWeight);
+	for (int i=0;i<seqs.size();i++)
+	{
+		double score = score_sequence_using_PKA_model(ranked_kmers, seqs[i]);
+		cout << seqs[i] << "\t" << weights[i] << "\t" << score << endl;		
+	}
+	*/
     message("Done!");
 
     return 0;

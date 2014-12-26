@@ -5,7 +5,7 @@
 # 'make clean'  removes all .o and executable files
 #
 
-PROGS = xtools kShuffle seqMatch PKA PKA2 geneFeature geneSet geneScore TopN intersectTab example pValueLookUp alignSW
+PROGS = xtools kShuffle seqMatch PKA PKA2 PKA2_predict geneFeature geneSet geneScore TopN intersectTab example pValueLookUp alignSW mirscan4 split_file_for_cross_validation cross_validation pairwise_similarity
 
 # define the C++ compiler to use
 CC = g++
@@ -50,6 +50,15 @@ all: $(PROGS) install
 
 xtools: utility.o xtools.o 
 	$(CC) $(CFLAGS) $^ -o $@
+	
+cross_validation: cross_validation.o text.o utility.o
+	$(CC) $(CFLAGS) $^ -o $@
+	
+split_file_for_cross_validation: split_file_for_cross_validation.o text.o utility.o
+	$(CC) $(CFLAGS) $^ -o $@
+	
+mirscan4: mirscan4.o structure.o utility.o sequence.o stat.o ushuffle.o text.o
+	$(CC) $(CFLAGS) $^ -o $@
 
 kShuffle: utility.o sequence.o kShuffle.o ushuffle.o stat.o
 	$(CC) $(CFLAGS) $^ -o $@
@@ -75,18 +84,23 @@ PKA: sequence.o markov.o container.o utility.o text.o stat.o ushuffle.o PKA.o
 PKA2: sequence.o markov.o container.o utility.o text.o stat.o ushuffle.o PKA2.o
 	$(CC) $(CFLAGS) $^ -o $@
 
+PKA2_predict: PKA2_predict.o sequence.o utility.o stat.o ushuffle.o
+	$(CC) $(CFLAGS) $^ -o $@
+
 TopN: TopN.o text.o utility.o
 	$(CC) $(CFLAGS) $^ -o $@
 	
 intersectTab: intersectTab.o text.o utility.o
 	$(CC) $(CFLAGS) $^ -o $@
 
-example: utility.o  example.o
+example: utility.o  example.o sequence.o stat.o ushuffle.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 pValueLookUp: utility.o pValueLookUp.o
 	$(CC) $(CFLAGS) $^ -o $@
 
+pairwise_similarity: pairwise_similarity.o sequence.o utility.o stat.o ushuffle.o
+	$(CC) $(CFLAGS) $^ -o $@
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of

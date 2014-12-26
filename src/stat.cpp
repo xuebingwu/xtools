@@ -15,12 +15,12 @@ using boost::math::hypergeometric;
   using namespace std;
   
 
-// only enrichment
+// note both enrichment and depletion
 double binom_test(int trials,int success,double success_fraction)
 {
     binomial binom(trials, success_fraction);
     double p = 1.0 - cdf(binom,success);
-    //if (p > 0.5) p = 1.0 - p; //depletion
+    if (p > 0.5) p = 1.0 - p; //depletion
     return p;
 }
 

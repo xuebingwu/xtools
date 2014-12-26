@@ -1,7 +1,6 @@
 #include "utility.h"
 #include "iostream"
 
-
 #include "sequence.h"
 
 using namespace std;
@@ -49,9 +48,6 @@ int main(int argc, char* argv[]) {
             } else if (str == "-o") { 
                 output = argv[i + 1];
                 i=i+1;
-            } else if (str == "-n") { 
-                n = atoi(argv[i + 1]);
-                i=i+1;
             } else if (str == "-h" || str == "--help") { 
                 help();
             } else {
@@ -61,7 +57,8 @@ int main(int argc, char* argv[]) {
         }
     }   
 
-	 tab_seq_to_letter_matrix( input,  output,  1,2, 1,  0);
+	vector<string> seqs = load_ranked_sequences_to_vectors(input,0,0);
+	pairwise_sequence_similarity_matrix( seqs,  output);
    
 		
 

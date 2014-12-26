@@ -43,16 +43,72 @@ public:
 	bool equals(positional_kmer a);  
 	bool is_part_of(positional_kmer a);
 	const positional_kmer &operator=(const positional_kmer &a);
-	string as_string();
+	string as_string(string del="_");
 };
 
+
 vector<positional_kmer> build_model_from_PKA2_output(string filename, double pCutoff, double pCutoff_B);
-
-void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq);
-
+vector<positional_kmer> build_model_from_PKA_output(string filename);
 void save_model_to_file(vector<positional_kmer> ranked_kmers, string filename);
 
+vector<positional_kmer> load_model_from_file(string filename);
+
 double score_sequence_using_PKA_model(vector<positional_kmer> ranked_kmers, string seq);
+
+
+
+void score_fasta_using_PKA_model(string seqfile, string outputfile, vector<positional_kmer> ranked_kmers);
+void score_tabular_using_PKA_model(string tabfile, int col, string outputfile, vector<positional_kmer> ranked_kmers);
+
+
+class paired_kmer
+{
+public:
+	string seq1;
+	string seq2;
+	int dist; // distance between seq1 start and seq2 start
+	int pos; // position of seq1
+	int shift;
+	double weight;
+	paired_kmer();
+	paired_kmer(const paired_kmer &a);
+	paired_kmer(string seq1, string seq2, int dist=0, int shift=0, int pos=0, double weight=0);
+	const paired_kmer &operator=(const paired_kmer &a);
+	string as_string(string del="_", bool add_shift=true,bool add_pos=false, bool add_weight=false);
+	bool equals(paired_kmer a, bool identical_pos=true, bool identical_shift=true);
+	int len(); // total length = seq1 + seq2 + gap
+	int gap();
+};
+
+vector<paired_kmer> build_paired_kmer_model(string filename);
+
+double score_sequence_using_paired_kmer_model(vector<paired_kmer> model,  string seq);
+
+vector<paired_kmer> generate_paired_kmers (
+	string alphabet,
+int seq1_len,
+int seq2_len,
+int max_dist,
+int min_dist=1,
+int max_shift=0,
+int min_shift=0	
+);
+
+array<int,2> find_significant_pairs_from_weighted_sequences(
+	vector<string> seqs,
+	vector<double> weights, 
+	vector<paired_kmer> paired_kmers, 
+	string outfile, 
+	int nTest, 
+	double pCutoff=0.05, 
+	double pCutoff_B=0.05,
+	int startPos=0) ;
+
+	
+void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq);
+
+
+
 
 void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, vector<double> &weights,int skip=0, int cSeq=1,int cWeight=2);
 
@@ -61,8 +117,7 @@ vector<string> load_ranked_sequences_to_vectors(string filename, int skip=0, int
 
 array<int,2> find_significant_kmer_from_ranked_sequences(vector<string> seqs, vector<string> kmers, string outfile, int nTest, double pCutoff=0.05, double pCutoff_B=0.05, int shift=0, int startPos=0 );
 
-
-array<int,2> find_significant_kmer_from_weighted_sequences(vector<string> seqs,vector<double> weights, vector<string> kmers, string outfile, int nTest, double pCutoff=0.05, double pCutoff_B=0.05,int shift=0, int startPos=0);
+array<int,2> find_significant_kmer_from_weighted_sequences(vector<string> seqs,vector<double> weights, vector<string> kmers, string outfile, int nTest, double pCutoff=0.05, double pCutoff_B=0.05,int shift_min=0, int shift_max=2, int startPos=0);
 
 void save_feature_matrix(map<string,string> seqs, vector<string> kmers, string outfile, string label, bool append=false, int shift=0);
 
@@ -74,9 +129,13 @@ void read_significant_positional_kmer_from_PKA2_output(string inputfile, vector<
 
 void significant_feature_matrix(map<string,string> seqs, vector<string> kmers, vector<int> positions, string outfile, string label, bool append=false, int shift=0);
 
-void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights, vector<string> kmers, vector<int> positions, string outfile, int shift=0);
+void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights, vector<positional_kmer> ranked_kmers, string outfile);
 
+// convert fasta file to a letter matrix
+void fasta_to_letter_matrix(string input, string output);
 
+// convert fasta file to a letter matrix, no header
+void tab_seq_to_letter_matrix(string input, string output, int k_min, int k_max, int col, int skip);
 
 // PKA: remove overlapping motifs
 // input: all significant motifs
@@ -86,7 +145,13 @@ int non_overlapping_sig_motifs(string inputfile, string outputfile);
 // used in generating markov model
 int countSubstringInSeqs(map<string,string>seqs, string sub);
 
+// of not of identical length, return -1
+int sequence_similarity(string a, string b);
 
+// calculate and write pairwise similarity matrix of
+void pairwise_sequence_similarity_matrix(vector<string> seqs, string filename);
+
+	
 set<int> findall(string seq, string motif);
 
 // dict for IUPAC degenerate nucleotides
@@ -98,7 +163,8 @@ vector<string> generate_kmers(int k, string alphabet);
 
 // degenerate kmers based on IUPAC, DNA only
 // remove those with terminal N, which is not a kmer, but (k-i)mer
-vector<string> degenerate_kmer(int k);
+vector<string> degenerate_kmer(int k, string alphabet="ACGTRYMKWSBDHVN");
+
 
 // convert one degenerate kmer to regular expression, e.g. ARG -> A[AG]G
 string degenerate_kmer_to_regex(string kmer,map<char,string> iupac);

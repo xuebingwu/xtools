@@ -12,6 +12,7 @@
 // for position matrix
 #include <boost/numeric/ublas/matrix.hpp>
 
+	
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -29,10 +30,43 @@ extern "C"{
 
 using namespace std;
 
+// number of identical bases
+int sequence_similarity(string a, string b)
+{
+	int s = 0;
+	if(a.size() != b.size()) return -1;
+	for(int i=0;i<a.size();i++)
+	{
+		if(a[i] == b[i]) s++;
+	}
+	return s;
+}
+
+// calculate and write pairwise similarity matrix of
+void pairwise_sequence_similarity_matrix(vector<string> seqs, string filename)
+{
+	ofstream out(filename.c_str());
+	map<string,int> data;
+	for(int i =0;i<seqs.size();i++)
+	{
+		for(int j=0;j<seqs.size();j++)
+		{
+			if (j<i) out << data[to_string(j)+","+to_string(i)] << "\t";
+			else if (i == j) out << seqs[i].size() << "\t";
+			else
+			{
+				data[to_string(i)+","+to_string(j)] = sequence_similarity(seqs[i],seqs[j]);
+				out << data[to_string(i)+","+to_string(j)] << "\t";
+			}
+		}
+		out << endl;
+	}
+	out.close();
+}
+
 // load weighted sequence file into two vectors: seqs and weights
 // the first three columns should be: id, seq, weight (tab-delimited)
-void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, vector<double> &weights,int skip/*=0*/, int cSeq/*=1*/, int cWeight/*=2*/)
-{
+void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, vector<double> &weights,int skip/*=0*/, int cSeq/*=1*/, int cWeight/*=2*/) {
 	// minimum number of columns in input
 	int nCol = max(cSeq,cWeight)+1;
 	
@@ -67,8 +101,7 @@ void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, v
 // default: no header, first column is id, second column is sequence
 // r: number of header lines to skip.
 // c: column for sequence, 0-based, i.e. first column is 0
-vector<string> load_ranked_sequences_to_vectors(string filename, int skip/*=0*/, int cSeq/*=1*/)
-{
+vector<string> load_ranked_sequences_to_vectors(string filename, int skip/*=0*/, int cSeq/*=1*/){
 	vector<string> seqs;
 	
 	ifstream fin;
@@ -111,11 +144,18 @@ vector<string> load_ranked_sequences_to_vectors(string filename, int skip/*=0*/,
 }
 
 
-
 // find significant positional kmer from ranked sequences
 // use non-parametric U test
 // input: a vector of ranked sequence with the same length, only ACGT 
-array<int,2> find_significant_kmer_from_ranked_sequences(vector<string> seqs, vector<string> kmers, string outfile, int nTest, double pCutoff/*=0.05*/, double pCutoff_B/*=0.05*/, int shift/*=0*/, int startPos/*=0*/ )
+array<int,2> find_significant_kmer_from_ranked_sequences(
+	vector<string> seqs, 
+	vector<string> kmers, 
+	string outfile, 
+	int nTest, 
+	double pCutoff/*=0.05*/, 
+	double pCutoff_B/*=0.05*/, 
+	int shift/*=0*/, 
+	int startPos/*=0*/ )
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -177,9 +217,11 @@ array<int,2> find_significant_kmer_from_ranked_sequences(vector<string> seqs, ve
 				}
 			}
 			// now ranks includes ranks of all sequences containing kmer i at position pos
-			if (ranks.size() == 0) // if no sequence contain this kmer, just go on to the next position
+			// if less than 3 sequence contain this kmer, or less than 3 sequence don't have this kmer,
+			// just go on to the next position
+			if (ranks.size() < 3 || ranks.size() > nSeq-3 ) 
 			{
-				break;
+				continue;
 			}
 			array<double,2> utest = Mann_Whitney_U_test(ranks, nSeq);
 			if (utest[1] < pCutoff)
@@ -199,7 +241,17 @@ array<int,2> find_significant_kmer_from_ranked_sequences(vector<string> seqs, ve
 // use t-test
 // input: a vector of weighted sequence with the same length, only ACGT 
 // 
-array<int,2> find_significant_kmer_from_weighted_sequences(vector<string> seqs,vector<double> weights, vector<string> kmers, string outfile, int nTest, double pCutoff/*=0.05*/, double pCutoff_B/*=0.05*/,int shift/*=0*/, int startPos/*=0*/)
+array<int,2> find_significant_kmer_from_weighted_sequences(
+	vector<string> seqs,
+	vector<double> weights, 
+	vector<string> kmers, 
+	string outfile, 
+	int nTest, 
+	double pCutoff/*=0.05*/, 
+	double pCutoff_B/*=0.05*/,
+	int shift_min/*=0*/, 
+	int shift_max/*=2*/,
+	int startPos/*=0*/) 
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -223,37 +275,147 @@ array<int,2> find_significant_kmer_from_weighted_sequences(vector<string> seqs,v
 		// expand a degenerate kmer to all possible element/exact kmers		
         vector<string> exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
 		int k = kmers[i].size();
+		for (int shift = shift_min; shift <= shift_max; shift ++)
+		{
+			for( int pos=0; pos < lSeq-k+1; pos ++) // at each position
+			{
+				//debug cout << kmers[i] << "@" << pos << endl;
+			
+				// whether each sequence is positive
+				vector<bool> positive;
+					// for each sequence, 
+				for( int j=0;j<nSeq;j++) 
+				{
+					//debug cout << "seq " << j << endl;
+				
+					// initialize
+					bool present = false;
+					//find if any of the expanded kmer is present at position pos
+					for( int n=0;n<exp_kmers.size();n++)
+					{
+						//debug cout << "exact kmer: " << exp_kmers[n] << endl;
+						/* speed not affected by shift */
+						size_t found = seqs[j].substr(pos,k+shift).find(exp_kmers[n]); // if found any kmer allowing shift 
+						if (found!=std::string::npos)
+						{
+							// add this sequence's rank to sample 1
+							//weights1.push_back(weights[j]);
+							// stop looking for the next expanded kmer in the same sequence, continue to the next sequence
+							present = true; 
+							break;
+						} /**/
+					}
+				
+					//debug cout << "present = " << present << endl;
+				
+					positive.push_back(present);
+				}
+				vector<double> weights1,weights2;
+				for( int j=0;j<nSeq;j++)
+				{
+					if(positive[j]) weights1.push_back(weights[j]);
+					else weights2.push_back(weights[j]);
+				}
+				// now weights includes weights of all sequences containing kmer i at position pos
+				// if less than 3 sequences with/without this kmer, just go on to the next position
+				// in such cases the kmer is unlikely to be significant
+				// also the t.test will not work well. it requires at least 2 data points in each sample
+				if (weights1.size() < 3 || weights2.size() < 3 ) 
+				{
+					continue;
+				}
+				array<double,6> ttest = t_test(weights1,weights2,false);
+				if (ttest[1] < pCutoff)
+				{
+					nSig[0]++;
+					// Bonferoni correction
+					double pB = min(1.0,ttest[1]*nTest);
+					if(pB < pCutoff_B) nSig[1]++;
+		            outstream << kmers[i] << "\t" << pos-startPos << "\t" << shift+k << "\t" << ttest[0] << "\t" << -log10(ttest[1]) << "\t" << -log10(pB) << "\t" << weights1.size() << "\t" << ttest[2] << "\t" << ttest[3] << "\t" << weights2.size() << "\t" << ttest[4] << "\t"  << ttest[5] << endl;
+				}
+			}
+		}
+	}
+
+    return nSig;
+} // end of function
+
+// generate paired kmer,
+vector<paired_kmer> generate_paired_kmers (
+	string alphabet,
+int seq1_len,
+int seq2_len,
+int max_dist,
+int min_dist,
+int max_shift,
+int min_shift
+){
+	vector<paired_kmer> paired_kmers;
+	vector<string> kmers1 = generate_kmers(seq1_len,alphabet);	
+	vector<string> kmers2 = generate_kmers(seq2_len,alphabet);	
+	for (int i=0;i<kmers1.size();i++)
+	{
+		for (int j=0;j<kmers2.size();j++)
+		{
+			for (int d = min_dist; d <= max_dist; d++)
+			{
+				for (int s= min_shift; s <= max_shift; s++)
+				{
+					paired_kmer a(kmers1[i],kmers2[j],d, s, 0 , 0);
+					paired_kmers.push_back(a);
+				}
+			}
+		}
+	}
+	return paired_kmers;
+}
+	
+
+// pairwise
+array<int,2> find_significant_pairs_from_weighted_sequences(
+	vector<string> seqs,
+	vector<double> weights, 
+	vector<paired_kmer> paired_kmers, 
+	string outfile, 
+	int nTest, 
+	double pCutoff/*=0.05*/, 
+	double pCutoff_B/*=0.05*/,
+	int startPos/*=0*/) 
+{
+    int nSeq = seqs.size();		// total number of sequences
+	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
+	
+	//message(to_string(nSeq)+" sequences");
+	//message(to_string(lSeq)+" length");
+	
+	// the number of significant positional kmers found
+	array<int,2> nSig = {0,0};
+		
+	// will output found significant positional kmers
+	ofstream outstream;
+	outstream.open(outfile.c_str());
+
+	// start of kmer counting and test
+	for( int i=0; i<paired_kmers.size();i++) // for each kmer
+	{
+		int k = paired_kmers[i].len();
 		for( int pos=0; pos < lSeq-k+1; pos ++) // at each position
 		{
-			//debug cout << kmers[i] << "@" << pos << endl;
-			
-			// whether each sequence is positive
 			vector<bool> positive;
-				// for each sequence, 
+			// whether each sequence is positive
+			// for each sequence, 
 			for( int j=0;j<nSeq;j++) 
-			{
-				//debug cout << "seq " << j << endl;
-				
-				// initialize
-				bool present = false;
-				//find if any of the expanded kmer is present at position pos
-				for( int n=0;n<exp_kmers.size();n++)
+			{	
+				bool present = false;	
+				for (int offset = 0; offset <= paired_kmers[i].shift; offset ++)
 				{
-					//debug cout << "exact kmer: " << exp_kmers[n] << endl;
-					/* speed not affected by shift */
-					size_t found = seqs[j].substr(pos,k+shift).find(exp_kmers[n]); // if found any kmer allowing shift 
-					if (found!=std::string::npos)
+					if (pos + k + offset > lSeq - 1) break;
+					if (seqs[j].substr(pos+offset,paired_kmers[i].seq1.size()) == paired_kmers[i].seq1 && seqs[j].substr(pos+offset+paired_kmers[i].dist,paired_kmers[i].seq2.size()) == paired_kmers[i].seq2) 
 					{
-						// add this sequence's rank to sample 1
-						//weights1.push_back(weights[j]);
-						// stop looking for the next expanded kmer in the same sequence, continue to the next sequence
-						present = true; 
+						present = true;
 						break;
-					} /**/
+					}
 				}
-				
-				//debug cout << "present = " << present << endl;
-				
 				positive.push_back(present);
 			}
 			vector<double> weights1,weights2;
@@ -277,17 +439,18 @@ array<int,2> find_significant_kmer_from_weighted_sequences(vector<string> seqs,v
 				// Bonferoni correction
 				double pB = min(1.0,ttest[1]*nTest);
 				if(pB < pCutoff_B) nSig[1]++;
-	            outstream << kmers[i] << "\t" << pos-startPos << "\t" << shift+k << "\t" << ttest[0] << "\t" << -log10(ttest[1]) << "\t" << -log10(pB) << "\t" << weights1.size() << "\t" << ttest[2] << "\t" << ttest[3] << "\t" << weights2.size() << "\t" << ttest[4] << "\t"  << ttest[5] << endl;
+	            outstream << paired_kmers[i].as_string("_") << "\t" << pos-startPos << "\t" << paired_kmers[i].shift+k << "\t" << ttest[0] << "\t" << -log10(ttest[1]) << "\t" << -log10(pB) << "\t" << weights1.size() << "\t" << ttest[2] << "\t" << ttest[3] << "\t" << weights2.size() << "\t" << ttest[4] << "\t"  << ttest[5] << endl;
 			}
 		}
 	}
-
     return nSig;
 } // end of function
 
+
+
 // nucleotide plot from PKA2 weighted output
-void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq)
-{
+void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq){
+	
 	string script = "# R script \n"
 	"lSeq="+to_string(lSeq)+" \n"
 	"data = numeric(4*lSeq)\n"
@@ -327,8 +490,7 @@ void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq)
 	R_run(script);
 }
 
-positional_kmer::positional_kmer(string seq1, int pos1, int size1, double weight1, int group1)
-{
+positional_kmer::positional_kmer(string seq1, int pos1, int size1, double weight1, int group1){
 	seq = seq1;
 	pos = pos1;
 	size = size1;
@@ -378,9 +540,78 @@ const positional_kmer &positional_kmer::operator = (const positional_kmer &a)
 	return *this;
 }
 
-string positional_kmer::as_string()
+string positional_kmer::as_string(string del/*="_"*/)
 {
-	return seq+"\t"+to_string(pos)+"\t"+to_string(size)+"\t"+to_string(weight)+"\t"+to_string(group);
+	return seq+del+to_string(pos)+del+to_string(size)+del+to_string(weight)+del+to_string(group);
+}
+
+
+paired_kmer::paired_kmer(string seqa, string seqb, int distance, int offset, int position, double score)
+{
+	seq1 = seqa;
+	seq2 = seqb;
+	dist = distance;
+	pos = position;
+	shift=offset;
+	weight=score;
+}
+
+paired_kmer::paired_kmer() 
+{
+  // allocate variables
+	seq1 = "A";
+	seq2 = "A";
+	dist = 1;
+	shift=0;
+	pos=0;
+	weight=0.0;
+}
+
+paired_kmer::paired_kmer(const paired_kmer &a) 
+{
+  // allocate variables
+  paired_kmer();
+  // copy values
+  operator = (a);
+}
+
+// everything equal except weight
+bool paired_kmer::equals(paired_kmer a, bool identical_pos, bool identical_shift)
+{
+	if (identical_pos && pos != a.pos) return false;
+	if (identical_shift && shift != a.shift) return false;
+	return seq1 == a.seq1 && dist == a.dist && seq2 == a.seq2;
+}
+
+
+const paired_kmer &paired_kmer::operator = (const paired_kmer &a)
+{
+	seq1 = a.seq1;
+	seq2 = a.seq2;
+	dist = a.dist;
+	pos = a.pos;
+	shift = a.shift;
+	weight = a. weight;
+	return *this;
+}
+
+string paired_kmer::as_string(string del/*="_"*/, bool add_shift/*=false*/,bool add_pos/*=false*/, bool add_weight/*=false*/)
+{
+	string res = seq1+del+to_string(dist)+del+seq2;
+	if (add_shift) res += del + to_string(shift);
+	if (add_pos) res += del + to_string(pos);
+	if (add_weight) res += del + to_string(weight);
+	return res;
+}
+
+int paired_kmer::len()
+{
+	return dist+int(seq2.size());
+}
+
+int paired_kmer::gap()
+{
+	return dist - int(seq1.size());
 }
 
 // note pCutoff and pCutoff_B here are -log10 transformed
@@ -480,16 +711,122 @@ vector<positional_kmer> build_model_from_PKA2_output(string filename, double pCu
 	return ranked_kmers;
 }
 
+// no degenerate nucleotides
+vector<paired_kmer> build_paired_kmer_model(string filename)
+{
+	int skip = 0; // no header
+	int cKmer = 0; // first column is kmer
+	int cStart = 1; // second column is start 
+	int cStat = 3; // statistics, tells you sign of signficance
+	int cWeight = 4; // -log10(p)
+
+	vector<paired_kmer> paired_kmers;
+	
+	ifstream fin;
+	fin.open(filename.c_str());
+	
+	string line;
+	vector<string> flds;
+	
+	// skip header lines
+	int i=0;
+	while(fin && i++ < skip) getline(fin,line);
+
+    while(fin)
+    {
+        getline(fin,line);
+        if (line.length() == 0)
+            continue;
+
+        flds = string_split(line,"\t");
+		
+		string kmer = flds[cKmer];
+		int pos = stoi(flds[cStart]);
+		double score = stof(flds[cWeight]);
+		if(stof(flds[cStat]) < 0 ) score = -score;
+		
+		vector<string> tmp = string_split(kmer,"_");
+		string seq1 = tmp[0];
+		string seq2 = tmp[2];
+		int dist = stoi(tmp[1]);
+		int shift = stoi(tmp[3]);
+		
+		paired_kmer x(seq1, seq2, dist, shift, pos, score);
+		paired_kmers.push_back(x);
+	}
+	fin.close();
+	return paired_kmers;
+}
+
+// no degenerate nucleotides
+vector<positional_kmer> build_model_from_PKA_output(string filename)
+{
+	int skip = 1;
+	int cKmer = 0;
+	int cStart = 2;
+	int cWeight = 7; // z-score
+
+	vector<positional_kmer> ranked_kmers;
+	
+	ifstream fin;
+	fin.open(filename.c_str());
+	
+	string line;
+	vector<string> flds;
+	// skip header lines
+	int i=0;
+	while(fin && i++ < skip) getline(fin,line);
+
+    while(fin)
+    {
+        getline(fin,line);
+        if (line.length() == 0)
+            continue;
+
+        flds = string_split(line,"\t");
+							
+		positional_kmer x(flds[cKmer],stoi(flds[cStart]),flds[cKmer].size(),stof(flds[cWeight]),0);
+		ranked_kmers.push_back(x);
+	}
+	fin.close();
+	return ranked_kmers;
+}
+
+
 void save_model_to_file(vector<positional_kmer> ranked_kmers, string filename)
 {
 	ofstream out;
 	out.open(filename.c_str());
 	
 	for( int i=0;i<ranked_kmers.size();i++)
-		out << ranked_kmers[i].as_string() << endl;
+		out << ranked_kmers[i].as_string("\t") << endl;
 	
 	out.close();
 }
+
+vector<positional_kmer> load_model_from_file(string filename)
+{
+	vector<positional_kmer> ranked_kmers;
+	
+	ifstream fin;
+	fin.open(filename.c_str());
+	
+	string line;
+	vector<string> flds;
+	
+    while(fin)
+    {
+        getline(fin,line);
+        if (line.length() == 0)
+            continue;
+
+        flds = string_split(line,"\t");
+		positional_kmer x(flds[0],stoi(flds[1]),stoi(flds[2]),stof(flds[3]),stoi(flds[4]));
+		ranked_kmers.push_back(x);
+	}
+	return ranked_kmers;
+}
+
 
 // ignore group information
 double score_sequence_using_PKA_model(vector<positional_kmer> ranked_kmers,  string seq)
@@ -503,6 +840,35 @@ double score_sequence_using_PKA_model(vector<positional_kmer> ranked_kmers,  str
 		if (found!=std::string::npos) 
 		{
 			score += ranked_kmers[i].weight;
+			//cout << "\t" << score;
+		}
+		//cout << endl;
+	}
+	return score;
+}
+
+
+double score_sequence_using_paired_kmer_model(vector<paired_kmer> model,  string seq)
+{
+	double score = 0;
+	int lSeq = seq.size();
+	for( int i=0;i<model.size();i++)
+	{
+		bool present = false;
+		int l = model[i].len();	
+		
+		for (int offset = 0; offset <= model[i].shift; offset ++)
+		{
+			if (model[i].pos + l + offset > lSeq - 1) break;
+			if (seq.substr(model[i].pos+offset,model[i].seq1.size()) == model[i].seq1 && seq.substr(model[i].pos+offset+model[i].dist,model[i].seq2.size()) == model[i].seq2) 
+			{
+				present = true;
+				break;
+			}
+		}
+		if (present) 
+		{
+			score += model[i].weight;
 			//cout << "\t" << score;
 		}
 		//cout << endl;
@@ -533,6 +899,47 @@ double score_sequence_using_PKA_model_use_group(vector<positional_kmer> ranked_k
 	}
 	return score;
 }
+
+// for both PKA and PKA2
+void score_fasta_using_PKA_model(string seqfile, string outputfile, vector<positional_kmer> ranked_kmers)
+{
+    ifstream fin(seqfile.c_str());
+	ofstream fout(outputfile.c_str());
+  
+    string name,seq;
+    while(fin.good())
+    {
+		ReadOneSeqFromFasta(fin,name,seq);
+     	double score = score_sequence_using_PKA_model(ranked_kmers, seq);
+  		fout << name << "\t" << seq << "\t" << score << endl;		
+    }
+    fin.close();
+	fout.close();
+}
+
+// sequence in column col, 1 based
+void score_tabular_using_PKA_model(string tabfile, int col, string outputfile, vector<positional_kmer> ranked_kmers)
+{
+	col = col - 1;
+	
+    ifstream fin(tabfile.c_str());
+	ofstream fout(outputfile.c_str());
+  
+    string line;
+	vector<string> flds;
+	
+    while(fin.good())
+    {
+		getline(fin,line);
+		if(line.length() == 0) continue;
+		flds = string_split(line,"\t");
+     	double score = score_sequence_using_PKA_model(ranked_kmers, flds[col]);
+  		fout << line << "\t" << score << endl;		
+    }
+    fin.close();
+	fout.close();
+}
+
 
 // count and write feature matrix, format
 // seqid, label (i.e. 1/0)
@@ -726,8 +1133,8 @@ void significant_feature_matrix(map<string,string> seqs, vector<string> kmers, v
 } // end of function
 
 
-// vector sequence, 
-void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights, vector<string> kmers, vector<int> positions, string outfile, int shift/*=0*/)
+// should work for ranked kmer with degenerate nucleotides
+void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights, vector<positional_kmer> ranked_kmers, string outfile)
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -742,9 +1149,9 @@ void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights
 	outstream.open(outfile.c_str());
 	// output header
 	outstream << "SeqID\tScore";
-	for( int i =0; i< kmers.size();i++)
+	for( int i =0; i< ranked_kmers.size();i++)
 	{
-		outstream << "\t" << kmers[i] << "_" << positions[i] << "_" << shift ;
+		outstream << "\t" << ranked_kmers[i].as_string() ;
 	}
 	outstream << endl;
 
@@ -753,11 +1160,11 @@ void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights
 	for(int j=0;j<seqs.size();j++) // each sequence is a line
 	{ 
 		outstream << "Seq-"<< j << "\t" << weights[j]; 
-		for( int i=0; i<kmers.size();i++) // for each kmer
+		for( int i=0; i<ranked_kmers.size();i++) // for each kmer
 		{
 			// expand a degenerate kmer to all possible element/exact kmers		
-	        vector<string> exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
-			int k = kmers[i].size();
+	        vector<string> exp_kmers = expand_degenerate_kmer(ranked_kmers[i].seq,define_iupac);
+			int k = ranked_kmers[i].seq.size();
 			
 			int present = 0;
 			//find if any of the expanded kmer is present at position pos
@@ -765,7 +1172,7 @@ void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights
 			{
 				//debug cout << "exact kmer: " << exp_kmers[n] << endl;
 				/* speed not affected by shift */
-				size_t found = seqs[j].substr(positions[i],k+shift).find(exp_kmers[n]); // if found any kmer allowing shift 
+				size_t found = seqs[j].substr(ranked_kmers[i].pos,ranked_kmers[i].size).find(exp_kmers[n]); // if found any kmer allowing shift 
 				if (found!=std::string::npos)
 				{
 					// add this sequence's rank to sample 1
@@ -981,9 +1388,8 @@ vector<string> generate_kmers(int k, string alphabet)
 
 // degenerate kmers based on IUPAC, DNA only
 // remove those with terminal N, which is not a kmer, but (k-i)mer
-vector<string> degenerate_kmer(int k)
+vector<string> degenerate_kmer(int k, string alphabet/*ACGTRYMKWSBDHVN*/)
 {
-    string alphabet =  "ACGTRYMKWSBDHVN";
     vector<string> tmp = generate_kmers(k,alphabet);
     // remove those with terminal N
     vector<string> dkmers;
@@ -1340,7 +1746,18 @@ map<string,vector<int> > degenerate_kmer_counts(vector<string> dkmers,map<string
     return new_data;
 }
 
-array<int,2> find_significant_kmer_from_one_seq_set(map<string,string>seqs1, map<string,double> probs_kmer,vector<string>kmers, vector<string> dkmers, int shift,bool degenerate,double pCutoff, double pCutoff_B, int startPos,int nTest, string outfile, string output_count_file)
+array<int,2> find_significant_kmer_from_one_seq_set(
+	map<string,string>seqs1, 
+	map<string,double> probs_kmer,vector<string>kmers, 
+	vector<string> dkmers, 
+	int shift,
+	bool degenerate,
+	double pCutoff, 
+	double pCutoff_B, 
+	int startPos,
+	int nTest, 
+	string outfile, 
+	string output_count_file)
 {
     int nSeq1 = seqs1.size();
     array<int,2> nSig = {0,0};
@@ -1471,6 +1888,7 @@ array<int,2> find_significant_kmer_from_one_seq_set(map<string,string>seqs1, map
 
     return nSig;
 } // end of function
+
 
 // two file comparison, not allow shift and degenerate at the same time
 array<int,2> find_significant_kmer_from_two_seq_sets(map<string,string>seqs1, map<string,string>seqs2, vector<string>kmers, vector<string> dkmers, int shift,bool degenerate,double pCutoff,double pCutoff_B, double pseudo,int startPos,int nTest, string outfile,string output_count_file)
@@ -1657,8 +2075,7 @@ string reverseComplement(string seq){
         return rc;
 }
 
-void ReadOneSeqFromFasta(ifstream& infile, string& name, string& seq)
-{
+void ReadOneSeqFromFasta(ifstream& infile, string& name, string& seq){
   // read one sequence from fasta file
   getline(infile,name); // read identifier line
   name = name.substr(1);// remove leading '>'
@@ -1674,10 +2091,8 @@ void ReadOneSeqFromFasta(ifstream& infile, string& name, string& seq)
   seq.erase(seq.find_last_not_of(" \n\r\t")+1);
 } 
 
-
-
-map<string,string> ReadFasta(string filename)
-{//read all sequences in a fasta file
+//read all sequences in a fasta file
+map<string,string> ReadFasta(string filename){
   ifstream fin(filename.c_str());
   
   map<string,string> seqs;
@@ -1691,8 +2106,7 @@ map<string,string> ReadFasta(string filename)
   return seqs;
 }
 
-void WriteFasta(map<string,string> seqs, string filename)
-{
+void WriteFasta(map<string,string> seqs, string filename){
     ofstream fout;
     fout.open(filename.c_str());
     for (map<string,string>::iterator it=seqs.begin(); it!=seqs.end(); ++it)
@@ -1701,76 +2115,7 @@ void WriteFasta(map<string,string> seqs, string filename)
     }
 }
 
-/*
-// shuffle a single sequence
-string shuffle_string(string str)
-{
-    // initialize the position array
-    int L = str.size();
-    vector<int> idx;
-    for( int i = 0;i < L; i++) idx.push_back(i);
-    // shuffle positions
-    random_shuffle(idx.begin(), idx.end());
-    // make a new string
-    string res;
-    for( int i = 0; i< L; i++) res += str[idx[i]];
-
-    return res;
-}
-
-// shuffle a map of strings, each N times
-map<string,string> shuffle_strings(map<string,string> seqs, int N)
-{
-    // obtain a time-based seed
-    srand(time(NULL));
-    map<string,string> seqs2;
-    for (map<string,string>::iterator it=seqs.begin(); it!=seqs.end(); ++it)
-    {
-        for( int i =0;i<N;i++) seqs2[it->first + "-" + to_string(i)] = shuffle_string(it->second);
-    }
-    return seqs2;
-}
-*/
-
-
-//uShuffle
-//http://digital.cs.usu.edu/~mjiang/ushuffle/
-// shuffle sequence preserving k-let
-string shuffle_seq_preserving_k_let(string str,int k)
-{
-    const char * c = str.c_str();
-    char *t = new char[str.size() + 1];
-    shuffle(c,t, str.size(), k);
-    t[str.size()] = '\0';
-    string res(t);
-    return res;
-}
-
-//
-map<string,string> shuffle_seqs_preserving_k_let(map<string,string> seqs, int N, int k)
-{
-    // obtain a time-based seed
-    srand(time(NULL));
-    map<string,string> seqs2;
-    for (map<string,string>::iterator it=seqs.begin(); it!=seqs.end(); ++it)
-    {
-        for( int i =0;i<N;i++) seqs2[it->first + "-" + to_string(i)] = shuffle_seq_preserving_k_let(it->second,k);
-    }
-    return seqs2;
-}
-
-/*
-void base_replacement(map<string,string> seqs, char from, char to)
-{
-    for (map<string,string>::iterator it=seqs.begin(); it!=seqs.end(); ++it)
-    {
-        replace( it->second.begin(), it->second.end(), from, to);
-    }
-}
-*/
-
-map<string,string> first_n_bases(map<string,string> seqs,int n)
-{
+map<string,string> first_n_bases(map<string,string> seqs,int n){
     // take the first n bases of each sequences
     // if the sequences is shorter than n, discard it
     map<string,string> res;
@@ -1784,8 +2129,7 @@ map<string,string> first_n_bases(map<string,string> seqs,int n)
     return res;
 }
 
-map<string,string> last_n_bases(map<string,string> seqs,int n)
-{
+map<string,string> last_n_bases(map<string,string> seqs,int n){
     // take the last n bases of each sequences
     // if the sequences is shorter than n, discard it
     map<string,string> res;
@@ -1799,9 +2143,93 @@ map<string,string> last_n_bases(map<string,string> seqs,int n)
     return res;
 }
 
+// convert fasta file to a letter matrix
+void fasta_to_letter_matrix(string input, string output){
+	ofstream out(output.c_str());
+	map<string,string> seqs = ReadFasta(input);
+	
+	// sequence length, assume fixed
+	int L = int(seqs.begin()->second.size());
+	
+	//header
+	out << "SeqID";
+	for(int i=0;i<L;i++) out << "\t" << "k1:p" << i+1 ;
+	out << endl;
+	
+    for (map<string,string>::iterator it=seqs.begin(); it!=seqs.end(); ++it)
+	{
+	    out << it->first;
+		for(int i=0;i<L;i++) out << "\t" << it->second[i] ;
+		out << endl;
+	}
+	out.close();
+}
 
-void mismatches(map<string,string>& mutant,map<string,int>& dist, string motif, int n, set<char> alphabet)
-{
+// convert fasta file to a letter matrix, no header
+void tab_seq_to_letter_matrix(string input, string output, int k_min, int k_max, int col, int skip){
+	col = col - 1;
+		
+	ifstream in(input.c_str());
+	ofstream out(output.c_str());
+
+	string line;
+	vector<string> flds;
+
+	int i = 0;
+	while(in.good() && i++ < skip) getline(in,line);
+	
+	while(in.good())
+	{
+		getline(in,line);
+		if(line.length()==0) continue;
+		flds = string_split(line,"\t");
+		// output other columns first
+		for (int i=0;i<flds.size();i++) 
+		{
+			if(i != col) out << flds[i] << "\t";
+		}
+		// split sequence as letters
+		for(int k = k_min;k<=k_max;k++)
+			for(int i=0;i<=flds[col].size()-k;i++) 
+				out << flds[col].substr(i,k) << "\t" ;
+		out << endl;
+	}
+	in.close();
+	out.close();
+}
+
+/**************** ushuffle *************/
+
+//uShuffle
+//http://digital.cs.usu.edu/~mjiang/ushuffle/
+// shuffle sequence preserving k-let
+string shuffle_seq_preserving_k_let(string str,int k){
+    const char * c = str.c_str();
+    char *t = new char[str.size() + 1];
+    shuffle(c,t, str.size(), k);
+    t[str.size()] = '\0';
+    string res(t);
+    return res;
+}
+
+//
+map<string,string> shuffle_seqs_preserving_k_let(map<string,string> seqs, int N, int k){
+    // obtain a time-based seed
+    srand(time(NULL));
+    map<string,string> seqs2;
+    for (map<string,string>::iterator it=seqs.begin(); it!=seqs.end(); ++it)
+    {
+        for( int i =0;i<N;i++) seqs2[it->first + "-" + to_string(i)] = shuffle_seq_preserving_k_let(it->second,k);
+    }
+    return seqs2;
+}
+
+
+
+/*******  seq_match   *******/
+
+
+void mismatches(map<string,string>& mutant,map<string,int>& dist, string motif, int n, set<char> alphabet){
   set<char>::iterator it;
   if (mutant.count(motif) == 0)
   {
@@ -1847,8 +2275,7 @@ void mismatches(map<string,string>& mutant,map<string,int>& dist, string motif, 
   }
 }
 
-map<string,string> ExpandMotifs(map<string,string>& motifs, int nmismatch, bool rc, set<char> alphabet) 
-{ 
+map<string,string> ExpandMotifs(map<string,string>& motifs, int nmismatch, bool rc, set<char> alphabet) { 
   map<string,string> expandedmotifs;
   // generate mismatched motifs
   map<string,string> mutants;
@@ -1898,8 +2325,7 @@ map<string,string> ExpandMotifs(map<string,string>& motifs, int nmismatch, bool 
 
 
 
-array<int,2> match(string motiffile, string seqfile, string outfile, int nmismatch, bool rc, set<char> alphabet)
-{
+array<int,2> match(string motiffile, string seqfile, string outfile, int nmismatch, bool rc, set<char> alphabet) {
   int nsite = 0; // total number of matches to report
   int nseq = 0;
   ifstream fmotif, fseq;
@@ -1954,10 +2380,7 @@ array<int,2> match(string motiffile, string seqfile, string outfile, int nmismat
 }
 
 
-
-
-int tab2bed_galaxy(string infile, string outfile)
-{
+int tab2bed_galaxy(string infile, string outfile){
   //hg18_chr6_122208322_122209078_+     635     5ss,A7C,G8T-rc  AAGTACCTG
   //hg18_chr6_122208322_122209078_+     553     5ss,C1G,G3A     GAAGTAAGT
   ifstream fin;
@@ -2025,8 +2448,7 @@ int tab2bed_galaxy(string infile, string outfile)
 }
 
 
-int tab2bed_bedtools(string infile, string outfile)
-{
+int tab2bed_bedtools(string infile, string outfile){
   //chrX:20597309-20645164(-)       7533    u1,CAGGTAAGT    CAGGTAAGT
   //chr17:70312707-70951085(+)      486494  u1,CAGGTAAGT,rc ACTTACCTG
   //can be without strand

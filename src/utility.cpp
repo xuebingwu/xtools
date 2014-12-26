@@ -15,6 +15,7 @@
 
 using namespace std;
 
+
 // generate a random string of letters and numbers of certain length
 string random_string( size_t length )
 {
@@ -107,7 +108,6 @@ void message(string text, bool stdout/*=false*/)
 	else cerr <<  "["<<current_time()<<"] " + text << endl;
 }
 
-
 // run system command
 int system_run(string cmd)
 {
@@ -150,7 +150,7 @@ void sort_file_and_add_header(string filename, string header, string sort_option
     "dev.off() \n";
 
 */
-int R_run(string script, bool clean/*=true*/)
+int R_run(string script, bool clean/*=true*/, string Rcmd/*="R CMD BATCH"*/)
 {
     // create tmp R script file
     string tmp = random_string(10)+".r";
@@ -160,7 +160,7 @@ int R_run(string script, bool clean/*=true*/)
     out.close();
 
     // run the script
-    string cmd = "R CMD BATCH "+tmp;
+    string cmd = Rcmd + " "+tmp;
     int ret = system(cmd.c_str());
 
     // remove the script and .Rout file
@@ -172,5 +172,4 @@ int R_run(string script, bool clean/*=true*/)
 	
     return ret;
 }
-
 

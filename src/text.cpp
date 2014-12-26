@@ -2,12 +2,126 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <cmath>
+#include <algorithm>
 
 #include "utility.h"
 #include "text.h"
-
+#include "time.h"
 #include <map>
 #include <iostream>
+
+
+
+// split files for crossvalidation
+void split_file_for_cross_validation(string input, string output, int nfold)
+{
+	// determine the number of lines
+	ifstream fin(input.c_str());
+	string line;
+	int total = 0;
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length()==0) continue;
+		total ++;
+	}
+	fin.close();
+	
+	
+	int step = floor(0.5 + total / nfold);
+	
+	vector<int> bins;
+	for(int i=0;i < nfold-1;i++)
+		for(int j=0;j<step;j++)
+			bins.push_back(i);
+	for(int i= bins.size(); i < total; i++) bins.push_back(nfold-1);
+	
+	//cout << "total=" << total << ",step=" << step << ",bins=" << bins.size() << endl; 
+	srand(time(NULL));
+	random_shuffle(bins.begin(),bins.end());
+	
+    // split files
+	for(int i=0;i<nfold;i++)
+	{
+		string trainfile = output+".train."+to_string(i);
+		string testfile = output+".test."+to_string(i);
+		
+		ofstream train(trainfile.c_str());
+		ofstream test(testfile.c_str());
+		
+		int n = 0;
+		fin.open(input.c_str());
+		while(fin)	
+		{
+			getline(fin,line);
+			if(line.length() == 0) continue;
+			if (i == bins[n]) test << line << endl;
+			else train << line << endl;
+			n++;
+		}
+		fin.close();
+		train.close();
+		test.close();
+	}
+	
+}
+
+// input file contine multi-line records such as fasta/fastq or others
+// col is 1 based
+void select_multi_lines(string inputfile, string idfile, string outputfile, int nline, int id_col, string id_prefix)
+{
+	id_col = id_col - 1;
+	
+	set<string> ids;
+	
+	ifstream fin;
+	fin.open(idfile.c_str());
+
+	string line;
+	vector<string> flds;
+	
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length()==0) continue;
+		flds = string_split(line,"\t");
+		ids.insert(id_prefix+flds[id_col]);
+	}
+	fin.close();
+	
+	ofstream out;
+	out.open(outputfile.c_str());
+	
+	fin.open(inputfile.c_str());
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length()==0) continue;
+		if(line[0] == '>')
+		{
+			if (ids.find(line) != ids.end())
+			{
+				out << line << endl; // id
+				for (int i =0;i< nline-1;i++)
+				{
+					getline(fin,line);
+					out << line << endl; //
+				}
+			} 
+			else
+			{
+				for (int i =0;i< nline-1;i++)
+				{
+					getline(fin,line);
+				}
+			}
+		}
+	}
+	fin.close();
+	out.close();
+}
+
 
 // subtract file 2 from file 1, based on shared key column
 void intersectTab(string file1, string file2, string outputfile, unsigned col1/*=0*/, unsigned col2/*=0*/, bool subtract/*=false*/)

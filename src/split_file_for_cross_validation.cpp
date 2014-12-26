@@ -1,8 +1,6 @@
 #include "utility.h"
 #include "iostream"
-
-
-#include "sequence.h"
+#include "text.h"
 
 using namespace std;
 
@@ -26,8 +24,6 @@ void help()
 
     exit(0);
 }
-
-
 
 int main(int argc, char* argv[]) {
 
@@ -61,9 +57,12 @@ int main(int argc, char* argv[]) {
         }
     }   
 
-	 tab_seq_to_letter_matrix( input,  output,  1,2, 1,  0);
-   
-		
+    message("Input  =   "+input);
+    message("Output =   "+output);
+    message("N      =   "+to_string(n));
+	
+	split_file_for_cross_validation( input,  output, n);
+	
 
     return 0;
 }

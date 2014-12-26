@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 
+
 using namespace std;
 
 // generate a random string of letters and numbers of certain length
@@ -51,7 +52,7 @@ int system_run(string cmd);
     "dev.off() \n";
 
 */
-int R_run(string script,bool clean=true);
+int R_run(string script,bool clean=true, string Rcmd="R CMD BATCH");
 
 void sort_file_and_add_header(string filename, string header, string sort_options);
 

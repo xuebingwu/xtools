@@ -1,0 +1,1332 @@
+structure.cpp: In function ‘int enlarge_loop(std::string&, int, int)’:
+structure.cpp:211:5: error: redefinition of ‘int enlarge_loop(std::string&, int, int)’
+structure.cpp:71:5: error: ‘int enlarge_loop(std::string&, int, int)’ previously defined here
+structure.cpp:222:30: error: no match for ‘operator==’ in ‘found == (& structure)->std::basic_string<_CharT, _Traits, _Alloc>::end<char, std::char_traits<char>, std::allocator<char> >()’
+structure.cpp:222:30: note: candidates are:
+In file included from /usr/include/c++/4.7/iosfwd:42:0,
+                 from /usr/include/c++/4.7/ios:39,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/postypes.h:218:5: note: template<class _StateT> bool std::operator==(const std::fpos<_StateT>&, const std::fpos<_StateT>&)
+/usr/include/c++/4.7/bits/postypes.h:218:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::fpos<_StateT>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:65:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_pair.h:206:5: note: template<class _T1, class _T2> constexpr bool std::operator==(const std::pair<_T1, _T2>&, const std::pair<_T1, _T2>&)
+/usr/include/c++/4.7/bits/stl_pair.h:206:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::pair<_T1, _T2>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:293:5: note: template<class _Iterator> bool std::operator==(const std::reverse_iterator<_Iterator>&, const std::reverse_iterator<_Iterator>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:293:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::reverse_iterator<_Iterator>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:343:5: note: template<class _IteratorL, class _IteratorR> bool std::operator==(const std::reverse_iterator<_Iterator>&, const std::reverse_iterator<_IteratorR>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:343:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::reverse_iterator<_Iterator>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:1033:5: note: template<class _IteratorL, class _IteratorR> bool std::operator==(const std::move_iterator<_Iterator>&, const std::move_iterator<_IteratorR>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:1033:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::move_iterator<_Iterator>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:1039:5: note: template<class _Iterator> bool std::operator==(const std::move_iterator<_Iterator>&, const std::move_iterator<_Iterator>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:1039:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::move_iterator<_Iterator>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:43:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/allocator.h:119:5: note: template<class _T1, class _T2> bool std::operator==(const std::allocator<_CharT>&, const std::allocator<_T2>&)
+/usr/include/c++/4.7/bits/allocator.h:119:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::allocator<_CharT>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:43:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/allocator.h:124:5: note: template<class _Tp> bool std::operator==(const std::allocator<_CharT>&, const std::allocator<_CharT>&)
+/usr/include/c++/4.7/bits/allocator.h:124:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::allocator<_CharT>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:54:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/basic_string.h:2483:5: note: template<class _CharT, class _Traits, class _Alloc> bool std::operator==(const std::basic_string<_CharT, _Traits, _Alloc>&, const std::basic_string<_CharT, _Traits, _Alloc>&)
+/usr/include/c++/4.7/bits/basic_string.h:2483:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::basic_string<_CharT, _Traits, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:54:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/basic_string.h:2490:5: note: template<class _CharT> typename __gnu_cxx::__enable_if<std::__is_char<_Tp>::__value, bool>::__type std::operator==(const std::basic_string<_CharT>&, const std::basic_string<_CharT>&)
+/usr/include/c++/4.7/bits/basic_string.h:2490:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::basic_string<_CharT>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:54:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/basic_string.h:2504:5: note: template<class _CharT, class _Traits, class _Alloc> bool std::operator==(const _CharT*, const std::basic_string<_CharT, _Traits, _Alloc>&)
+/usr/include/c++/4.7/bits/basic_string.h:2504:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const _CharT*’ and ‘long unsigned int’
+In file included from /usr/include/c++/4.7/string:54:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/basic_string.h:2516:5: note: template<class _CharT, class _Traits, class _Alloc> bool std::operator==(const std::basic_string<_CharT, _Traits, _Alloc>&, const _CharT*)
+/usr/include/c++/4.7/bits/basic_string.h:2516:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::basic_string<_CharT, _Traits, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/locale_facets.h:50:0,
+                 from /usr/include/c++/4.7/bits/basic_ios.h:39,
+                 from /usr/include/c++/4.7/ios:45,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/streambuf_iterator.h:206:5: note: template<class _CharT, class _Traits> bool std::operator==(const std::istreambuf_iterator<_CharT, _Traits>&, const std::istreambuf_iterator<_CharT, _Traits>&)
+/usr/include/c++/4.7/bits/streambuf_iterator.h:206:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::istreambuf_iterator<_CharT, _Traits>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/vector:65:0,
+                 from ../include/utility.h:6,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_vector.h:1370:5: note: template<class _Tp, class _Alloc> bool std::operator==(const std::vector<_Tp, _Alloc>&, const std::vector<_Tp, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_vector.h:1370:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::vector<_Tp, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/set:60:0,
+                 from ../include/utility.h:7,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_tree.h:309:5: note: template<class _Val> bool std::operator==(const std::_Rb_tree_iterator<_Tp>&, const std::_Rb_tree_const_iterator<_Val>&)
+/usr/include/c++/4.7/bits/stl_tree.h:309:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::_Rb_tree_iterator<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/set:60:0,
+                 from ../include/utility.h:7,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_tree.h:863:5: note: template<class _Key, class _Val, class _KeyOfValue, class _Compare, class _Alloc> bool std::operator==(const std::_Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>&, const std::_Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_tree.h:863:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::_Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/set:61:0,
+                 from ../include/utility.h:7,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_set.h:704:5: note: template<class _Key, class _Compare, class _Alloc> bool std::operator==(const std::set<_Key, _Compare, _Alloc>&, const std::set<_Key, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_set.h:704:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::set<_Key, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/set:62:0,
+                 from ../include/utility.h:7,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_multiset.h:685:5: note: template<class _Key, class _Compare, class _Alloc> bool std::operator==(const std::multiset<_Key, _Compare, _Alloc>&, const std::multiset<_Key, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_multiset.h:685:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::multiset<_Key, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/map:61:0,
+                 from ../include/sequence.h:10,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/stl_map.h:889:5: note: template<class _Key, class _Tp, class _Compare, class _Alloc> bool std::operator==(const std::map<_Key, _Tp, _Compare, _Alloc>&, const std::map<_Key, _Tp, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_map.h:889:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::map<_Key, _Tp, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/map:62:0,
+                 from ../include/sequence.h:10,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/stl_multimap.h:805:5: note: template<class _Key, class _Tp, class _Compare, class _Alloc> bool std::operator==(const std::multimap<_Key, _Tp, _Compare, _Alloc>&, const std::multimap<_Key, _Tp, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_multimap.h:805:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::multimap<_Key, _Tp, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from ../include/sequence.h:12:0,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/array:204:5: note: template<class _Tp, long unsigned int _Nm> bool std::operator==(const std::array<_Tp, _Nm>&, const std::array<_Tp, _Nm>&)
+/usr/include/c++/4.7/array:204:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::array<_Tp, _Nm>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/random:51:0,
+                 from /usr/include/c++/4.7/bits/stl_algo.h:67,
+                 from /usr/include/c++/4.7/algorithm:63,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:16,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/random.tcc:1713:5: note: template<class _RealType1> bool std::operator==(const std::normal_distribution<_RealType>&, const std::normal_distribution<_RealType>&)
+/usr/include/c++/4.7/bits/random.tcc:1713:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::normal_distribution<_RealType>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/functional:56:0,
+                 from /usr/include/c++/4.7/bits/stl_algo.h:68,
+                 from /usr/include/c++/4.7/algorithm:63,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:16,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/tuple:797:5: note: template<class ... _TElements, class ... _UElements> bool std::operator==(const std::tuple<_Elements ...>&, const std::tuple<_Elements ...>&)
+/usr/include/c++/4.7/tuple:797:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::tuple<_Elements ...>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algo.h:68:0,
+                 from /usr/include/c++/4.7/algorithm:63,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:16,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/functional:2376:5: note: template<class _Res, class ... _Args> bool std::operator==(const std::function<_Res(_ArgTypes ...)>&, std::nullptr_t)
+/usr/include/c++/4.7/functional:2376:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::function<_Res(_ArgTypes ...)>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algo.h:68:0,
+                 from /usr/include/c++/4.7/algorithm:63,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:16,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/functional:2382:5: note: template<class _Res, class ... _Args> bool std::operator==(std::nullptr_t, const std::function<_Res(_ArgTypes ...)>&)
+/usr/include/c++/4.7/functional:2382:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘std::nullptr_t’
+In file included from /usr/include/c++/4.7/iterator:66:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/detail/iterator.hpp:11,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/array.hpp:48,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/serialization/array.hpp:30,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/stream_iterator.h:130:5: note: template<class _Tp, class _CharT, class _Traits, class _Dist> bool std::operator==(const std::istream_iterator<_Tp, _CharT, _Traits, _Dist>&, const std::istream_iterator<_Tp, _CharT, _Traits, _Dist>&)
+/usr/include/c++/4.7/bits/stream_iterator.h:130:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::istream_iterator<_Tp, _CharT, _Traits, _Dist>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:86:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/unique_ptr.h:446:5: note: template<class _Tp, class _Dp, class _Up, class _Ep> bool std::operator==(const std::unique_ptr<_Tp, _Dp>&, const std::unique_ptr<_Up, _Ep>&)
+/usr/include/c++/4.7/bits/unique_ptr.h:446:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::unique_ptr<_Tp, _Dp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:86:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/unique_ptr.h:452:5: note: template<class _Tp, class _Dp> bool std::operator==(const std::unique_ptr<_Tp, _Dp>&, std::nullptr_t)
+/usr/include/c++/4.7/bits/unique_ptr.h:452:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::unique_ptr<_Tp, _Dp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:86:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/unique_ptr.h:457:5: note: template<class _Tp, class _Dp> bool std::operator==(std::nullptr_t, const std::unique_ptr<_Tp, _Dp>&)
+/usr/include/c++/4.7/bits/unique_ptr.h:457:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘std::nullptr_t’
+In file included from /usr/include/c++/4.7/bits/shared_ptr.h:52:0,
+                 from /usr/include/c++/4.7/memory:87,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1069:5: note: template<class _Tp1, class _Tp2, __gnu_cxx::_Lock_policy _Lp> bool std::operator==(const std::__shared_ptr<_Tp1, _Lp>&, const std::__shared_ptr<_Tp2, _Lp>&)
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1069:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::__shared_ptr<_Tp1, _Lp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/shared_ptr.h:52:0,
+                 from /usr/include/c++/4.7/memory:87,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1075:5: note: template<class _Tp, __gnu_cxx::_Lock_policy _Lp> bool std::operator==(const std::__shared_ptr<_Tp, _Lp>&, std::nullptr_t)
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1075:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::__shared_ptr<_Tp, _Lp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/shared_ptr.h:52:0,
+                 from /usr/include/c++/4.7/memory:87,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1080:5: note: template<class _Tp, __gnu_cxx::_Lock_policy _Lp> bool std::operator==(std::nullptr_t, const std::__shared_ptr<_Tp, _Lp>&)
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1080:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘std::nullptr_t’
+In file included from /usr/include/c++/4.7/memory:87:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr.h:328:5: note: template<class _Tp1, class _Tp2> bool std::operator==(const std::shared_ptr<_Tp1>&, const std::shared_ptr<_Tp2>&)
+/usr/include/c++/4.7/bits/shared_ptr.h:328:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::shared_ptr<_Tp1>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:87:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr.h:334:5: note: template<class _Tp> bool std::operator==(const std::shared_ptr<_Tp1>&, std::nullptr_t)
+/usr/include/c++/4.7/bits/shared_ptr.h:334:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::shared_ptr<_Tp1>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:87:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr.h:339:5: note: template<class _Tp> bool std::operator==(std::nullptr_t, const std::shared_ptr<_Tp1>&)
+/usr/include/c++/4.7/bits/shared_ptr.h:339:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘std::nullptr_t’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/traits.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:26,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/complex:451:5: note: template<class _Tp> constexpr bool std::operator==(const std::complex<_Tp>&, const std::complex<_Tp>&)
+/usr/include/c++/4.7/complex:451:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::complex<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/traits.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:26,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/complex:456:5: note: template<class _Tp> constexpr bool std::operator==(const std::complex<_Tp>&, const _Tp&)
+/usr/include/c++/4.7/complex:456:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::complex<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/traits.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:26,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/complex:461:5: note: template<class _Tp> constexpr bool std::operator==(const _Tp&, const std::complex<_Tp>&)
+/usr/include/c++/4.7/complex:461:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   ‘std::basic_string<char>::iterator {aka __gnu_cxx::__normal_iterator<char*, std::basic_string<char> >}’ is not derived from ‘const std::complex<_Tp>’
+In file included from /usr/include/c++/4.7/list:64:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/std/list_traits.hpp:15,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/std_containers_traits.hpp:20,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:18,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_list.h:277:5: note: template<class _Val> bool std::operator==(const std::_List_iterator<_Tp>&, const std::_List_const_iterator<_Val>&)
+/usr/include/c++/4.7/bits/stl_list.h:277:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::_List_iterator<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/list:64:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/std/list_traits.hpp:15,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/std_containers_traits.hpp:20,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:18,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_list.h:1574:5: note: template<class _Tp, class _Alloc> bool std::operator==(const std::list<_Tp, _Alloc>&, const std::list<_Tp, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_list.h:1574:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::list<_Tp, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/deque:65:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_format.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/replace.hpp:22,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:25,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_deque.h:248:5: note: template<class _Tp, class _Ref, class _Ptr> bool std::operator==(const std::_Deque_iterator<_Tp, _Ref, _Ptr>&, const std::_Deque_iterator<_Tp, _Ref, _Ptr>&)
+/usr/include/c++/4.7/bits/stl_deque.h:248:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::_Deque_iterator<_Tp, _Ref, _Ptr>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/deque:65:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_format.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/replace.hpp:22,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:25,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_deque.h:255:5: note: template<class _Tp, class _RefL, class _PtrL, class _RefR, class _PtrR> bool std::operator==(const std::_Deque_iterator<_Tp, _Ref, _Ptr>&, const std::_Deque_iterator<_Tp, _RefR, _PtrR>&)
+/usr/include/c++/4.7/bits/stl_deque.h:255:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::_Deque_iterator<_Tp, _Ref, _Ptr>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/deque:65:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_format.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/replace.hpp:22,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:25,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_deque.h:1929:5: note: template<class _Tp, class _Alloc> bool std::operator==(const std::deque<_Tp, _Alloc>&, const std::deque<_Tp, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_deque.h:1929:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const std::deque<_Tp, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:63:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:97,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9> void boost::operator==(const boost::function10<R, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>&, const boost::function10<R, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function10<R, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:58:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:92,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8> void boost::operator==(const boost::function9<R, T0, T1, T2, T3, T4, T5, T6, T7, T8>&, const boost::function9<R, T0, T1, T2, T3, T4, T5, T6, T7, T8>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function9<R, T0, T1, T2, T3, T4, T5, T6, T7, T8>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:53:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:87,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7> void boost::operator==(const boost::function8<R, T0, T1, T2, T3, T4, T5, T6, T7>&, const boost::function8<R, T0, T1, T2, T3, T4, T5, T6, T7>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function8<R, T0, T1, T2, T3, T4, T5, T6, T7>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:48:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:82,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5, class T6> void boost::operator==(const boost::function7<R, T0, T1, T2, T3, T4, T5, T6>&, const boost::function7<R, T0, T1, T2, T3, T4, T5, T6>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function7<R, T0, T1, T2, T3, T4, T5, T6>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:43:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:77,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5> void boost::operator==(const boost::function6<R, T0, T1, T2, T3, T4, T5>&, const boost::function6<R, T0, T1, T2, T3, T4, T5>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function6<R, T0, T1, T2, T3, T4, T5>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:38:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:72,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4> void boost::operator==(const boost::function5<R, T0, T1, T2, T3, T4>&, const boost::function5<R, T0, T1, T2, T3, T4>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function5<R, T0, T1, T2, T3, T4>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:33:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:67,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3> void boost::operator==(const boost::function4<R, T0, T1, T2, T3>&, const boost::function4<R, T0, T1, T2, T3>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function4<R, T0, T1, T2, T3>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:28:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:62,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2> void boost::operator==(const boost::function3<R, T0, T1, T2>&, const boost::function3<R, T0, T1, T2>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function3<R, T0, T1, T2>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:23:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:57,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1> void boost::operator==(const boost::function2<R, T0, T1>&, const boost::function2<R, T0, T1>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function2<R, T0, T1>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:18:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:52,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0> void boost::operator==(const boost::function1<R, T0>&, const boost::function1<R, T0>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function1<R, T0>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:13:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:47,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R> void boost::operator==(const boost::function0<R>&, const boost::function0<R>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::function0<R>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:846:3: note: template<class Functor> typename boost::enable_if_c<boost::type_traits::ice_not<boost::is_integral<T>::value>::value, bool>::type boost::operator==(boost::reference_wrapper<T>, const boost::function_base&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:846:3: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘boost::reference_wrapper<T>’ and ‘long unsigned int’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:837:3: note: template<class Functor> typename boost::enable_if_c<boost::type_traits::ice_not<boost::is_integral<T>::value>::value, bool>::type boost::operator==(const boost::function_base&, boost::reference_wrapper<T>)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:837:3: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘const boost::function_base&’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:809:3: note: template<class Functor> typename boost::enable_if_c<boost::type_traits::ice_not<boost::is_integral<T>::value>::value, bool>::type boost::operator==(Functor, const boost::function_base&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:809:3: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   cannot convert ‘(& structure)->std::basic_string<_CharT, _Traits, _Alloc>::end<char, std::char_traits<char>, std::allocator<char> >()’ (type ‘std::basic_string<char>::iterator {aka __gnu_cxx::__normal_iterator<char*, std::basic_string<char> >}’) to type ‘const boost::function_base&’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:800:3: note: template<class Functor> typename boost::enable_if_c<boost::type_traits::ice_not<boost::is_integral<T>::value>::value, bool>::type boost::operator==(const boost::function_base&, Functor)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:800:3: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘const boost::function_base&’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:750:13: note: bool boost::operator==(boost::detail::function::useless_clear_type*, const boost::function_base&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:750:13: note:   no known conversion for argument 2 from ‘std::basic_string<char>::iterator {aka __gnu_cxx::__normal_iterator<char*, std::basic_string<char> >}’ to ‘const boost::function_base&’
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:738:13: note: bool boost::operator==(const boost::function_base&, boost::detail::function::useless_clear_type*)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:738:13: note:   no known conversion for argument 1 from ‘size_t {aka long unsigned int}’ to ‘const boost::function_base&’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:19:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:639:9: note: template<class IteratorT, class ForwardRange> typename boost::enable_if<boost::mpl::not_<boost::is_base_and_derived<boost::iterator_range_detail::iterator_range_tag, ForwardRange> >, bool>::type boost::operator==(const boost::iterator_range<IteratorT>&, const ForwardRange&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:639:9: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::iterator_range<IteratorT>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:19:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:629:9: note: template<class Iterator1T, class Iterator2T> bool boost::operator==(const boost::iterator_range<IteratorT>&, const boost::iterator_range<Iterator2T>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:629:9: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::iterator_range<IteratorT>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:19:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:570:9: note: template<class IteratorT, class ForwardRange> typename boost::enable_if<boost::mpl::not_<boost::is_base_and_derived<boost::iterator_range_detail::iterator_range_tag, ForwardRange> >, bool>::type boost::operator==(const ForwardRange&, const boost::iterator_range<IteratorT>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:570:9: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   ‘std::basic_string<char>::iterator {aka __gnu_cxx::__normal_iterator<char*, std::basic_string<char> >}’ is not derived from ‘const boost::iterator_range<IteratorT>’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/serialization/array.hpp:30:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/array.hpp:342:10: note: template<class T, long unsigned int N> bool boost::operator==(const boost::array<T, N>&, const boost::array<T, N>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/array.hpp:342:10: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const boost::array<T, N>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/x86_64-linux-gnu/c++/4.7/./bits/c++allocator.h:34:0,
+                 from /usr/include/c++/4.7/bits/allocator.h:48,
+                 from /usr/include/c++/4.7/string:43,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/ext/new_allocator.h:129:5: note: template<class _Tp> bool __gnu_cxx::operator==(const __gnu_cxx::new_allocator<_Tp>&, const __gnu_cxx::new_allocator<_Tp>&)
+/usr/include/c++/4.7/ext/new_allocator.h:129:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const __gnu_cxx::new_allocator<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:813:5: note: template<class _Iterator, class _Container> bool __gnu_cxx::operator==(const __gnu_cxx::__normal_iterator<_Iterator, _Container>&, const __gnu_cxx::__normal_iterator<_Iterator, _Container>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:813:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const __gnu_cxx::__normal_iterator<_Iterator, _Container>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:807:5: note: template<class _IteratorL, class _IteratorR, class _Container> bool __gnu_cxx::operator==(const __gnu_cxx::__normal_iterator<_IteratorL, _Container>&, const __gnu_cxx::__normal_iterator<_IteratorR, _Container>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:807:5: note:   template argument deduction/substitution failed:
+structure.cpp:222:30: note:   mismatched types ‘const __gnu_cxx::__normal_iterator<_IteratorL, _Container>’ and ‘size_t {aka long unsigned int}’
+structure.cpp:243:29: error: no match for ‘operator==’ in ‘found == (& structure)->std::basic_string<_CharT, _Traits, _Alloc>::end<char, std::char_traits<char>, std::allocator<char> >()’
+structure.cpp:243:29: note: candidates are:
+In file included from /usr/include/c++/4.7/iosfwd:42:0,
+                 from /usr/include/c++/4.7/ios:39,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/postypes.h:218:5: note: template<class _StateT> bool std::operator==(const std::fpos<_StateT>&, const std::fpos<_StateT>&)
+/usr/include/c++/4.7/bits/postypes.h:218:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::fpos<_StateT>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:65:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_pair.h:206:5: note: template<class _T1, class _T2> constexpr bool std::operator==(const std::pair<_T1, _T2>&, const std::pair<_T1, _T2>&)
+/usr/include/c++/4.7/bits/stl_pair.h:206:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::pair<_T1, _T2>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:293:5: note: template<class _Iterator> bool std::operator==(const std::reverse_iterator<_Iterator>&, const std::reverse_iterator<_Iterator>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:293:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::reverse_iterator<_Iterator>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:343:5: note: template<class _IteratorL, class _IteratorR> bool std::operator==(const std::reverse_iterator<_Iterator>&, const std::reverse_iterator<_IteratorR>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:343:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::reverse_iterator<_Iterator>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:1033:5: note: template<class _IteratorL, class _IteratorR> bool std::operator==(const std::move_iterator<_Iterator>&, const std::move_iterator<_IteratorR>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:1033:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::move_iterator<_Iterator>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:1039:5: note: template<class _Iterator> bool std::operator==(const std::move_iterator<_Iterator>&, const std::move_iterator<_Iterator>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:1039:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::move_iterator<_Iterator>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:43:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/allocator.h:119:5: note: template<class _T1, class _T2> bool std::operator==(const std::allocator<_CharT>&, const std::allocator<_T2>&)
+/usr/include/c++/4.7/bits/allocator.h:119:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::allocator<_CharT>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:43:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/allocator.h:124:5: note: template<class _Tp> bool std::operator==(const std::allocator<_CharT>&, const std::allocator<_CharT>&)
+/usr/include/c++/4.7/bits/allocator.h:124:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::allocator<_CharT>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:54:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/basic_string.h:2483:5: note: template<class _CharT, class _Traits, class _Alloc> bool std::operator==(const std::basic_string<_CharT, _Traits, _Alloc>&, const std::basic_string<_CharT, _Traits, _Alloc>&)
+/usr/include/c++/4.7/bits/basic_string.h:2483:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::basic_string<_CharT, _Traits, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:54:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/basic_string.h:2490:5: note: template<class _CharT> typename __gnu_cxx::__enable_if<std::__is_char<_Tp>::__value, bool>::__type std::operator==(const std::basic_string<_CharT>&, const std::basic_string<_CharT>&)
+/usr/include/c++/4.7/bits/basic_string.h:2490:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::basic_string<_CharT>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/string:54:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/basic_string.h:2504:5: note: template<class _CharT, class _Traits, class _Alloc> bool std::operator==(const _CharT*, const std::basic_string<_CharT, _Traits, _Alloc>&)
+/usr/include/c++/4.7/bits/basic_string.h:2504:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const _CharT*’ and ‘long unsigned int’
+In file included from /usr/include/c++/4.7/string:54:0,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/basic_string.h:2516:5: note: template<class _CharT, class _Traits, class _Alloc> bool std::operator==(const std::basic_string<_CharT, _Traits, _Alloc>&, const _CharT*)
+/usr/include/c++/4.7/bits/basic_string.h:2516:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::basic_string<_CharT, _Traits, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/locale_facets.h:50:0,
+                 from /usr/include/c++/4.7/bits/basic_ios.h:39,
+                 from /usr/include/c++/4.7/ios:45,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/streambuf_iterator.h:206:5: note: template<class _CharT, class _Traits> bool std::operator==(const std::istreambuf_iterator<_CharT, _Traits>&, const std::istreambuf_iterator<_CharT, _Traits>&)
+/usr/include/c++/4.7/bits/streambuf_iterator.h:206:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::istreambuf_iterator<_CharT, _Traits>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/vector:65:0,
+                 from ../include/utility.h:6,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_vector.h:1370:5: note: template<class _Tp, class _Alloc> bool std::operator==(const std::vector<_Tp, _Alloc>&, const std::vector<_Tp, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_vector.h:1370:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::vector<_Tp, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/set:60:0,
+                 from ../include/utility.h:7,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_tree.h:309:5: note: template<class _Val> bool std::operator==(const std::_Rb_tree_iterator<_Tp>&, const std::_Rb_tree_const_iterator<_Val>&)
+/usr/include/c++/4.7/bits/stl_tree.h:309:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::_Rb_tree_iterator<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/set:60:0,
+                 from ../include/utility.h:7,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_tree.h:863:5: note: template<class _Key, class _Val, class _KeyOfValue, class _Compare, class _Alloc> bool std::operator==(const std::_Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>&, const std::_Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_tree.h:863:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::_Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/set:61:0,
+                 from ../include/utility.h:7,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_set.h:704:5: note: template<class _Key, class _Compare, class _Alloc> bool std::operator==(const std::set<_Key, _Compare, _Alloc>&, const std::set<_Key, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_set.h:704:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::set<_Key, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/set:62:0,
+                 from ../include/utility.h:7,
+                 from structure.cpp:6:
+/usr/include/c++/4.7/bits/stl_multiset.h:685:5: note: template<class _Key, class _Compare, class _Alloc> bool std::operator==(const std::multiset<_Key, _Compare, _Alloc>&, const std::multiset<_Key, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_multiset.h:685:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::multiset<_Key, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/map:61:0,
+                 from ../include/sequence.h:10,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/stl_map.h:889:5: note: template<class _Key, class _Tp, class _Compare, class _Alloc> bool std::operator==(const std::map<_Key, _Tp, _Compare, _Alloc>&, const std::map<_Key, _Tp, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_map.h:889:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::map<_Key, _Tp, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/map:62:0,
+                 from ../include/sequence.h:10,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/stl_multimap.h:805:5: note: template<class _Key, class _Tp, class _Compare, class _Alloc> bool std::operator==(const std::multimap<_Key, _Tp, _Compare, _Alloc>&, const std::multimap<_Key, _Tp, _Compare, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_multimap.h:805:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::multimap<_Key, _Tp, _Compare, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from ../include/sequence.h:12:0,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/array:204:5: note: template<class _Tp, long unsigned int _Nm> bool std::operator==(const std::array<_Tp, _Nm>&, const std::array<_Tp, _Nm>&)
+/usr/include/c++/4.7/array:204:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::array<_Tp, _Nm>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/random:51:0,
+                 from /usr/include/c++/4.7/bits/stl_algo.h:67,
+                 from /usr/include/c++/4.7/algorithm:63,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:16,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/random.tcc:1713:5: note: template<class _RealType1> bool std::operator==(const std::normal_distribution<_RealType>&, const std::normal_distribution<_RealType>&)
+/usr/include/c++/4.7/bits/random.tcc:1713:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::normal_distribution<_RealType>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/functional:56:0,
+                 from /usr/include/c++/4.7/bits/stl_algo.h:68,
+                 from /usr/include/c++/4.7/algorithm:63,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:16,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/tuple:797:5: note: template<class ... _TElements, class ... _UElements> bool std::operator==(const std::tuple<_Elements ...>&, const std::tuple<_Elements ...>&)
+/usr/include/c++/4.7/tuple:797:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::tuple<_Elements ...>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algo.h:68:0,
+                 from /usr/include/c++/4.7/algorithm:63,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:16,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/functional:2376:5: note: template<class _Res, class ... _Args> bool std::operator==(const std::function<_Res(_ArgTypes ...)>&, std::nullptr_t)
+/usr/include/c++/4.7/functional:2376:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::function<_Res(_ArgTypes ...)>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algo.h:68:0,
+                 from /usr/include/c++/4.7/algorithm:63,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:16,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/functional:2382:5: note: template<class _Res, class ... _Args> bool std::operator==(std::nullptr_t, const std::function<_Res(_ArgTypes ...)>&)
+/usr/include/c++/4.7/functional:2382:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘std::nullptr_t’
+In file included from /usr/include/c++/4.7/iterator:66:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/detail/iterator.hpp:11,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/array.hpp:48,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/serialization/array.hpp:30,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/stream_iterator.h:130:5: note: template<class _Tp, class _CharT, class _Traits, class _Dist> bool std::operator==(const std::istream_iterator<_Tp, _CharT, _Traits, _Dist>&, const std::istream_iterator<_Tp, _CharT, _Traits, _Dist>&)
+/usr/include/c++/4.7/bits/stream_iterator.h:130:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::istream_iterator<_Tp, _CharT, _Traits, _Dist>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:86:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/unique_ptr.h:446:5: note: template<class _Tp, class _Dp, class _Up, class _Ep> bool std::operator==(const std::unique_ptr<_Tp, _Dp>&, const std::unique_ptr<_Up, _Ep>&)
+/usr/include/c++/4.7/bits/unique_ptr.h:446:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::unique_ptr<_Tp, _Dp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:86:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/unique_ptr.h:452:5: note: template<class _Tp, class _Dp> bool std::operator==(const std::unique_ptr<_Tp, _Dp>&, std::nullptr_t)
+/usr/include/c++/4.7/bits/unique_ptr.h:452:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::unique_ptr<_Tp, _Dp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:86:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/unique_ptr.h:457:5: note: template<class _Tp, class _Dp> bool std::operator==(std::nullptr_t, const std::unique_ptr<_Tp, _Dp>&)
+/usr/include/c++/4.7/bits/unique_ptr.h:457:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘std::nullptr_t’
+In file included from /usr/include/c++/4.7/bits/shared_ptr.h:52:0,
+                 from /usr/include/c++/4.7/memory:87,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1069:5: note: template<class _Tp1, class _Tp2, __gnu_cxx::_Lock_policy _Lp> bool std::operator==(const std::__shared_ptr<_Tp1, _Lp>&, const std::__shared_ptr<_Tp2, _Lp>&)
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1069:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::__shared_ptr<_Tp1, _Lp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/shared_ptr.h:52:0,
+                 from /usr/include/c++/4.7/memory:87,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1075:5: note: template<class _Tp, __gnu_cxx::_Lock_policy _Lp> bool std::operator==(const std::__shared_ptr<_Tp, _Lp>&, std::nullptr_t)
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1075:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::__shared_ptr<_Tp, _Lp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/shared_ptr.h:52:0,
+                 from /usr/include/c++/4.7/memory:87,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1080:5: note: template<class _Tp, __gnu_cxx::_Lock_policy _Lp> bool std::operator==(std::nullptr_t, const std::__shared_ptr<_Tp, _Lp>&)
+/usr/include/c++/4.7/bits/shared_ptr_base.h:1080:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘std::nullptr_t’
+In file included from /usr/include/c++/4.7/memory:87:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr.h:328:5: note: template<class _Tp1, class _Tp2> bool std::operator==(const std::shared_ptr<_Tp1>&, const std::shared_ptr<_Tp2>&)
+/usr/include/c++/4.7/bits/shared_ptr.h:328:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::shared_ptr<_Tp1>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:87:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr.h:334:5: note: template<class _Tp> bool std::operator==(const std::shared_ptr<_Tp1>&, std::nullptr_t)
+/usr/include/c++/4.7/bits/shared_ptr.h:334:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::shared_ptr<_Tp1>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/memory:87:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/fwd.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/detail/config.hpp:299,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/exception.hpp:19,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:25,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/bits/shared_ptr.h:339:5: note: template<class _Tp> bool std::operator==(std::nullptr_t, const std::shared_ptr<_Tp1>&)
+/usr/include/c++/4.7/bits/shared_ptr.h:339:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘std::nullptr_t’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/traits.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:26,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/complex:451:5: note: template<class _Tp> constexpr bool std::operator==(const std::complex<_Tp>&, const std::complex<_Tp>&)
+/usr/include/c++/4.7/complex:451:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::complex<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/traits.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:26,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/complex:456:5: note: template<class _Tp> constexpr bool std::operator==(const std::complex<_Tp>&, const _Tp&)
+/usr/include/c++/4.7/complex:456:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::complex<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/traits.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:26,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/usr/include/c++/4.7/complex:461:5: note: template<class _Tp> constexpr bool std::operator==(const _Tp&, const std::complex<_Tp>&)
+/usr/include/c++/4.7/complex:461:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   ‘std::basic_string<char>::iterator {aka __gnu_cxx::__normal_iterator<char*, std::basic_string<char> >}’ is not derived from ‘const std::complex<_Tp>’
+In file included from /usr/include/c++/4.7/list:64:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/std/list_traits.hpp:15,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/std_containers_traits.hpp:20,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:18,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_list.h:277:5: note: template<class _Val> bool std::operator==(const std::_List_iterator<_Tp>&, const std::_List_const_iterator<_Val>&)
+/usr/include/c++/4.7/bits/stl_list.h:277:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::_List_iterator<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/list:64:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/std/list_traits.hpp:15,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/std_containers_traits.hpp:20,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:18,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_list.h:1574:5: note: template<class _Tp, class _Alloc> bool std::operator==(const std::list<_Tp, _Alloc>&, const std::list<_Tp, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_list.h:1574:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::list<_Tp, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/deque:65:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_format.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/replace.hpp:22,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:25,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_deque.h:248:5: note: template<class _Tp, class _Ref, class _Ptr> bool std::operator==(const std::_Deque_iterator<_Tp, _Ref, _Ptr>&, const std::_Deque_iterator<_Tp, _Ref, _Ptr>&)
+/usr/include/c++/4.7/bits/stl_deque.h:248:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::_Deque_iterator<_Tp, _Ref, _Ptr>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/deque:65:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_format.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/replace.hpp:22,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:25,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_deque.h:255:5: note: template<class _Tp, class _RefL, class _PtrL, class _RefR, class _PtrR> bool std::operator==(const std::_Deque_iterator<_Tp, _Ref, _Ptr>&, const std::_Deque_iterator<_Tp, _RefR, _PtrR>&)
+/usr/include/c++/4.7/bits/stl_deque.h:255:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::_Deque_iterator<_Tp, _Ref, _Ptr>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/deque:65:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_format.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/replace.hpp:22,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string.hpp:25,
+                 from structure.cpp:13:
+/usr/include/c++/4.7/bits/stl_deque.h:1929:5: note: template<class _Tp, class _Alloc> bool std::operator==(const std::deque<_Tp, _Alloc>&, const std::deque<_Tp, _Alloc>&)
+/usr/include/c++/4.7/bits/stl_deque.h:1929:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const std::deque<_Tp, _Alloc>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:63:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:97,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9> void boost::operator==(const boost::function10<R, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>&, const boost::function10<R, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function10<R, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:58:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:92,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8> void boost::operator==(const boost::function9<R, T0, T1, T2, T3, T4, T5, T6, T7, T8>&, const boost::function9<R, T0, T1, T2, T3, T4, T5, T6, T7, T8>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function9<R, T0, T1, T2, T3, T4, T5, T6, T7, T8>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:53:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:87,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7> void boost::operator==(const boost::function8<R, T0, T1, T2, T3, T4, T5, T6, T7>&, const boost::function8<R, T0, T1, T2, T3, T4, T5, T6, T7>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function8<R, T0, T1, T2, T3, T4, T5, T6, T7>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:48:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:82,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5, class T6> void boost::operator==(const boost::function7<R, T0, T1, T2, T3, T4, T5, T6>&, const boost::function7<R, T0, T1, T2, T3, T4, T5, T6>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function7<R, T0, T1, T2, T3, T4, T5, T6>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:43:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:77,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4, class T5> void boost::operator==(const boost::function6<R, T0, T1, T2, T3, T4, T5>&, const boost::function6<R, T0, T1, T2, T3, T4, T5>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function6<R, T0, T1, T2, T3, T4, T5>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:38:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:72,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3, class T4> void boost::operator==(const boost::function5<R, T0, T1, T2, T3, T4>&, const boost::function5<R, T0, T1, T2, T3, T4>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function5<R, T0, T1, T2, T3, T4>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:33:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:67,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2, class T3> void boost::operator==(const boost::function4<R, T0, T1, T2, T3>&, const boost::function4<R, T0, T1, T2, T3>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function4<R, T0, T1, T2, T3>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:28:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:62,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1, class T2> void boost::operator==(const boost::function3<R, T0, T1, T2>&, const boost::function3<R, T0, T1, T2>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function3<R, T0, T1, T2>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:23:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:57,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0, class T1> void boost::operator==(const boost::function2<R, T0, T1>&, const boost::function2<R, T0, T1>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function2<R, T0, T1>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:18:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:52,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R, class T0> void boost::operator==(const boost::function1<R, T0>&, const boost::function1<R, T0>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function1<R, T0>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/maybe_include.hpp:13:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/function_iterate.hpp:14,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/preprocessor/iteration/detail/iter/forward1.hpp:47,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:64,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note: template<class R> void boost::operator==(const boost::function0<R>&, const boost::function0<R>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_template.hpp:1026:8: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::function0<R>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:846:3: note: template<class Functor> typename boost::enable_if_c<boost::type_traits::ice_not<boost::is_integral<T>::value>::value, bool>::type boost::operator==(boost::reference_wrapper<T>, const boost::function_base&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:846:3: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘boost::reference_wrapper<T>’ and ‘long unsigned int’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:837:3: note: template<class Functor> typename boost::enable_if_c<boost::type_traits::ice_not<boost::is_integral<T>::value>::value, bool>::type boost::operator==(const boost::function_base&, boost::reference_wrapper<T>)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:837:3: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘const boost::function_base&’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:809:3: note: template<class Functor> typename boost::enable_if_c<boost::type_traits::ice_not<boost::is_integral<T>::value>::value, bool>::type boost::operator==(Functor, const boost::function_base&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:809:3: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   cannot convert ‘(& structure)->std::basic_string<_CharT, _Traits, _Alloc>::end<char, std::char_traits<char>, std::allocator<char> >()’ (type ‘std::basic_string<char>::iterator {aka __gnu_cxx::__normal_iterator<char*, std::basic_string<char> >}’) to type ‘const boost::function_base&’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:800:3: note: template<class Functor> typename boost::enable_if_c<boost::type_traits::ice_not<boost::is_integral<T>::value>::value, bool>::type boost::operator==(const boost::function_base&, Functor)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:800:3: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   cannot convert ‘found’ (type ‘size_t {aka long unsigned int}’) to type ‘const boost::function_base&’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/detail/prologue.hpp:17:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/detail/find_iterator.hpp:18,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/find_iterator.hpp:24,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:27,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:750:13: note: bool boost::operator==(boost::detail::function::useless_clear_type*, const boost::function_base&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:750:13: note:   no known conversion for argument 2 from ‘std::basic_string<char>::iterator {aka __gnu_cxx::__normal_iterator<char*, std::basic_string<char> >}’ to ‘const boost::function_base&’
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:738:13: note: bool boost::operator==(const boost::function_base&, boost::detail::function::useless_clear_type*)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/function/function_base.hpp:738:13: note:   no known conversion for argument 1 from ‘size_t {aka long unsigned int}’ to ‘const boost::function_base&’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:19:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:639:9: note: template<class IteratorT, class ForwardRange> typename boost::enable_if<boost::mpl::not_<boost::is_base_and_derived<boost::iterator_range_detail::iterator_range_tag, ForwardRange> >, bool>::type boost::operator==(const boost::iterator_range<IteratorT>&, const ForwardRange&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:639:9: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::iterator_range<IteratorT>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:19:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:629:9: note: template<class Iterator1T, class Iterator2T> bool boost::operator==(const boost::iterator_range<IteratorT>&, const boost::iterator_range<Iterator2T>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:629:9: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::iterator_range<IteratorT>’ and ‘size_t {aka long unsigned int}’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/iter_find.hpp:19:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/algorithm/string/split.hpp:16,
+                 from structure.cpp:12:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:570:9: note: template<class IteratorT, class ForwardRange> typename boost::enable_if<boost::mpl::not_<boost::is_base_and_derived<boost::iterator_range_detail::iterator_range_tag, ForwardRange> >, bool>::type boost::operator==(const ForwardRange&, const boost::iterator_range<IteratorT>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/range/iterator_range_core.hpp:570:9: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   ‘std::basic_string<char>::iterator {aka __gnu_cxx::__normal_iterator<char*, std::basic_string<char> >}’ is not derived from ‘const boost::iterator_range<IteratorT>’
+In file included from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/serialization/array.hpp:30:0,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/storage.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/vector.hpp:21,
+                 from /lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/numeric/ublas/matrix.hpp:18,
+                 from ../include/sequence.h:17,
+                 from ../include/structure.h:6,
+                 from structure.cpp:7:
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/array.hpp:342:10: note: template<class T, long unsigned int N> bool boost::operator==(const boost::array<T, N>&, const boost::array<T, N>&)
+/lab/bartel1_ata/wuxbl/lib/boost_1_57_0/boost/array.hpp:342:10: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const boost::array<T, N>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/x86_64-linux-gnu/c++/4.7/./bits/c++allocator.h:34:0,
+                 from /usr/include/c++/4.7/bits/allocator.h:48,
+                 from /usr/include/c++/4.7/string:43,
+                 from /usr/include/c++/4.7/bits/locale_classes.h:42,
+                 from /usr/include/c++/4.7/bits/ios_base.h:43,
+                 from /usr/include/c++/4.7/ios:43,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/ext/new_allocator.h:129:5: note: template<class _Tp> bool __gnu_cxx::operator==(const __gnu_cxx::new_allocator<_Tp>&, const __gnu_cxx::new_allocator<_Tp>&)
+/usr/include/c++/4.7/ext/new_allocator.h:129:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const __gnu_cxx::new_allocator<_Tp>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:813:5: note: template<class _Iterator, class _Container> bool __gnu_cxx::operator==(const __gnu_cxx::__normal_iterator<_Iterator, _Container>&, const __gnu_cxx::__normal_iterator<_Iterator, _Container>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:813:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const __gnu_cxx::__normal_iterator<_Iterator, _Container>’ and ‘size_t {aka long unsigned int}’
+In file included from /usr/include/c++/4.7/bits/stl_algobase.h:68:0,
+                 from /usr/include/c++/4.7/bits/char_traits.h:41,
+                 from /usr/include/c++/4.7/ios:41,
+                 from /usr/include/c++/4.7/istream:40,
+                 from /usr/include/c++/4.7/fstream:40,
+                 from structure.cpp:1:
+/usr/include/c++/4.7/bits/stl_iterator.h:807:5: note: template<class _IteratorL, class _IteratorR, class _Container> bool __gnu_cxx::operator==(const __gnu_cxx::__normal_iterator<_IteratorL, _Container>&, const __gnu_cxx::__normal_iterator<_IteratorR, _Container>&)
+/usr/include/c++/4.7/bits/stl_iterator.h:807:5: note:   template argument deduction/substitution failed:
+structure.cpp:243:29: note:   mismatched types ‘const __gnu_cxx::__normal_iterator<_IteratorL, _Container>’ and ‘size_t {aka long unsigned int}’
+make: *** [structure.o] Error 1

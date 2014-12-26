@@ -26,12 +26,14 @@ void help()
 	"    alignSW       Smith-waterman local sequence alignment\n"
 	"    PKA           Positional kmer analysis from aligned sequences\n"
 	"    PKA2          PKA with ranked or weighted sequences\n"
+	"    PKA2_predict  Score fasta sequences using a trained PKA2 model\n"
 	"\n"
 	"Interval analysis ======\n"
 	"    makeBigWig    Make bigWig file from bed or bam\n"
 	"    compareBigWig Compare two bigWig files to find enriched regions\n" // TODO: do binomial test or hypergenometric test using c++, also read bigwig file using c++
 	"    sampleBam     Randomly sample a fraction of reads from a Bam file\n"
 	"    pe2seBam      Convert paired-end Bam file to single-end\n"
+	"    bedLength     Total nucleotides length of intervals in a bed file\n"
 	"\n"	
 	"Text ===================\n"
 	"    intersectTab  Intersection/subtraction/merge between two tabular files based on a shared key column\n"
@@ -47,7 +49,7 @@ int main(int argc, char* argv[]) {
 
 	if (argc < 2) help();
 	
-	string valid_cmds = "geneFeature, geneSet, geneScore, PKA, PKA2, intersectTab, TopN, kShuffle, seqMatch, smithWaterman, makeBigWig, compareBigWig, sampleBam, pe2seBam, ";
+	string valid_cmds = "geneFeature, geneSet, geneScore, PKA, PKA2, PKA2_predict, intersectTab, TopN, kShuffle, seqMatch, smithWaterman, makeBigWig, compareBigWig, sampleBam, pe2seBam, bedLength, ";
 	
 	string cmd(argv[1]);
 	
