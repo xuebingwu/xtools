@@ -1,5 +1,5 @@
 #ifndef __STAT_H__
-#define __STAR_H__
+#define __STAT_H__
 
 #include <vector>
 #include <array>
@@ -7,6 +7,8 @@
 
 
 using namespace std;
+
+double p_value_for_z_score(double z);
 
 // only enrichment
 double binom_test(int trials,int success,double success_fraction);
@@ -30,7 +32,7 @@ T sum(vector<T> v)
 template<typename T>
 double mean(vector<T> v)
 {
-    return sum(v)/v.size();
+    return double(sum(v))/v.size();
 }
 
 template<typename T>

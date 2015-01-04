@@ -66,6 +66,47 @@ void pairwise_sequence_similarity_matrix(vector<string> seqs, string filename)
 
 // load weighted sequence file into two vectors: seqs and weights
 // the first three columns should be: id, seq, weight (tab-delimited)
+// if cWeight < 0, load unweighted sequences
+void load_sequences_from_tabular(string filename, vector<string> &seqs, vector<double> &weights,int skip/*=0*/, int cSeq/*=1*/, int cWeight/*=2*/) {
+	// minimum number of columns in input
+	int nCol = max(cSeq,cWeight)+1;
+	
+	ifstream fin;
+	fin.open(filename.c_str());
+
+    string line;
+    vector<string> flds;
+
+	// skip header lines
+	int i=0;
+	while(i<skip) getline(fin,line);
+	
+    while(fin)
+    {
+        getline(fin,line);
+        if (line.length() == 0)
+            continue;
+
+        flds = string_split(line,"\t");
+		if (flds.size() < nCol) message("too few columns in line: "+line);
+		else
+		{
+			seqs.push_back(flds[cSeq]);
+			if (cWeight>=0) weights.push_back(stof(flds[cWeight]));
+		}
+	}
+	fin.close();
+}
+
+map<string,string> vector2map(vector<string> seqs)
+{
+	map<string,string> res;
+	for (int i=0;i<seqs.size();i++) res[to_string(i)] = seqs[i];
+	return res;
+}
+
+// load weighted sequence file into two vectors: seqs and weights
+// the first three columns should be: id, seq, weight (tab-delimited)
 void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, vector<double> &weights,int skip/*=0*/, int cSeq/*=1*/, int cWeight/*=2*/) {
 	// minimum number of columns in input
 	int nCol = max(cSeq,cWeight)+1;
@@ -143,19 +184,40 @@ vector<string> load_ranked_sequences_to_vectors(string filename, int skip/*=0*/,
 	return seqs;
 }
 
+// remove sequences with size differ from lSeq
+// if lSeq = 0 (default), use the length of the first 
+vector<int> filter_sequences_by_size(vector<string> &seqs, int lSeq/*=0*/)
+{
+	vector<int> removed;
+	
+	if (lSeq == 0) lSeq = seqs[0].size();
+	
+	for(int i=seqs.size()-1;i>=0;i--)
+	{
+		if(seqs[i].size() != lSeq)
+		{
+			seqs.erase(seqs.begin()+i);
+			removed.push_back(i);
+		}
+	}
+	return removed;
+}
+
 
 // find significant positional kmer from ranked sequences
 // use non-parametric U test
 // input: a vector of ranked sequence with the same length, only ACGT 
-array<int,2> find_significant_kmer_from_ranked_sequences(
+int find_significant_kmer_from_ranked_sequences(
 	vector<string> seqs, 
 	vector<string> kmers, 
 	string outfile, 
 	int nTest, 
 	double pCutoff/*=0.05*/, 
-	double pCutoff_B/*=0.05*/, 
-	int shift/*=0*/, 
-	int startPos/*=0*/ )
+	bool Bonferroni/*=true*/,
+	int min_shift/*=0*/, 
+	int max_shift/*=0*/,
+	int startPos/*=0*/,
+	int minCount/*=5*/ )
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -164,7 +226,7 @@ array<int,2> find_significant_kmer_from_ranked_sequences(
 	//message(to_string(lSeq)+" length");
 	
 	// the number of significant positional kmers found
-	array<int,2> nSig = {0,0};
+	int nSig = 0;
 		
 	// a map defining IUPAC degenerate nucletodes
 	map<char,string> define_iupac = define_IUPAC();
@@ -180,56 +242,62 @@ array<int,2> find_significant_kmer_from_ranked_sequences(
 		//cout << kmers[i] << endl;
         vector<string> exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
 		int k = kmers[i].size();
-		for( int pos=0; pos < lSeq-k+1; pos ++) // at each position
+		for (int shift = min_shift; shift <= max_shift; shift ++)
 		{
-			// ranks of sequences with this kmer at this position
-			vector<int> ranks;
-			// for each sequence, 
-			for( int j=0;j<nSeq;j++) 
+			for( int pos=0; pos < lSeq-k+1; pos ++) // at each position
 			{
-				//find if any of the expanded kmer is present at position pos
-				for( int n=0;n<exp_kmers.size();n++)
+				// ranks of sequences with this kmer at this position
+				vector<int> ranks;
+				// for each sequence, 
+				for( int j=0;j<nSeq;j++) 
 				{
-					/* speed not affected by shift */
-					size_t found = seqs[j].substr(pos,k+shift).find(exp_kmers[n]); // if found any kmer allowing shift 
-					if (found!=std::string::npos)
+					//find if any of the expanded kmer is present at position pos
+					for( int n=0;n<exp_kmers.size();n++)
 					{
-						// add this sequence's rank to sample 1
-						ranks.push_back(j);
-						// stop looking for the next expanded kmer in the same sequence, continue to the next sequence
-						break;
-					} /**/
-					// another implementation, slower, linear with shift
-					/*
-					bool found = false;
-					for(int s=0;s<=shift;s++)
-					{
-						if(seqs[j].substr(pos+s,k) == exp_kmers[n]) 
+						/* speed not affected by shift */
+						size_t found = seqs[j].substr(pos,k+shift).find(exp_kmers[n]); // if found any kmer allowing shift 
+						if (found!=std::string::npos)
 						{
+							// add this sequence's rank to sample 1
 							ranks.push_back(j);
-							//cout << exp_kmers[n] <<","<< seqs[j].substr(pos+s,k) << endl;
-							found = true;
+							// stop looking for the next expanded kmer in the same sequence, continue to the next sequence
 							break;
+						} /**/
+						// another implementation, slower, linear with shift
+						/*
+						bool found = false;
+						for(int s=0;s<=shift;s++)
+						{
+							if(seqs[j].substr(pos+s,k) == exp_kmers[n]) 
+							{
+								ranks.push_back(j);
+								//cout << exp_kmers[n] <<","<< seqs[j].substr(pos+s,k) << endl;
+								found = true;
+								break;
+							}
 						}
+						if (found) break;
+						*/
 					}
-					if (found) break;
-					*/
 				}
-			}
-			// now ranks includes ranks of all sequences containing kmer i at position pos
-			// if less than 3 sequence contain this kmer, or less than 3 sequence don't have this kmer,
-			// just go on to the next position
-			if (ranks.size() < 3 || ranks.size() > nSeq-3 ) 
-			{
-				continue;
-			}
-			array<double,2> utest = Mann_Whitney_U_test(ranks, nSeq);
-			if (utest[1] < pCutoff)
-			{
-				nSig[0] ++;
-				double pB = min(1.0,utest[1]*nTest);
-				if (pB < pCutoff_B) nSig[1]++;
-	            outstream << kmers[i] << "\t" << pos-startPos << "\t" << k+shift << "\t" << utest[0] << "\t" << -log10(utest[1]) << "\t" << -log10(pB) << endl;
+				// now ranks includes ranks of all sequences containing kmer i at position pos
+				// if less than 3 sequence contain this kmer, or less than 3 sequence don't have this kmer,
+				// just go on to the next position
+				if (ranks.size() < minCount || ranks.size() > nSeq-minCount ) 
+				{
+					continue;
+				}
+				//cout << kmers[i] << "\t" << pos << "\t" << ranks.size() << endl;
+				array<double,2> utest = Mann_Whitney_U_test(ranks, nSeq);
+				if (utest[1] < pCutoff)
+				{
+					double pB = min(1.0,utest[1]*nTest);
+					if (Bonferroni && pB > pCutoff) continue;
+					nSig ++;
+					int position = pos-startPos+2;
+					if (position < 1) position -= 1;
+		            outstream << kmers[i] << "\t" << position  << "\t" << shift << "\t" << utest[0] << "\t" << -log10(utest[1]) << "\t" << -log10(pB) << endl;
+				}
 			}
 		}
 	}
@@ -241,17 +309,18 @@ array<int,2> find_significant_kmer_from_ranked_sequences(
 // use t-test
 // input: a vector of weighted sequence with the same length, only ACGT 
 // 
-array<int,2> find_significant_kmer_from_weighted_sequences(
+int find_significant_kmer_from_weighted_sequences(
 	vector<string> seqs,
 	vector<double> weights, 
 	vector<string> kmers, 
 	string outfile, 
 	int nTest, 
 	double pCutoff/*=0.05*/, 
-	double pCutoff_B/*=0.05*/,
-	int shift_min/*=0*/, 
-	int shift_max/*=2*/,
-	int startPos/*=0*/) 
+	bool Bonferroni/*=true*/,
+	int min_shift/*=0*/, 
+	int max_shift/*=2*/,
+	int startPos/*=0*/,
+	int minCount/*=5*/) 
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -260,7 +329,7 @@ array<int,2> find_significant_kmer_from_weighted_sequences(
 	//message(to_string(lSeq)+" length");
 	
 	// the number of significant positional kmers found
-	array<int,2> nSig = {0,0};
+	int nSig = 0;
 		
 	// a map defining IUPAC degenerate nucletodes
 	map<char,string> define_iupac = define_IUPAC();
@@ -275,7 +344,7 @@ array<int,2> find_significant_kmer_from_weighted_sequences(
 		// expand a degenerate kmer to all possible element/exact kmers		
         vector<string> exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
 		int k = kmers[i].size();
-		for (int shift = shift_min; shift <= shift_max; shift ++)
+		for (int shift = min_shift; shift <= max_shift; shift ++)
 		{
 			for( int pos=0; pos < lSeq-k+1; pos ++) // at each position
 			{
@@ -320,20 +389,126 @@ array<int,2> find_significant_kmer_from_weighted_sequences(
 				// if less than 3 sequences with/without this kmer, just go on to the next position
 				// in such cases the kmer is unlikely to be significant
 				// also the t.test will not work well. it requires at least 2 data points in each sample
-				if (weights1.size() < 3 || weights2.size() < 3 ) 
+				if (weights1.size() < minCount || weights2.size() < minCount ) 
 				{
 					continue;
 				}
 				array<double,6> ttest = t_test(weights1,weights2,false);
 				if (ttest[1] < pCutoff)
 				{
-					nSig[0]++;
 					// Bonferoni correction
 					double pB = min(1.0,ttest[1]*nTest);
-					if(pB < pCutoff_B) nSig[1]++;
-		            outstream << kmers[i] << "\t" << pos-startPos << "\t" << shift+k << "\t" << ttest[0] << "\t" << -log10(ttest[1]) << "\t" << -log10(pB) << "\t" << weights1.size() << "\t" << ttest[2] << "\t" << ttest[3] << "\t" << weights2.size() << "\t" << ttest[4] << "\t"  << ttest[5] << endl;
+					if (Bonferroni && pB > pCutoff) continue;
+					nSig ++;
+					int position = pos-startPos+2;
+					if (position < 1) position -= 1;
+		            outstream << kmers[i] << "\t" << position << "\t" << shift << "\t" << ttest[0] << "\t" << -log10(ttest[1]) << "\t" << -log10(pB) << "\t" << weights1.size() << "\t" << ttest[2] << "\t" << ttest[3] << "\t" << weights2.size() << "\t" << ttest[4] << "\t"  << ttest[5] << endl;
 				}
 			}
+		}
+	}
+
+    return nSig;
+} // end of function
+
+
+// only calculate local enrichment, no need for backgrounintd
+int find_significant_degenerate_shift_kmer_from_one_set_unweighted_sequences(
+	vector<string> seqs,
+	vector<string> kmers, 
+	string outfile, 
+	int nTest, 
+	double pCutoff/*=0.05*/, 
+	bool Bonferroni/*=true*/,
+	int min_shift/*=0*/, 
+	int max_shift/*=2*/,
+	int startPos/*=0*/,
+	int minCount/*=5*/) 
+{
+    int nSeq = seqs.size();		// total number of sequences
+	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
+	
+	//message(to_string(nSeq)+" sequences");
+	//message(to_string(lSeq)+" length");
+	
+	// the number of significant positional kmers found
+	int nSig = 0;
+		
+	// a map defining IUPAC degenerate nucletodes
+	map<char,string> define_iupac = define_IUPAC();
+
+	// will output found significant positional kmers
+	ofstream outstream;
+	outstream.open(outfile.c_str());
+
+	// start of kmer counting and test
+	for( int i=0; i<kmers.size();i++) // for each kmer
+	{
+		// expand a degenerate kmer to all possible element/exact kmers		
+        vector<string> exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
+		int k = kmers[i].size();
+		for (int shift = min_shift; shift <= max_shift; shift ++)
+		{
+			vector<int> counts = {};
+			for( int pos=0; pos < lSeq-k+1; pos ++) // at each position
+			{
+				int n1 = 0;
+					// for each sequence, 
+				for( int j=0;j<nSeq;j++) 
+				{
+					//debug cout << "seq " << j << endl;
+					//find if any of the expanded kmer is present at position pos
+					for( int n=0;n<exp_kmers.size();n++)
+					{
+						//debug cout << "exact kmer: " << exp_kmers[n] << endl;
+						/* speed not affected by shift */
+						size_t found = seqs[j].substr(pos,k+shift).find(exp_kmers[n]); // if found any kmer allowing shift 
+						if (found!=std::string::npos)
+						{
+							// add this sequence's rank to sample 1
+							//weights1.push_back(weights[j]);
+							// stop looking for the next expanded kmer in the same sequence, continue to the next sequence
+							n1 ++ ; 
+							break;
+						} /**/
+					}
+				}
+				counts.push_back(n1);
+			}
+			
+	        int total_counts = sum(counts);
+			
+			double expected = double(total_counts)/counts.size();
+			
+			// calculate background f2
+			double f2 = expected / nSeq;
+			
+			//double sigma = sd(counts) / nSeq;
+			for(int x=0;x<counts.size();x++)
+			{
+				if (counts[x] < minCount || counts[x] > nSeq - minCount) continue;
+				//double f1 = float(counts[x])/nSeq;
+				//double z = (f1 - f2)/sigma;
+				//double p = p_value_for_z_score(z);
+				double p = binom_test(nSeq,counts[x],f2);
+
+	            if (p < pCutoff)
+	            {					
+					if(p == 0) p = 1e-16;
+
+	                double corrected_p = min(1.0,p*nTest);	
+					if (Bonferroni && corrected_p > pCutoff) continue;
+					
+	                nSig++;
+					double f1 = float(counts[x])/nSeq;
+	                double z = (counts[x] - expected) / sqrt(expected*(1-f2));
+	                double local_r = f1/f2;
+					int position = x-startPos+2;
+					if (position < 1) position -= 1;
+	                outstream << kmers[i] << "\t" << position << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << local_r << "\t"  << local_r << endl;
+	            }
+			}
+			
 		}
 	}
 
@@ -372,15 +547,16 @@ int min_shift
 	
 
 // pairwise
-array<int,2> find_significant_pairs_from_weighted_sequences(
+int find_significant_pairs_from_weighted_sequences(
 	vector<string> seqs,
 	vector<double> weights, 
 	vector<paired_kmer> paired_kmers, 
 	string outfile, 
 	int nTest, 
 	double pCutoff/*=0.05*/, 
-	double pCutoff_B/*=0.05*/,
-	int startPos/*=0*/) 
+	bool Bonferroni/*=true*/,
+	int startPos/*=0*/,
+	int minCount/*=5*/) 
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -389,7 +565,7 @@ array<int,2> find_significant_pairs_from_weighted_sequences(
 	//message(to_string(lSeq)+" length");
 	
 	// the number of significant positional kmers found
-	array<int,2> nSig = {0,0};
+	int nSig = 0;
 		
 	// will output found significant positional kmers
 	ofstream outstream;
@@ -428,18 +604,20 @@ array<int,2> find_significant_pairs_from_weighted_sequences(
 			// if less than 3 sequences with/without this kmer, just go on to the next position
 			// in such cases the kmer is unlikely to be significant
 			// also the t.test will not work well. it requires at least 2 data points in each sample
-			if (weights1.size() < 3 || weights2.size() < 3 ) 
+			if (weights1.size() < minCount || weights2.size() < minCount) 
 			{
 				continue;
 			}
 			array<double,6> ttest = t_test(weights1,weights2,false);
 			if (ttest[1] < pCutoff)
 			{
-				nSig[0]++;
 				// Bonferoni correction
 				double pB = min(1.0,ttest[1]*nTest);
-				if(pB < pCutoff_B) nSig[1]++;
-	            outstream << paired_kmers[i].as_string("_") << "\t" << pos-startPos << "\t" << paired_kmers[i].shift+k << "\t" << ttest[0] << "\t" << -log10(ttest[1]) << "\t" << -log10(pB) << "\t" << weights1.size() << "\t" << ttest[2] << "\t" << ttest[3] << "\t" << weights2.size() << "\t" << ttest[4] << "\t"  << ttest[5] << endl;
+				if (Bonferroni && pB > pCutoff) continue;
+				nSig++;
+				int position = pos-startPos+2;
+				if (position < 1) position -= 1;
+	            outstream << paired_kmers[i].as_string("_") << "\t" << position << "\t" << paired_kmers[i].shift+k << "\t" << ttest[0] << "\t" << -log10(ttest[1]) << "\t" << -log10(pB) << "\t" << weights1.size() << "\t" << ttest[2] << "\t" << ttest[3] << "\t" << weights2.size() << "\t" << ttest[4] << "\t"  << ttest[5] << endl;
 			}
 		}
 	}
@@ -449,10 +627,13 @@ array<int,2> find_significant_pairs_from_weighted_sequences(
 
 
 // nucleotide plot from PKA2 weighted output
-void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq){
+// no shift, k=1
+// plot column 
+void plot_nucleotide_profile(string infile, string outfile, int lSeq, int column, int startPos){
 	
 	string script = "# R script \n"
 	"lSeq="+to_string(lSeq)+" \n"
+	"startPos="+to_string(startPos)+"\n"
 	"data = numeric(4*lSeq)\n"
 	"dict = new.env()\n"
 	"dict[[\"A\"]] = 1\n"
@@ -461,8 +642,11 @@ void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq){
 	"dict[[\"T\"]] = 4\n"
 
 	"x=read.table('"+infile+"',header=F)\n"
-	"x = x[x[,3]==1,]\n"
-	"pv = x[,5] * ((x[,4]>0)*2-1)\n"
+	"k=nchar(as.character(x[,1]))\n"
+	"x[x[,2]<0,2] = x[x[,2]<0,2] + 1\n"
+	"x[,2] = x[,2] + startPos - 2\n"
+	"x = x[x[,3]==0 & k==1,]\n"
+	"pv = x[,"+to_string(column)+"] * ((x[,4]>0)*2-1)\n"
 
 	"pos=numeric(nrow(x))\n"
 	"for (i in 1:nrow(x)){\n"
@@ -474,13 +658,14 @@ void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq){
 	"color=c('red','green','blue','yellow') \n"
 	"label=c('A','C','G','T')\n"
 	"pdf('"+outfile+"',width=10,height=5)\n"
-	"bp = barplot(data,col=rep(color,4),ylab='disfavored <=== log10(p) ===> favored',ylim=c(-maxy,maxy)*1.3,border=NA)\n"
-		
-	"text(bp,data,labels=rep(label,lSeq),pos= (data>0)*2+1,offset=0.2,col='gray') \n"
+	"bp = barplot(data,col=rep(color,4),ylab='disfavored <- log10(p) -> favored',ylim=c(-maxy,maxy)*1.3,border=NA)\n"
+	
+	"sub = data != 0 \n"
+	"text(bp[sub],data[sub],labels=rep(label,lSeq)[sub],pos= (data[sub]>0)*2+1,offset=0.2,col='gray',cex=0.75) \n"
 
 	"for(i in 1:lSeq){\n"
-	"	abline(v=bp[i*4+1]/2+bp[i*4]/2,col='gray')\n"
-	"	text(bp[i*4-2]/2+bp[i*4-1]/2,-maxy*1.2,labels=i)\n"
+	"	abline(v=bp[i*4+1]/2+bp[i*4]/2,col='gray',cex=0.1,lty=3)\n"
+	"	text(bp[i*4-2]/2+bp[i*4-1]/2,-maxy*1.2,labels=(i-startPos+1 - (i-startPos+1 < 1)),srt=90,cex=0.75)\n"
 	"}\n"
 
 	"legend('topright',legend=label,col=color,pch=15,bty='n')\n"
@@ -489,6 +674,65 @@ void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq){
 	
 	R_run(script);
 }
+
+void plot_most_significant_kmers(string infile, string outfile, int lSeq, int column, int startPos)
+{
+	
+	string script = "# R script \n"
+		
+		"dnaColor = new.env()\n"
+		"dnaColor[[\"A\"]] = \"red\"\n"
+		"dnaColor[[\"C\"]] = \"green\"\n"
+		"dnaColor[[\"G\"]] = \"blue\"\n"
+		"dnaColor[[\"T\"]] = \"magenta\"\n"
+
+		"color_dna <-function(x,y,txt,col,cex) {  \n"
+		"    letters=unlist(strsplit(txt,'')) \n"
+		"    thisy<-y \n"
+		"    for(txtstr in 1:length(letters)) { \n"
+		"        text(x,thisy,letters[txtstr],col=col[[letters[txtstr]]],adj=0,srt=90,cex=cex) \n"
+		"        thisy<-thisy+strheight(letters[txtstr],cex=cex)*1.1 \n"
+		"    } \n"
+		"} \n"
+			
+	"lSeq="+to_string(lSeq)+" \n"
+	"startPos="+to_string(startPos)+"\n"		
+    "column = "+to_string(column)+"\n"
+	"x=read.table('"+infile+"',header=F)\n"
+	"x[x[,2]<0,2] = x[x[,2]<0,2] + 1\n"
+	"x[,2] = x[,2] + startPos - 2\n"		
+	"pv = x[,column] * ((x[,4]>0)*2-1)\n"
+	"pos = x[,2]+1\n"
+	"y = numeric(lSeq)\n"
+	"labels = character(lSeq)\n"
+	"y[pos] = pv\n"
+	"labels[pos] = as.character(x[,1])\n"
+	"\n"
+	"maxy = max(y)\n"	
+	"miny = min(y)\n"
+	"maxabs = maxy-miny\n"
+	"pdf('"+outfile+"',width=10,height=5)\n"
+	"bp = barplot(y,col='gray',ylab='disfavored <- log10(p) -> favored',ylim=c(miny-0.5*maxabs,maxy+0.5*maxabs),border=NA)\n"
+	
+	"#sub = (y != 0) \n"
+	"#text(bp[sub],y[sub]+ ((y[sub]>0)*2-1)*(nchar(labels[sub])^0.65)*maxy/20,labels=labels[sub],col='blue',cex=0.75,srt=90) \n"
+						
+	"for(i in 1:lSeq){\n"
+	"   if(y[i] > 0 ){\n"
+	"    	color_dna(bp[i],y[i]+0.5*strheight(\"A\",cex=0.75),labels[i],dnaColor,0.75)\n"
+	"   }else if(y[i] < 0){\n"
+	"    color_dna(bp[i],y[i]-strheight(\"A\",cex=0.75)*(0.5+nchar(labels[i])),labels[i],dnaColor,0.75)\n"	
+	"   }\n"
+	"	text(bp[i],miny-0.4*maxabs,labels= (i-startPos+1 - (i-startPos+1 < 1)),srt=90,cex=0.75)\n"
+	"}\n"
+
+	"#legend('topright',legend=label,col=color,pch=15,bty='n')\n"
+
+	"dev.off() \n";
+	
+	R_run(script);
+}
+
 
 positional_kmer::positional_kmer(string seq1, int pos1, int size1, double weight1, int group1){
 	seq = seq1;
@@ -614,17 +858,15 @@ int paired_kmer::gap()
 	return dist - int(seq1.size());
 }
 
-// note pCutoff and pCutoff_B here are -log10 transformed
-// note input should be sorted by weight then by size
-vector<positional_kmer> build_model_from_PKA2_output(string filename, double pCutoff, double pCutoff_B)
+// note input should be sorted by weight
+vector<positional_kmer> build_model_from_PKA_output(string filename, int startPos)
 {
 	int skip = 0;
 	int cKmer = 0;
 	int cStart = 1;
-	int cSize = 2;
+	int cShift = 2;
 	int cStat = 3;
-	int cWeight = 4; // p, log10 
-	int cpB = 5; // corrected p, -log10
+	int cWeight = 4; // p, -log10 
 		
 	vector<string> kmers;
 	vector<int> starts, sizes;
@@ -655,23 +897,24 @@ vector<positional_kmer> build_model_from_PKA2_output(string filename, double pCu
         flds = string_split(line,"\t");
 		
 		double weight = stof(flds[cWeight]);
-		double logpb = stof(flds[cpB]);
-		
-		if (weight < pCutoff || logpb < pCutoff_B) continue;
-		
+				
 		if(stof(flds[cStat])<0) weight = -weight;
+		
+		int pos = stoi(flds[cStart]);
+		if(pos < 0) pos = pos + 1;
+		pos = pos - 2 + startPos;
 		
 		vector<string> tmp = expand_degenerate_kmer(flds[cKmer],iupac);
 		for(int i=0;i<tmp.size();i++)
 		{
-			string id = tmp[i]+","+flds[cStart]+","+flds[cSize];
+			string id = tmp[i]+","+flds[cStart]+","+flds[cShift];
 			//debug 
 			//cout << id << endl;
 			// if new kmer instead of the same kmer with lower weight (can happen when degenerate base is used)
 			if(ranked_kmer_ids.find(id) == ranked_kmer_ids.end()) 
 			{
 				ranked_kmer_ids.insert(id);
-				positional_kmer x(tmp[i],stoi(flds[cStart]),stoi(flds[cSize]),weight,0);
+				positional_kmer x(tmp[i],pos,stoi(flds[cShift])+tmp[i].size(),weight,0);
 				/*
 				// tried to remove longer but weaker motif, or ignore shorter when stronger present, worse in training
 				// try test with crossvalidation
@@ -758,41 +1001,6 @@ vector<paired_kmer> build_paired_kmer_model(string filename)
 	return paired_kmers;
 }
 
-// no degenerate nucleotides
-vector<positional_kmer> build_model_from_PKA_output(string filename)
-{
-	int skip = 1;
-	int cKmer = 0;
-	int cStart = 2;
-	int cWeight = 7; // z-score
-
-	vector<positional_kmer> ranked_kmers;
-	
-	ifstream fin;
-	fin.open(filename.c_str());
-	
-	string line;
-	vector<string> flds;
-	// skip header lines
-	int i=0;
-	while(fin && i++ < skip) getline(fin,line);
-
-    while(fin)
-    {
-        getline(fin,line);
-        if (line.length() == 0)
-            continue;
-
-        flds = string_split(line,"\t");
-							
-		positional_kmer x(flds[cKmer],stoi(flds[cStart]),flds[cKmer].size(),stof(flds[cWeight]),0);
-		ranked_kmers.push_back(x);
-	}
-	fin.close();
-	return ranked_kmers;
-}
-
-
 void save_model_to_file(vector<positional_kmer> ranked_kmers, string filename)
 {
 	ofstream out;
@@ -834,10 +1042,10 @@ double score_sequence_using_PKA_model(vector<positional_kmer> ranked_kmers,  str
 	double score = 0;
 	for( int i=0;i<ranked_kmers.size();i++)
 	{
-		//cout << ranked_kmers[i].as_string() ;
+		//cout << i << "\t"<< ranked_kmers[i].as_string() ;
 		//cout << "\t" << seq.substr(ranked_kmers[i].pos,ranked_kmers[i].size) ;
 		size_t found = seq.substr(ranked_kmers[i].pos,ranked_kmers[i].size).find(ranked_kmers[i].seq);
-		if (found!=std::string::npos) 
+		if (found != std::string::npos) 
 		{
 			score += ranked_kmers[i].weight;
 			//cout << "\t" << score;
@@ -1061,14 +1269,6 @@ void read_significant_positional_kmer_from_PKA2_output(string inputfile, vector<
 	fin.close();
 }
 
-// vector<string> to map<string,string>
-map<string, string> seq_vector2map(vector<string> seqs)
-{
-	map<string,string> res;
-	for(int i=0;i<seqs.size();i++)
-		res[to_string(i)] = seqs[i];
-	return res; 
-}
 
 void significant_feature_matrix(map<string,string> seqs, vector<string> kmers, vector<int> positions, string outfile, string label, bool append/*=false*/, int shift/*=0*/)
 {
@@ -1275,12 +1475,12 @@ int non_overlapping_sig_motifs(string inputfile, string outputfile)
 
 // count substring in a map of sequences, i.e. from fasta
 // used in generating markov model
-int countSubstringInSeqs(map<string,string>seqs, string sub)
+int countSubstringInSeqs(vector<string>seqs, string sub)
 {
     int count = 0;
-    for(map<string,string>::iterator it=seqs.begin();it!=seqs.end();it++)
+    for(int i=0;i<seqs.size();i++)
     {
-        count += findall(it->second,sub).size();
+        count += findall(seqs[i],sub).size();
     } 
     return count;
 }
@@ -1480,7 +1680,7 @@ void write_pwm_in_meme_format(boost::numeric::ublas::matrix<double> pwm, string 
 
 
 // build position weight matrix for a positional kmer, can include flanking sequence
-boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(map<string,string> seqs, string kmer, int position, map<char,string> iupac, int d, int startPos)
+boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(vector<string> seqs, string kmer, int position, map<char,string> iupac, int d, int startPos)
 {
     //position: 0-based
     // need to back-calculate position = position + startPos
@@ -1489,7 +1689,7 @@ boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(ma
     //cout << kmer << "\t" << position;     //debug
 
     // length of sequences
-    int seqLen = seqs.begin()->second.size();
+    int seqLen = seqs[0].size();
     int k = kmer.size();
 
     // begin and end of region in the sequence
@@ -1517,16 +1717,16 @@ boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(ma
 
     // find sequence with motif match and update matrix       
     int total_positive_seq = 0; // total number of sequences contain the motif
-    for(map<string,string>::iterator it=seqs.begin();it!=seqs.end();it++)
+    for(int k=0;k<seqs.size();k++)
     {
         for( int i =0;i<dkmersexp.size();i++)
         {
-            if (it->second.substr(position,k) == dkmersexp[i])
+            if (seqs[k].substr(position,k) == dkmersexp[i])
             {
                 // update matrix
                 for( int j=start;j<=end;j++)
                 {
-                    pwm(letter2pos[it->second[j]],j-start) += 1;
+                    pwm(letter2pos[seqs[k][j]],j-start) += 1;
                 }                
                 total_positive_seq ++;
                 break;
@@ -1550,7 +1750,7 @@ boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(ma
 }
 
 //PKA : create logo for a single kmer
-void create_logo_for_kmer(map<string,string> seqs, string kmer, int position, map<char,string> iupac, int d, int startPos,string output)
+void create_logo_for_kmer(vector<string> seqs, string kmer, int position, map<char,string> iupac, int d, int startPos,string output)
 {
     boost::numeric::ublas::matrix<double> pwm;
     pwm = create_position_weight_matrix_from_kmer(seqs, kmer, position,iupac,d,startPos);
@@ -1565,7 +1765,7 @@ void create_logo_for_kmer(map<string,string> seqs, string kmer, int position, ma
 }
 
 // create logos for top 1 kmer passing pCutoff_B
-void create_logo_for_topN_sig_kmer_per_position(map<string,string> seqs, string filename,int d, double pCutoff_B,int startPos,string output)
+void create_logo_for_topN_sig_kmer_per_position(vector<string> seqs, string filename,int d, double pCutoff,bool Bonferroni,int startPos,string output)
 {
     ifstream fin;
     fin.open(filename.c_str());
@@ -1583,8 +1783,8 @@ void create_logo_for_topN_sig_kmer_per_position(map<string,string> seqs, string 
         if (line.length() == 0)
             continue;
         flds = string_split(line,"\t");
-        //cout << flds[9] <<","<< pCutoff_B << endl;
-        if(stod(flds[9]) < pCutoff_B)
+        //cout << flds[9] <<","<< pCutoff << endl;
+        if(stod(flds[9]) < pCutoff)
         {
             create_logo_for_kmer(seqs,flds[0],stoi(flds[2]),iupac,d,startPos,output); // change back to 0-based coordinates
         }
@@ -1666,7 +1866,7 @@ array<int,2> find_significant_degenerate_kmer_with_shift(vector<string> kmers, m
 
 // doesn't work with shift+degenerate
 // for each kmer, count its freq at each position(start), allowing shifts (to the right)
-map<string,vector<int> > count_all_kmer_in_seqs(vector<string> kmers, map<string,string> seqs, int shift)
+map<string,vector<int> > count_all_kmer_in_seqs(vector<string> kmers, vector<string> seqs, int shift)
 {
     // kmers: vector of all kmers
     // 
@@ -1675,11 +1875,10 @@ map<string,vector<int> > count_all_kmer_in_seqs(vector<string> kmers, map<string
     int i,j,k;
 	int m;
     string name,seq;
-    map<string,string>::iterator it;
     vector<int> counts;
     set<int> found;
 
-    int seq_len = seqs.begin()->second.size();
+    int seq_len = seqs[0].size();
 
     for (i=0;i<kmers.size();i++)
     {  
@@ -1688,10 +1887,9 @@ map<string,vector<int> > count_all_kmer_in_seqs(vector<string> kmers, map<string
         // initialize counts
         for(j=0;j<seq_len-k+1;j++) counts.push_back(0);
         // loop through each sequencs, count this kmer
-        for(it=seqs.begin();it!=seqs.end();it++)
+        for(int x=0;x<seqs.size();x++)
         {   
-            name = (*it).first;
-            seq = (*it).second;
+            seq = seqs[x];
 
             // find all matches
             found = findall(seq,kmers[i]);
@@ -1746,26 +1944,22 @@ map<string,vector<int> > degenerate_kmer_counts(vector<string> dkmers,map<string
     return new_data;
 }
 
-array<int,2> find_significant_kmer_from_one_seq_set(
-	map<string,string>seqs1, 
+int find_significant_kmer_from_one_seq_set(
+	vector<string>seqs1, 
 	map<string,double> probs_kmer,vector<string>kmers, 
 	vector<string> dkmers, 
-	int shift,
+	int min_shift,
+	int max_shift,
 	bool degenerate,
 	double pCutoff, 
-	double pCutoff_B, 
+	bool Bonferroni/*=true*/,
 	int startPos,
 	int nTest, 
 	string outfile, 
 	string output_count_file)
 {
     int nSeq1 = seqs1.size();
-    array<int,2> nSig = {0,0};
-
-    // kmer counts in foreground
-    // note that each count vector could be of different length due to kmer length difference
-    message("counting exact kmers in foreground sequences...");
-    map<string, vector<int> > data1 = count_all_kmer_in_seqs(kmers, seqs1, shift);
+    int nSig = 0;
 
     ofstream outstream;
     outstream.open(outfile.c_str());
@@ -1773,114 +1967,121 @@ array<int,2> find_significant_kmer_from_one_seq_set(
     ofstream outcounts;
     outcounts.open(output_count_file.c_str());
 
-    // compute p-value for exact kmers
-    message("computing p-values for exact kmers...");
-    for (map<string,vector<int> >::iterator it=data1.begin(); it!=data1.end(); ++it) 
-    {
-        // counts in foreground
-        vector<int> counts1 = it->second;
 
-        // total counts 
-        int total_counts1 = sum(counts1);
+	for(int shift = min_shift; shift <= max_shift; shift ++ )
+	{
+	    // kmer counts in foreground
+	    // note that each count vector could be of different length due to kmer length difference
+	    message("counting exact kmers in foreground sequences...shift="+to_string(shift));
+	    map<string, vector<int> > data1 = count_all_kmer_in_seqs(kmers, seqs1, shift);
 
-        double f2 = min(1.0,probs_kmer[it->first]*(1+shift));
+	    // compute p-value for exact kmers
+	    message("computing p-values for exact kmers...");
+	    for (map<string,vector<int> >::iterator it=data1.begin(); it!=data1.end(); ++it) 
+	    {
+	        // counts in foreground
+	        vector<int> counts1 = it->second;
+
+	        // total counts 
+	        int total_counts1 = sum(counts1);
+
+	        double f2 = min(1.0,probs_kmer[it->first]*(1+shift));
 
 
-        // for each position
-        for( int m=0;m<counts1.size();m++)
-        { 
-            if (counts1[m] == 0 && f2 ==0) continue; 
-            // compare background p estimate from shuffling and markov model
-            double p = binom_test(nSeq1,counts1[m],f2);
-            if (p < pCutoff)
-            {
-                nSig[0]++;
-                double f1 = float(counts1[m])/nSeq1;
-                double expected = nSeq1 * f2;
-                double z = (counts1[m] - expected) / sqrt(expected*(1-f2));
-                // local enrichment
-                double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
-                double corrected_p = min(1.0,p*nTest);
-                outstream << it->first << "\t" << it->first << "\t"  << m-startPos << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << "\t" << z << "\t" << p << "\t"<< corrected_p << endl;
-                if (corrected_p < pCutoff_B)
-                {
-                    nSig[1]++;
-                    outcounts << it->first << ":" << m-startPos;
-                    for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
-                    outcounts << endl;
-                }
-            }
-        }
-    }
+	        // for each position
+	        for( int m=0;m<counts1.size();m++)
+	        { 
+	            if (counts1[m] == 0 && f2 ==0) continue; 
+	            // compare background p estimate from shuffling and markov model
+	            double p = binom_test(nSeq1,counts1[m],f2);
+	            if (p < pCutoff)
+	            {
+					if(p == 0) p = 1e-16;
+	                double corrected_p = min(1.0,p*nTest);					
+					if(Bonferroni && corrected_p > pCutoff) continue;
+	                nSig++;
+	                double f1 = float(counts1[m])/nSeq1;
+	                double expected = nSeq1 * f2;
+	                double z = (counts1[m] - expected) / sqrt(expected*(1-f2));
+	                // local enrichment
+	                double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
+										
+	                outstream << it->first << "\t" << m-startPos << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
+	                outcounts << it->first << ":" << m-startPos;
+	                for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
+	                outcounts << endl;
+	            }
+	        }
+	    }
 
-    // compute p-value for non-exact kmers, only work without shift
-    if (degenerate)
-    {   
+	    // compute p-value for non-exact kmers, only work without shift
+	    if (degenerate)
+	    {   
 
-        message( to_string( nSig[0])+ " significant exact kmers identified");
-        message( to_string( nSig[1] ) + " remain after Bonferoni multiple testing correction");
-        message( "computing p-values for degenerate kmers...");
+	        message( to_string( nSig)+ " significant exact kmers identified");
+	        message( "computing p-values for degenerate kmers...");
 
-        // map from degeneate bases to all allowed bases, e.g. R => AG
-        map<char,string> define_iupac = define_IUPAC();
-        // for output purpurse only, e.g. will use g to replace H = [ACT] = non-G
-        // map<char,string> interpret_iupac = interpret_IUPAC();
+	        // map from degeneate bases to all allowed bases, e.g. R => AG
+	        map<char,string> define_iupac = define_IUPAC();
+	        // for output purpurse only, e.g. will use g to replace H = [ACT] = non-G
+	        // map<char,string> interpret_iupac = interpret_IUPAC();
 
-        // for each degenerate kmer, combine element kmer counts
-        for( int i=0;i<dkmers.size();i++)
-        {
-            // if already in exact kmers, i.e. contain no degenerate bases, skip
-            if ( find(kmers.begin(), kmers.end(), dkmers[i])!=kmers.end() ) continue;
+	        // for each degenerate kmer, combine element kmer counts
+	        for( int i=0;i<dkmers.size();i++)
+	        {
+	            // if already in exact kmers, i.e. contain no degenerate bases, skip
+	            if ( find(kmers.begin(), kmers.end(), dkmers[i])!=kmers.end() ) continue;
 
-            // expand a degenerate kmer to all possible element/exact kmers
-            vector<string> dkmersexp = expand_degenerate_kmer(dkmers[i],define_iupac);
+	            // expand a degenerate kmer to all possible element/exact kmers
+	            vector<string> dkmersexp = expand_degenerate_kmer(dkmers[i],define_iupac);
 
-            // for output only, also generate regex version of the degenerate kmer
-            string dkmersexp_readable = degenerate_kmer_to_regex(dkmers[i],define_iupac);
+	            // for output only, also generate regex version of the degenerate kmer
+	            string dkmersexp_readable = degenerate_kmer_to_regex(dkmers[i],define_iupac);
 
-            // initialize the count at each position with the first element kmer
-            vector<int> counts1  = data1[dkmersexp[0]];
-            // sum over the rest element kmers
-            for( int j=1;j<dkmersexp.size();j++) counts1 = sum(counts1,data1[dkmersexp[j]]);
+	            // initialize the count at each position with the first element kmer
+	            vector<int> counts1  = data1[dkmersexp[0]];
+	            // sum over the rest element kmers
+	            for( int j=1;j<dkmersexp.size();j++) counts1 = sum(counts1,data1[dkmersexp[j]]);
 
-            // calculate probs from markov model: sum of element prob
-            double f2 = probs_kmer[dkmersexp[0]];
-            for( int j=1;j<dkmersexp.size();j++) f2 += probs_kmer[dkmersexp[j]]; 
-            //f2 = f2 * (1+shift); // can't have shift on degenerate kmers
+	            // calculate probs from markov model: sum of element prob
+	            double f2 = probs_kmer[dkmersexp[0]];
+	            for( int j=1;j<dkmersexp.size();j++) f2 += probs_kmer[dkmersexp[j]]; 
+	            //f2 = f2 * (1+shift); // can't have shift on degenerate kmers
 
-            // for output only
-            string regex_format = degenerate_kmer_to_regex(dkmers[i],define_iupac);
+	            // for output only
+	            string regex_format = degenerate_kmer_to_regex(dkmers[i],define_iupac);
 
-            // total counts
-            int total_counts1 = sum(counts1);
+	            // total counts
+	            int total_counts1 = sum(counts1);
 
-            // calculate  p-value 
-            for( int m=0;m<counts1.size();m++)
-            { 
-                if (counts1[m] == 0 && f2==0) continue;
-                double p = binom_test(nSeq1,counts1[m],f2);
-                if (p < pCutoff)
-                {
-                    nSig[0]++;
-                    double f1 = float(counts1[m])/nSeq1;
-                    double expected = nSeq1 * f2;
-                    double z = (counts1[m] - expected) / sqrt(expected*(1-f2)); 
-                    double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
-                    double corrected_p = min(1.0,p*nTest);
-                    outstream  << dkmers[i] << "\t" << regex_format << "\t"  << m-startPos << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << "\t" << z << "\t" << p << "\t"<< corrected_p << endl;
-
-                    if (corrected_p < pCutoff_B) 
-                    { 
-                        nSig[1]++;
-                        outcounts << dkmers[i] << ":" << m-startPos;
-                        for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
-                        outcounts << endl;
-                    }
-
-                }
-            }
-        }
-    }
+	            // calculate  p-value 
+	            for( int m=0;m<counts1.size();m++)
+	            { 
+	                if (counts1[m] == 0 && f2==0) continue;
+	                double p = binom_test(nSeq1,counts1[m],f2);
+	                if (p < pCutoff)
+	                {
+						if(p == 0) p = 1e-16;
+	                    double corrected_p = min(1.0,p*nTest);
+						if(Bonferroni && corrected_p > pCutoff) continue;
+						
+	                    nSig++;
+	                    double f1 = float(counts1[m])/nSeq1;
+	                    double expected = nSeq1 * f2;
+	                    double z = (counts1[m] - expected) / sqrt(expected*(1-f2)); 
+	                    double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
+												
+	                    outstream  << dkmers[i] << "\t" << m-startPos << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
+	        
+                       outcounts << dkmers[i] << ":" << m-startPos;
+                       for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
+                       outcounts << endl;
+	                }
+	            }
+	        }
+	    }
+	}
+	
 
     outstream.close();
 
@@ -1891,20 +2092,13 @@ array<int,2> find_significant_kmer_from_one_seq_set(
 
 
 // two file comparison, not allow shift and degenerate at the same time
-array<int,2> find_significant_kmer_from_two_seq_sets(map<string,string>seqs1, map<string,string>seqs2, vector<string>kmers, vector<string> dkmers, int shift,bool degenerate,double pCutoff,double pCutoff_B, double pseudo,int startPos,int nTest, string outfile,string output_count_file)
+int find_significant_kmer_from_two_seq_sets(vector<string>seqs1, vector<string>seqs2, vector<string>kmers, vector<string> dkmers, int min_shift,int max_shift,bool degenerate,double pCutoff, bool Bonferroni/*=true*/,double pseudo,int startPos,int nTest, string outfile,string output_count_file)
 {
     int nSeq1 = seqs1.size();
     int nSeq2 = seqs2.size();
-    array<int,2> nSig = {0,0};
+    int nSig = 0;
 
-    // kmer counts in foreground
-    // note that each count vector could be of different length due to kmer length difference
-    message("counting exact kmers in foreground sequences...");
-    map<string, vector<int> > data1 = count_all_kmer_in_seqs(kmers, seqs1, shift);
 
-    // kmer counts in foreground
-    message("counting exact kmers in background sequences...");
-    map<string, vector<int> > data2 = count_all_kmer_in_seqs(kmers, seqs2, shift);
 
     ofstream outstream;
     outstream.open(outfile.c_str());
@@ -1912,117 +2106,129 @@ array<int,2> find_significant_kmer_from_two_seq_sets(map<string,string>seqs1, ma
     ofstream outcounts;
     outcounts.open(output_count_file.c_str());
 
-    // compute p-value for exact kmers
-    message("computing p-values for exact kmers...");
-    for (map<string,vector<int> >::iterator it=data1.begin(); it!=data1.end(); ++it) 
-    {
-        // counts in foreground
-        vector<int> counts1 = it->second;
-        // counts in background
-        vector<int> counts2 = data2[it->first];
+	for(int shift = min_shift; shift <= max_shift; shift ++ )
+	{
+	    // kmer counts in foreground
+	    // note that each count vector could be of different length due to kmer length difference
+	    message("counting exact kmers in foreground sequences...shift="+to_string(shift));
+	    map<string, vector<int> > data1 = count_all_kmer_in_seqs(kmers, seqs1, shift);
 
-        // total counts 
-        int total_counts1 = sum(counts1);
+	    // kmer counts in foreground
+	    message("counting exact kmers in background sequences...shift="+to_string(shift));
+	    map<string, vector<int> > data2 = count_all_kmer_in_seqs(kmers, seqs2, shift);
+		
+	    // compute p-value for exact kmers
+	    message("computing p-values for exact kmers...");
+	    for (map<string,vector<int> >::iterator it=data1.begin(); it!=data1.end(); ++it) 
+	    {
+	        // counts in foreground
+	        vector<int> counts1 = it->second;
+	        // counts in background
+	        vector<int> counts2 = data2[it->first];
 
-        // for each position
-        for( int m=0;m<counts1.size();m++)
-        { 
-            if (counts1[m] == 0 && counts2[m] == 0) continue; 
-            double f2 = float(counts2[m]+pseudo)/nSeq2;
-            // compare background p estimate from shuffling and markov model
-            double p = binom_test(nSeq1,counts1[m],f2);
-            if (p < pCutoff)
-            {
-                nSig[0]++;
-                double f1 = float(counts1[m])/nSeq1;
-                double expected = nSeq1 * f2;
-                double z = (counts1[m] - expected) / sqrt(expected*(1-f2));
-                // local enrichment
-                double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
-                double corrected_p = min(1.0,p*nTest);
-                outstream << it->first << "\t" << it->first << "\t"  << m-startPos << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << "\t" << z << "\t" << p << "\t"<< corrected_p << endl;
-                if (corrected_p < pCutoff_B)
-                {
-                    nSig[1]++;
-                    outcounts << it->first << ":" << m-startPos;
-                    for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
-                    outcounts << endl;
-                }
+	        // total counts 
+	        int total_counts1 = sum(counts1);
 
-            }
-        }
-    }
+	        // for each position
+	        for( int m=0;m<counts1.size();m++)
+	        { 
+	            if (counts1[m] == 0 && counts2[m] == 0) continue; 
+	            double f2 = float(counts2[m]+pseudo)/nSeq2;
+	            // compare background p estimate from shuffling and markov model
+	            double p = binom_test(nSeq1,counts1[m],f2);
+	            if (p < pCutoff)
+	            {
+					if(p == 0) p = 1e-16;
+	                double corrected_p = min(1.0,p*nTest);					
+					if(Bonferroni && corrected_p > pCutoff) continue;
+	                nSig++;
+	                double f1 = float(counts1[m])/nSeq1;
+	                double expected = nSeq1 * f2;
+	                double z = (counts1[m] - expected) / sqrt(expected*(1-f2));
+	                // local enrichment
+	                double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
+					
+	                outstream << it->first << "\t"  << m-startPos << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
+	               
+	                    outcounts << it->first << ":" << m-startPos;
+	                    for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
+	                    outcounts << endl;
+	               
 
-    // compute p-value for non-exact kmers, only work without shift
-    if (degenerate)
-    {   
+	            }
+	        }
+	    }
 
-        message(to_string(nSig[0]) + " significant exact kmers identified");
-        message(to_string( nSig[1] ) +" remain after Bonferoni multiple testing correction");
-        message("computing p-values for degenerate kmers...");
+	    // compute p-value for non-exact kmers, only work without shift
+	    if (degenerate)
+	    {   
 
-        // map from degeneate bases to all allowed bases, e.g. R => AG
-        map<char,string> define_iupac = define_IUPAC();
-        // for output purpurse only, e.g. will use g to replace H = [ACT] = non-G
-        // map<char,string> interpret_iupac = interpret_IUPAC();
+	        message(to_string(nSig) + " significant exact kmers identified");
+	        message("computing p-values for degenerate kmers...");
 
-        // for each degenerate kmer, combine element kmer counts
-        for( int i=0;i<dkmers.size();i++)
-        {
-            // if already in exact kmers, i.e. contain no degenerate bases, skip
-            if ( find(kmers.begin(), kmers.end(), dkmers[i])!=kmers.end() ) continue;
+	        // map from degeneate bases to all allowed bases, e.g. R => AG
+	        map<char,string> define_iupac = define_IUPAC();
+	        // for output purpurse only, e.g. will use g to replace H = [ACT] = non-G
+	        // map<char,string> interpret_iupac = interpret_IUPAC();
 
-            // expand a degenerate kmer to all possible element/exact kmers
-            vector<string> dkmersexp = expand_degenerate_kmer(dkmers[i],define_iupac);
+	        // for each degenerate kmer, combine element kmer counts
+	        for( int i=0;i<dkmers.size();i++)
+	        {
+	            // if already in exact kmers, i.e. contain no degenerate bases, skip
+	            if ( find(kmers.begin(), kmers.end(), dkmers[i])!=kmers.end() ) continue;
 
-            // for output only, also generate regex version of the degenerate kmer
-            string dkmersexp_readable = degenerate_kmer_to_regex(dkmers[i],define_iupac);
+	            // expand a degenerate kmer to all possible element/exact kmers
+	            vector<string> dkmersexp = expand_degenerate_kmer(dkmers[i],define_iupac);
 
-            // initialize the count at each position with the first element kmer
-            vector<int> counts1  = data1[dkmersexp[0]];
-            vector<int> counts2  = data2[dkmersexp[0]];
+	            // for output only, also generate regex version of the degenerate kmer
+	            string dkmersexp_readable = degenerate_kmer_to_regex(dkmers[i],define_iupac);
 
-            // sum over the rest element kmers
-            for( int j=1;j<dkmersexp.size();j++)
-            {
-                counts1 = sum(counts1,data1[dkmersexp[j]]);
-                counts2 = sum(counts2,data2[dkmersexp[j]]);
-            }
+	            // initialize the count at each position with the first element kmer
+	            vector<int> counts1  = data1[dkmersexp[0]];
+	            vector<int> counts2  = data2[dkmersexp[0]];
 
-            // for output only
-            string regex_format = degenerate_kmer_to_regex(dkmers[i],define_iupac);
+	            // sum over the rest element kmers
+	            for( int j=1;j<dkmersexp.size();j++)
+	            {
+	                counts1 = sum(counts1,data1[dkmersexp[j]]);
+	                counts2 = sum(counts2,data2[dkmersexp[j]]);
+	            }
 
-            // total counts
-            int total_counts1 = sum(counts1);
+	            // for output only
+	            string regex_format = degenerate_kmer_to_regex(dkmers[i],define_iupac);
 
-            // calculate  p-value 
-            for( int m=0;m<counts1.size();m++)
-            { 
-                if (counts1[m] == 0 && counts2[m]==0) continue;
-                double f2 = float(counts2[m]+pseudo)/nSeq2;
-                double p = binom_test(nSeq1,counts1[m],f2);
-                if (p < pCutoff)
-                {
-                    nSig[0]++;
-                    double f1 = float(counts1[m])/nSeq1;
-                    double expected = nSeq1 * f2;
-                    double z = (counts1[m] - expected) / sqrt(expected*(1-f2)); 
-                    double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
-                    double corrected_p = min(1.0,p*nTest); 
-                    outstream  << dkmers[i] << "\t" << regex_format << "\t"  << m-startPos << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << "\t" << z << "\t" << p << "\t"<< corrected_p << endl;
+	            // total counts
+	            int total_counts1 = sum(counts1);
 
-                    if (corrected_p < pCutoff_B)
-                    {
-                        nSig[1]++;
-                        outcounts << dkmers[i] << ":" << m-startPos;
-                        for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
-                        outcounts << endl;
-                    }
+	            // calculate  p-value 
+	            for( int m=0;m<counts1.size();m++)
+	            { 
+	                if (counts1[m] == 0 && counts2[m]==0) continue;
+	                double f2 = float(counts2[m]+pseudo)/nSeq2;
+	                double p = binom_test(nSeq1,counts1[m],f2);
+	                if (p < pCutoff)
+	                {
+						if(p == 0) p = 1e-16;
+	                    double corrected_p = min(1.0,p*nTest); 
+						if(Bonferroni && corrected_p > pCutoff) continue;
+	                    nSig++;
+	                    double f1 = float(counts1[m])/nSeq1;
+	                    double expected = nSeq1 * f2;
+	                    double z = (counts1[m] - expected) / sqrt(expected*(1-f2)); 
+	                    double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
+						
+						
+	                    outstream  << dkmers[i] << "\t" << m-startPos << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r  << endl;
+	                        outcounts << dkmers[i] << ":" << m-startPos;
+	                        for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
+	                        outcounts << endl;
 
-                }
-            }
-        }
-    }
+	                }
+	            }
+	        }
+	    }
+
+	}
 
     outstream.close();
     outcounts.close();
@@ -2075,6 +2281,15 @@ string reverseComplement(string seq){
         return rc;
 }
 
+// check if file is fasta by looking at the first character
+bool is_fasta(string filename)
+{
+	ifstream fin(filename.c_str());
+	string line;
+	getline(fin,line);
+	return line[0] == '>';
+}
+
 void ReadOneSeqFromFasta(ifstream& infile, string& name, string& seq){
   // read one sequence from fasta file
   getline(infile,name); // read identifier line
@@ -2106,6 +2321,19 @@ map<string,string> ReadFasta(string filename){
   return seqs;
 }
 
+void ReadFastaToVectors(string filename, vector<string> &names, vector<string> &seqs)
+{
+  ifstream fin(filename.c_str());
+  string name,seq;
+  while(fin.good())
+  {
+    ReadOneSeqFromFasta(fin,name,seq);
+    names.push_back(name);
+	seqs.push_back(seq);
+  }
+  fin.close();
+}
+
 void WriteFasta(map<string,string> seqs, string filename){
     ofstream fout;
     fout.open(filename.c_str());
@@ -2115,33 +2343,34 @@ void WriteFasta(map<string,string> seqs, string filename){
     }
 }
 
-map<string,string> first_n_bases(map<string,string> seqs,int n){
+vector<string> first_n_bases(vector<string> seqs,int n){
     // take the first n bases of each sequences
     // if the sequences is shorter than n, discard it
-    map<string,string> res;
-    for (map<string,string>::iterator it=seqs.begin(); it!=seqs.end(); ++it)
+    vector<string> res;
+    for (int i=0;i<seqs.size();i++)
     {   
-        if(it->second.size() >= n)
+        if(seqs[i].size() >= n)
         {
-            res[it->first] = it->second.substr(0,n);
+            res.push_back(seqs[i].substr(0,n));
         }
     }
     return res;
 }
 
-map<string,string> last_n_bases(map<string,string> seqs,int n){
+vector<string> last_n_bases(vector<string> seqs,int n){
     // take the last n bases of each sequences
     // if the sequences is shorter than n, discard it
-    map<string,string> res;
-    for (map<string,string>::iterator it=seqs.begin(); it!=seqs.end(); ++it)
+    vector<string> res;
+    for (int i=0;i<seqs.size();i++)
     {   
-        if(it->second.size() >= n)
-        {  
-            res[it->first] = it->second.substr(it->second.size()-n,n);
+        if(seqs[i].size() >= n)
+        {
+            res.push_back(seqs[i].substr(seqs[i].size()-n,n));
         }
     }
     return res;
 }
+
 
 // convert fasta file to a letter matrix
 void fasta_to_letter_matrix(string input, string output){
@@ -2213,13 +2442,13 @@ string shuffle_seq_preserving_k_let(string str,int k){
 }
 
 //
-map<string,string> shuffle_seqs_preserving_k_let(map<string,string> seqs, int N, int k){
+vector<string> shuffle_seqs_preserving_k_let(vector<string> seqs, int N, int k){
     // obtain a time-based seed
     srand(time(NULL));
-    map<string,string> seqs2;
-    for (map<string,string>::iterator it=seqs.begin(); it!=seqs.end(); ++it)
+    vector<string> seqs2;
+    for (int i=0;i<seqs.size();i++)
     {
-        for( int i =0;i<N;i++) seqs2[it->first + "-" + to_string(i)] = shuffle_seq_preserving_k_let(it->second,k);
+        for( int i =0;i<N;i++) seqs2.push_back( shuffle_seq_preserving_k_let(seqs[i],k));
     }
     return seqs2;
 }

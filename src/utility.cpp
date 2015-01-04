@@ -34,6 +34,21 @@ string random_string( size_t length )
     return str;
 }
 
+/*
+string random_string(const int len) {
+	string s;
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    for (int i = 0; i < len; ++i) {
+        s += alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+	return s;
+}
+*/
+
 string to_string(vector<string> str, string del/*="\t"*/)
 {
 	string res = str[0];
@@ -153,6 +168,7 @@ void sort_file_and_add_header(string filename, string header, string sort_option
 int R_run(string script, bool clean/*=true*/, string Rcmd/*="R CMD BATCH"*/)
 {
     // create tmp R script file
+	srand(time(NULL));
     string tmp = random_string(10)+".r";
     ofstream out;
     out.open(tmp.c_str());

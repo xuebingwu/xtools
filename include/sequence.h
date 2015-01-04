@@ -26,6 +26,9 @@ extern "C"{
 
 using namespace std;
 
+bool is_fasta(string filename);
+void ReadFastaToVectors(string filename, vector<string> &names, vector<string> &seqs);
+
 // build a model that can be used to score sequences
 // skip some lines
 // specify column number (0-based) of kmer, start, end
@@ -47,8 +50,8 @@ public:
 };
 
 
-vector<positional_kmer> build_model_from_PKA2_output(string filename, double pCutoff, double pCutoff_B);
-vector<positional_kmer> build_model_from_PKA_output(string filename);
+vector<positional_kmer> build_model_from_PKA2_output(string filename, double pCutoff);
+vector<positional_kmer> build_model_from_PKA_output(string filename, int startPos);
 void save_model_to_file(vector<positional_kmer> ranked_kmers, string filename);
 
 vector<positional_kmer> load_model_from_file(string filename);
@@ -94,30 +97,29 @@ int max_shift=0,
 int min_shift=0	
 );
 
-array<int,2> find_significant_pairs_from_weighted_sequences(
+int find_significant_pairs_from_weighted_sequences(
 	vector<string> seqs,
 	vector<double> weights, 
 	vector<paired_kmer> paired_kmers, 
 	string outfile, 
 	int nTest, 
 	double pCutoff=0.05, 
-	double pCutoff_B=0.05,
-	int startPos=0) ;
+	bool Bonferroni=true,
+	int startPos=0,
+	int minCount=5) ;
 
 	
-void plot_PKA2_nucleotide_output(string infile, string outfile, int lSeq);
+void plot_nucleotide_profile(string infile, string outfile, int lSeq, int col, int startPos);
 
-
-
+void plot_most_significant_kmers(string infile, string outfile, int lSeq, int column, int startPos);
 
 void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, vector<double> &weights,int skip=0, int cSeq=1,int cWeight=2);
 
 vector<string> load_ranked_sequences_to_vectors(string filename, int skip=0, int cSeq=1);
 
+int find_significant_kmer_from_ranked_sequences(vector<string> seqs, vector<string> kmers, string outfile, int nTest, double pCutoff=0.05,bool Bonferroni=true,int min_shift=0, int max_shift=0, int startPos=0, int minCount=5 );
 
-array<int,2> find_significant_kmer_from_ranked_sequences(vector<string> seqs, vector<string> kmers, string outfile, int nTest, double pCutoff=0.05, double pCutoff_B=0.05, int shift=0, int startPos=0 );
-
-array<int,2> find_significant_kmer_from_weighted_sequences(vector<string> seqs,vector<double> weights, vector<string> kmers, string outfile, int nTest, double pCutoff=0.05, double pCutoff_B=0.05,int shift_min=0, int shift_max=2, int startPos=0);
+int find_significant_kmer_from_weighted_sequences(vector<string> seqs,vector<double> weights, vector<string> kmers, string outfile, int nTest, double pCutoff=0.05, 	bool Bonferroni=true,int shift_min=0, int shift_max=2, int startPos=0, int minCount=5);
 
 void save_feature_matrix(map<string,string> seqs, vector<string> kmers, string outfile, string label, bool append=false, int shift=0);
 
@@ -131,6 +133,8 @@ void significant_feature_matrix(map<string,string> seqs, vector<string> kmers, v
 
 void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights, vector<positional_kmer> ranked_kmers, string outfile);
 
+vector<int> filter_sequences_by_size(vector<string> &seqs, int lSeq=0);
+
 // convert fasta file to a letter matrix
 void fasta_to_letter_matrix(string input, string output);
 
@@ -143,7 +147,7 @@ int non_overlapping_sig_motifs(string inputfile, string outputfile);
 
 // count substring in a map of sequences, i.e. from fasta
 // used in generating markov model
-int countSubstringInSeqs(map<string,string>seqs, string sub);
+int countSubstringInSeqs(vector<string>seqs, string sub);
 
 // of not of identical length, return -1
 int sequence_similarity(string a, string b);
@@ -182,13 +186,13 @@ void write_pwm_in_meme_format(boost::numeric::ublas::matrix<double> pwm, string 
 
 
 // build position weight matrix for a positional kmer, can include flanking sequence
-boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(map<string,string> seqs, string kmer, int position, map<char,string> iupac, int d, int startPos);
+boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(vector<string> seqs, string kmer, int position, map<char,string> iupac, int d, int startPos);
 
 //PKA : create logo for a single kmer
-void create_logo_for_kmer(map<string,string> seqs, string kmer, int position, map<char,string> iupac, int d, int startPos,string output);
+void create_logo_for_kmer(vector<string> seqs, string kmer, int position, map<char,string> iupac, int d, int startPos,string output);
 
 // create logos for top 1 kmer passing pCutoff_B
-void create_logo_for_topN_sig_kmer_per_position(map<string,string> seqs, string filename,int d, double pCutoff_B,int startPos,string output);
+void create_logo_for_topN_sig_kmer_per_position(vector<string> seqs, string filename,int d, int startPos,string output);
 
 
 //vector<int> count_one_kmer_in_all_seqs_regex(map<string,string> seqs, boost::regex pattern, int k, int seq_len_minus_k_plus_1, int k_plus_shift);
@@ -197,7 +201,7 @@ void create_logo_for_topN_sig_kmer_per_position(map<string,string> seqs, string 
 
 // doesn't work with shift+degenerate
 // for each kmer, count its freq at each position(start), allowing shifts (to the right)
-map<string,vector<int> > count_all_kmer_in_seqs(vector<string> kmers, map<string,string> seqs, int shift);  
+map<string,vector<int> > count_all_kmer_in_seqs(vector<string> kmers, vector<string> seqs, int shift);  
 
 //PKA
 void print_kmer_positional_profile(map<string,vector<int> > data);
@@ -205,11 +209,22 @@ void print_kmer_positional_profile(map<string,vector<int> > data);
 
 map<string,vector<int> > degenerate_kmer_counts(vector<string> dkmers,map<string,vector<int> > data, map<char,string> define_iupac);
 
-array<int,2> find_significant_kmer_from_one_seq_set(map<string,string>seqs1, map<string,double> probs_kmer,vector<string>kmers, vector<string> dkmers, int shift,bool degenerate,double pCutoff, double pCutoff_B, int startPos,int nTest, string outfile, string output_count_file);
+int find_significant_kmer_from_one_seq_set(vector<string>seqs1, map<string,double> probs_kmer,vector<string>kmers, vector<string> dkmers, int min_shift,int max_shift, bool degenerate,double pCutoff, 	bool Bonferroni, int startPos,int nTest, string outfile, string output_count_file);
 
 // two file comparison, not allow shift and degenerate at the same time
-array<int,2> find_significant_kmer_from_two_seq_sets(map<string,string>seqs1, map<string,string>seqs2, vector<string>kmers, vector<string> dkmers, int shift,bool degenerate,double pCutoff,double pCutoff_B, double pseudo,int startPos,int nTest, string outfile,string output_count_file);
+int find_significant_kmer_from_two_seq_sets(vector<string>seqs1, vector<string>seqs2, vector<string>kmers, vector<string> dkmers, int min_shift, int max_shift, bool degenerate,double pCutoff, 	bool Bonferroni,double pseudo,int startPos,int nTest, string outfile,string output_count_file);
 
+int find_significant_degenerate_shift_kmer_from_one_set_unweighted_sequences(
+	vector<string> seqs,
+	vector<string> kmers, 
+	string outfile, 
+	int nTest, 
+	double pCutoff=0.05, 
+	bool Bonferroni=true,
+	int min_shift=0, 
+	int max_shift=2,
+	int startPos=0,
+	int minCount=5) ;
 
 void plot_frequency_for_significant_kmer(string inputfile, string outputfile);
    
@@ -224,6 +239,9 @@ map<string,string> ReadFasta(string filename);
 
 void WriteFasta(map<string,string> seqs, string filename);
 
+map<string,string> vector2map(vector<string> seqs);
+
+void load_sequences_from_tabular(string filename, vector<string> &seqs, vector<double> &weights,int skip=0, int cSeq=1, int cWeight=2);
 
 //uShuffle
 //http://digital.cs.usu.edu/~mjiang/ushuffle/
@@ -231,11 +249,11 @@ void WriteFasta(map<string,string> seqs, string filename);
 string shuffle_seq_preserving_k_let(string str,int k);
 
 //
-map<string,string> shuffle_seqs_preserving_k_let(map<string,string> seqs, int N, int k);
+vector<string> shuffle_seqs_preserving_k_let(vector<string> seqs, int N, int k);
 
-map<string,string> first_n_bases(map<string,string> seqs,int n);
+vector<string> first_n_bases(vector<string> seqs,int n);
 
-map<string,string> last_n_bases(map<string,string> seqs,int n);
+vector<string> last_n_bases(vector<string> seqs,int n);
 
 
 void mismatches(map<string,string>& mutant,map<string,int>& dist, string motif, int n, set<char> alphabet);

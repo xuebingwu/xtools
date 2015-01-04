@@ -14,7 +14,8 @@
 
 
 // split files for crossvalidation
-void split_file_for_cross_validation(string input, string output, int nfold)
+// if each fold has less than 2 samples,do leave-one-out
+int split_file_for_cross_validation(string input, string output, int nfold)
 {
 	// determine the number of lines
 	ifstream fin(input.c_str());
@@ -28,8 +29,14 @@ void split_file_for_cross_validation(string input, string output, int nfold)
 	}
 	fin.close();
 	
-	
 	int step = floor(0.5 + total / nfold);
+	
+	// leave one out cv:LOOCV
+	if (step < 2) 
+	{
+		nfold = total;
+		step = 1;
+	}
 	
 	vector<int> bins;
 	for(int i=0;i < nfold-1;i++)
@@ -64,7 +71,7 @@ void split_file_for_cross_validation(string input, string output, int nfold)
 		train.close();
 		test.close();
 	}
-	
+	return nfold;
 }
 
 // input file contine multi-line records such as fasta/fastq or others
@@ -305,4 +312,69 @@ void remove_duplicates(string input, string output, int col, int max, string sor
     if(sort_opts.size()>0) system("rm xxx.tmp");
 
 }
+
+int count_lines(string filename)
+{
+	ifstream fin(filename.c_str());
+	string line;
+	int n = -1;
+	while(fin) 
+	{
+        getline(fin,line);
+		n++;
+	}
+	fin.close();
+	return n;
+}
+// find lines the key column is unique
+int find_unique_lines(string input, string output, int col)
+{
+    string cmd = "sort -k"+to_string(col)+","+to_string(col)+ " "+input+" > xxx.tmp";
+	//message("sort input file: "+ cmd);
+    system(cmd.c_str());
+    input="xxx.tmp";
+
+    col = col - 1;
+    ifstream fin;
+    ofstream fout;
+    fin.open(input.c_str());
+    fout.open(output.c_str());
+    string line;
+    vector<string> flds;
+
+    getline(fin,line);
+    flds = string_split(line,"\t");
+    string pre = flds[col];
+	string pre_line = line;
+	
+	bool duplicated = false;
+
+	int n = 0;
+	
+    while(fin)
+    {
+        getline(fin,line);
+        if (line.length() == 0)
+            continue;
+        flds = string_split(line,"\t");
+        if (pre != flds[col]) // a new line
+        {
+			if(duplicated == false)  
+			{
+				fout << pre_line << endl;
+				n ++; 
+			}
+			pre = flds[col];
+			pre_line = line;
+			duplicated = false;
+		}
+		else duplicated = true;
+    }
+
+	
+   	system("rm xxx.tmp");
+
+	return n;
+}
+
 

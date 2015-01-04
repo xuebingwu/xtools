@@ -10,7 +10,7 @@ markov_model::markov_model()
 }
 
 // construct a n-th order markov model from sequences 
-markov_model::markov_model(int n, string alphabet, map<string,string> seqs)
+markov_model::markov_model(int n, string alphabet, vector<string> seqs)
 {
     this->order = n; // n = 0,1,2
     this->alphabet = alphabet;

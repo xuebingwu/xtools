@@ -14,6 +14,11 @@ using boost::math::hypergeometric;
   
   using namespace std;
   
+double p_value_for_z_score(double z)
+	{
+		normal s;
+		return cdf(s, -fabs(z));
+	} 
 
 // note both enrichment and depletion
 double binom_test(int trials,int success,double success_fraction)
@@ -34,18 +39,23 @@ double hypergeometric_test(unsigned k, unsigned r, unsigned n, unsigned N)
 	return p;
 }
 
+// normal approximation is ok for n1 and n2 > 8
+// see paper: Carine A. Bellera et al, Normal Approximations to the Distributions of the Wilcoxon
+// Statistics: Accurate to What N? Graphical Insights, Journal of Statistics Education, Volume 18, Number 2, (2010)
+// http://www.amstat.org/publications/jse/v18n2/bellera.pdf
 array<double,2> Mann_Whitney_U_test(vector<int> ranks, int N)
 {
-	int n1 = ranks.size();
-	int n2 = N - n1;
-	int rank_sum = ranks[0];
+	double n1 = ranks.size();
+	double n2 = N - n1;
+	double rank_sum = ranks[0];
 	for (int i=1;i<n1;i++) rank_sum += ranks[i];
-	int n1n2 = n1*n2;
-	int U = n1n2+n1*(n1+1)/2-rank_sum;
+	double n1n2 = n1*n2;
+	double U = n1n2+n1*(n1+1)/2-rank_sum;
 	double mU = n1n2/2.0;
 	double sigmaU = sqrt(n1n2*(N+1)/12.0);
 	double z = (U-mU)/sigmaU;
 	normal s;
+	//cout << n1n2 << "\t" << n1n2*(N+1)/12.0 << "\t" << sigmaU << endl;
 	double p = cdf(s, -fabs(z));
 	array<double,2> res = {{z,p}};
 	return res;

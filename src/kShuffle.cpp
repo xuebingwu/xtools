@@ -70,9 +70,10 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 
+	/*
 	map<string,string> seqs1 = ReadFasta(input); 
     map<string,string> seqs2 = shuffle_seqs_preserving_k_let(seqs1,n,k);
 	WriteFasta(seqs2,output);
-
+*/
     return 0;
 }

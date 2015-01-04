@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
     }   
 
 	message("spliting data to training and test sets...");
-	split_file_for_cross_validation( data,  "data", nfold);
+	nfold = split_file_for_cross_validation( data,  "data", nfold);
 
 	string cmd;
 	for (int i=0;i<nfold;i++)
@@ -79,18 +79,14 @@ int main(int argc, char* argv[]) {
 	
 	/* 
 	
-	for k in 1 2 3 4 5
+	for k in 1 2 3 4
 	do 
 	    for shift in 0 1 2
 	    do
 	    echo $k, $shift
-	    rm log; cross_validation -data PKA2_test_Doench2014.txt  -train_cmd "PKA2 data.train.@ -seq 1 -weight 2  -o output.@ -upto $k -shift_max $shift -pair 2>> log " -test_cmd "PKA2 data.test.@ -seq 1 -weight 2 -pCutoff_B 2 -predict output.@ -pair 2>> log" -nfold 10
-	    rm *.score.all
-	    cat output.*.pair.score > data.pair.score.all
-	    rm *.pair.score
-	    cat output.*.score > data.score.all
+	    rm log; cross_validation -data PKA2_test_Doench2014.txt  -train_cmd "PKA data.train.@ -o output.@ -max_k $k -max_shift $shift -weighted 2>> log " -test_cmd "PKA data.test.@ -predict output.@ -weighted 2>> log" -nfold 10
 	    rm tmp
-	    paste data.score.all data.pair.score.all | cut -f 1,2,3,6 | grep -v inf > tmp
+	    cat output.*.score | grep -v inf > tmp
 	    Rscript cor.r
 	    done 
 	done
