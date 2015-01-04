@@ -11,6 +11,7 @@
 
 // for position matrix
 #include <boost/numeric/ublas/matrix.hpp>
+#include <boost/lexical_cast.hpp>
 
 	
 #include <stdio.h>

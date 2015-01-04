@@ -17,6 +17,7 @@ using namespace std;
 
 
 // generate a random string of letters and numbers of certain length
+/*
 string random_string( size_t length )
 {
     srand(time(NULL));
@@ -33,8 +34,9 @@ string random_string( size_t length )
     generate_n( str.begin(), length, randchar );
     return str;
 }
+*/
 
-/*
+/**/
 string random_string(const int len) {
 	string s;
     static const char alphanum[] =
@@ -47,7 +49,7 @@ string random_string(const int len) {
     }
 	return s;
 }
-*/
+/**/
 
 string to_string(vector<string> str, string del/*="\t"*/)
 {
