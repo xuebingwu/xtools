@@ -11,7 +11,7 @@ PROGS = xtools kShuffle seqMatch PKA geneFeature geneSet geneScore TopN intersec
 CC = g++
 
 # define any compile-time flags
-CFLAGS = -std=c++0x
+CFLAGS = -std=c++11
 
 # define any directories containing header files other than /usr/include
 #
@@ -84,7 +84,7 @@ install:
 	mv $(PROGS) ../bin	
 
 clean:
-	$(RM) *.o *~ $(MAIN)
+	$(RM) *.o *~ ../bin/*
 
 depend: $(SRCS)
 	makedepend $(INCLUDES) $^
