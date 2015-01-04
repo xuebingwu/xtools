@@ -4,7 +4,7 @@
 #include <vector>
 #include <array>
 #include <algorithm>
-
+#include <math.h>
 
 using namespace std;
 
@@ -26,7 +26,12 @@ array<double,6> t_test(vector<double> x, vector<double> y, bool equal_var=false)
 template<typename T>
 T sum(vector<T> v)
 {
-	return accumulate(v.begin(), v.end(), 0.0);
+	T s = 0;
+	for(int i=0;i< v.size();i++) s += v[i];
+	return s;
+	
+	// the following implementation does not compile on mac os x yosemite
+	// return accumulate(v.begin(), v.end(), 0.0); 
 }
 
 template<typename T>
@@ -41,7 +46,13 @@ double var(vector<T> v)
 	vector<double> diff(v.size());
 	transform(v.begin(), v.end(), diff.begin(),
     bind2nd(minus<double>(), mean(v)));
-	double sq_sum = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+	
+	// the following implementation of sq_sum does not compile on mac os x yosemite
+	// double sq_sum = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+	
+	double sq_sum = 0;
+	for(int i=0;i<diff.size();i++) sq_sum += diff[i]*diff[i];
+	
 	double var = sq_sum / v.size();
 	return var;
 }
