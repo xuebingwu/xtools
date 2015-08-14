@@ -11,20 +11,15 @@
 ## Installation
 1. Download the source code from xtools page on github: https://github.com/xuebingwu/xtools (bottom right, "Download ZIP")
 2. Unzip the downloaded file:
-
 ```sh
 unzip xtools-master.zip
 ``` 
-
 3. Go to folder 'xtools-master/src', type 'make' to compile the source code:
-
 ```sh
 cd xtools-master/src
 make 
 ``` 
-
 4. The compiled programs are in the folder 'bin'.
-
 5. To recompile, type 'make clean' then 'make'.
 
 
