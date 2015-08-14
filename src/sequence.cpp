@@ -6,6 +6,7 @@
 #include <set>
 #include <map>
 #include <array>        // std::array
+#include <algorithm>
 
 //#include <boost/regex.hpp>
 
@@ -30,6 +31,280 @@ extern "C"{
 }
 
 using namespace std;
+
+/********* for regression motif analysis ********/
+
+// for each motif, count frequency in each target sequence
+
+vector<int> motif_counts_in_seqs(string motif, vector<string> seqs)
+{
+	vector<int> counts;
+	for( int i=0;i<seqs.size();i++)
+	{		
+		counts.push_back(count_non_overlap(seqs[i],motif));
+	}
+	return counts;
+}
+/*******************/
+
+// test if a kmer's presence is associated with sequence scores/weights
+// do not require position info
+array<double,4>  kmer_rank_test(string kmer, vector<string> seqs, vector<double> ranks)
+{
+	vector<double> ranks_with_kmer;
+	array<double,2> utest;
+	for(int i=0;i<seqs.size();i++)
+	{
+		if(seqs[i].find(kmer) != string::npos) ranks_with_kmer.push_back(ranks[i]);
+	}
+	if (ranks_with_kmer.size()>2)
+	{
+		utest = Mann_Whitney_U_test(ranks_with_kmer, seqs.size()); // z, p
+	} else
+	{
+		utest = {{0,1}};
+	}
+	array<double,4> res = {{seqs.size(),ranks_with_kmer.size(),utest[0],utest[0]/fabs(utest[0])*log10(utest[1])}};
+	return res;
+}
+
+string reverse(string str)
+{
+	string res = str;
+	std::reverse(res.begin(), res.end());
+	return res;
+}
+
+// seq can not have letters not in valid_letters
+bool valid_sequence(string seq, string valid_letters)
+{
+	for (int i=0;i<seq.size();i++)
+	{
+		bool valid = false;
+		for(int j=0;j<valid_letters.size();j++)
+		{
+			if (seq[i] == valid_letters[j])
+			{
+				valid = true;
+				break;
+			}
+		}
+		if (valid == false) return false;
+	}
+	return true;
+}
+
+// homopolymer: find the longest runs of any letter of letters in s
+// return length and start position (0-based)
+array<int,2> find_longest_run(string s, string letters)
+{
+	int max_L = 0;
+	int start=-1;
+	int L=0;
+	// starting at each position
+	for(int i =0;i<s.size();i++)
+	{
+		if (letters.find(s[i])!=std::string::npos) 
+		{
+			int j;
+			for(j=i+1;j<s.size();j++)
+			{
+				if (letters.find(s[j])==std::string::npos) break;
+			}
+			L = j - i;
+			if(L > max_L)
+			{
+				max_L = L;
+				start = i;
+			}
+		}
+	}
+	array<int,2> res={max_L,start};
+	return res;
+}
+
+// DNA sequence feature, output to screen
+// 
+void sequence_feature(string s, bool di, bool tri, bool p1, bool p2, bool h2, bool h3, bool h4)
+{
+
+	// string header = "Seq\tAn.L\tAn.P\tCn.L\tCn.P\tGn.L\tGn.P\tTn.L\tTn.P\tRn.L\tRn.P\tYn.L\tYn.P\tWn.L\tWn.P\tSn.L\tSn.P\tA\tC\tG\tT\tW\tS\tR\tY\tAA\tAC\tAG\tAT\tCA\tCC\tCG\tCT\tGA\tGC\tGG\tGT\tTA\tTC\tTG\tTT\tAAA\tCAA\tGAA\tTAA\tACA\tAGA\tATA\tCCA\tCGA\tCTA\tGCA\tGGA\tGTA\tTCA\tTGA\tTTA\tAAC\tAAG\tAAT\tCAC\tCAG\tCAT\tGAC\tGAG\tGAT\tTAC\tTAG\tTAT\tACC\tACG\tACT\tAGC\tAGG\tAGT\tATC\tATG\tATT\tCCC\tCCG\tCCT\tCGC\tCGG\tCGT\tCTC\tCTG\tCTT\tGCC\tGCG\tGCT\tGGC\tGGG\tGGT\tGTC\tGTG\tGTT\tTCC\tTCG\tTCT\tTGC\tTGG\tTGT\tTTC\tTTG\tTTT";
+
+	// column 1: sequence
+	cout << s ;
+
+    // column 2-9: longest runs and center position
+    vector<string> runs = {"A","C", "G", "T","AG","TC","AT","GC"};
+
+    for(int i=0;i<runs.size();i++)
+    {  
+        array<int,2> res = find_longest_run(s,runs[i]);
+        cout << "\t" << res[0] << "\t" << res[0]/2 + res[1] ;
+    }
+
+
+	// column 10-17: mono + A/T + G/C + A/G + T/C
+	int nA = count(s,"A");
+	int nC = count(s,"C");
+	int nG = count(s,"G");
+	int nT = count(s,"T");
+	
+	cout << "\t" << nA << "\t" << nC << "\t" << nG << "\t" << nT << "\t" << nA+nT << "\t" << nG+nC << "\t" << nA+nG << "\t" << nT+nC;	
+
+
+	if(di)
+	{	
+		// column 18-33: di
+		array<string,16> di = {"AA","AC","AG","AT","CA","CC","CG","CT","GA","GC","GG","GT","TA","TC","TG","TT"};
+
+		for (int i=0;i<di.size();i++) cout << "\t" << count(s,di[i]) ;
+	}
+
+	if(tri)
+	{
+		vector<string> tri = generate_kmers(3,"ACGT");
+		for (int i=0;i<tri.size();i++) cout << "\t" << count(s,tri[i]) ;
+	}
+	//header = header +"\t"+to_string(tri);
+
+
+	if(p1)
+	{
+		for(int i=0;i<s.size();i++)
+		{
+			if(s[i] == 'A') cout << "\t1\t0\t0\t0";
+			else if (s[i] == 'C') cout << "\t0\t1\t0\t0";
+            else if (s[i] == 'G') cout << "\t0\t0\t1\t0";
+            else cout << "\t0\t0\t0\t1";
+		}		
+	}
+
+    if(p2)
+    {
+		array<string,16> di = {"AA","AC","AG","AT","CA","CC","CG","CT","GA","GC","GG","GT","TA","TC","TG","TT"};
+        for(int i=0;i< s.size()-1;i++)
+        {
+			for(int j=0;j<16;j++)
+			{
+				if(s.substr(i,2) == di[j]) cout << "\t1";
+				else cout << "\t0";
+			}
+        }
+    }
+
+
+	// homopolymer
+	if(h2)
+	{
+		array<string,4> homo = {"AA","CC","GG","TT"};
+		for(int i=0;i< s.size()-1;i++)
+        {   
+            for(int j=0;j<4;j++)
+            {  
+                if(s.substr(i,2) == homo[j]) cout << "\t1";
+                else cout << "\t0";
+            }
+        }
+	}
+    if(h3)
+    {   
+        array<string,4> homo = {"AAA","CCC","GGG","TTT"};
+        for(int i=0;i< s.size()-2;i++)
+        {      
+            for(int j=0;j<4;j++)
+            {  
+                if(s.substr(i,3) == homo[j]) cout << "\t1";
+                else cout << "\t0";
+            }
+        }
+    }
+    if(h4)
+    {   
+        array<string,4> homo = {"AAAA","CCCC","GGGG","TTTT"};
+        for(int i=0;i< s.size()-3;i++)
+        {      
+            for(int j=0;j<4;j++)
+            {  
+                if(s.substr(i,4) == homo[j]) cout << "\t1";
+                else cout << "\t0";
+            }
+        }
+    }
+
+	cout << endl;
+
+	//cerr << header << endl;
+}
+
+// features specified via strings
+// freq_feat: A,CG,...
+// posi_feat: A.-3,CG.9,...
+// col: column of sequence, 0 based
+// start: 1 based
+void sequence_feature(string infile, string outfile, string freq_feat, string posi_feat, int col_seq/*=1*/, int col_id/*=1*/,int start/*=1*/)
+{
+	vector<string> freq_feats = string_split(freq_feat,",");
+	vector<string> posi_feats = string_split(posi_feat,",");
+	vector<string> feat;
+	vector<int> posi;
+	for(int i=0;i<posi_feats.size();i++)
+	{
+		vector<string> tmp = string_split(posi_feats[i],".");
+		feat.push_back(tmp[0]);
+		int p = stoi(tmp[1]);
+		if (p<0) p = p + 1;
+		p = p + start - 2;
+		posi.push_back(p);
+	}
+	
+	ofstream fout(outfile.c_str());
+	
+	fout << "SeqID\t" << to_string(freq_feats) << "\t" << to_string(posi_feats) << endl;
+	
+	ifstream fin(infile.c_str());
+	
+    string line;
+    vector<string> flds;
+
+    while(fin)
+    {  
+        getline(fin,line);
+        if (line.length() == 0)
+            continue;
+
+        line.erase(line.find_last_not_of(" \n\r\t")+1);
+		
+		flds = string_split(line,"\t");
+
+		string seq = to_upper(flds[col_seq]);
+		string id = flds[col_id];
+		
+		fout << id ;
+		
+		// count freq
+		for(int i=0;i<freq_feats.size();i++)
+		{
+			fout << "\t" << count(seq,freq_feats[i]);
+		}
+
+		//presence of position motif
+		for(int i=0;i<feat.size();i++)
+		{
+			if(seq.substr(posi[i],feat[i].size()) == feat[i]) fout <<"\t1" ;
+			else fout << "\t0";
+		}
+		
+		fout << endl;
+
+	}
+	fin.close();
+	fout.close();
+}
+
+void to_upper(vector<string> &seqs)
+{
+	for(int i=0;i<seqs.size();i++) seqs[i] = to_upper(seqs[i]);
+}
 
 // number of identical bases
 int sequence_similarity(string a, string b)
@@ -68,7 +343,7 @@ void pairwise_sequence_similarity_matrix(vector<string> seqs, string filename)
 // load weighted sequence file into two vectors: seqs and weights
 // the first three columns should be: id, seq, weight (tab-delimited)
 // if cWeight < 0, load unweighted sequences
-void load_sequences_from_tabular(string filename, vector<string> &seqs, vector<double> &weights,int skip/*=0*/, int cSeq/*=1*/, int cWeight/*=2*/) {
+void load_sequences_from_tabular(string filename, vector<string> &seqs, vector<double> &weights, int cSeq/*=1*/, int cWeight/*=2*/) {
 	// minimum number of columns in input
 	int nCol = max(cSeq,cWeight)+1;
 	
@@ -77,18 +352,18 @@ void load_sequences_from_tabular(string filename, vector<string> &seqs, vector<d
 
     string line;
     vector<string> flds;
-
-	// skip header lines
-	int i=0;
-	while(i<skip) getline(fin,line);
 	
     while(fin)
     {
         getline(fin,line);
         if (line.length() == 0)
             continue;
+		
+		line.erase(line.find_last_not_of(" \n\r\t")+1);
+		
+		if(line[0] == '#') continue;
 
-        flds = string_split(line,"\t");
+        flds = string_split(to_upper(line));
 		if (flds.size() < nCol) message("too few columns in line: "+line);
 		else
 		{
@@ -108,7 +383,7 @@ map<string,string> vector2map(vector<string> seqs)
 
 // load weighted sequence file into two vectors: seqs and weights
 // the first three columns should be: id, seq, weight (tab-delimited)
-void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, vector<double> &weights,int skip/*=0*/, int cSeq/*=1*/, int cWeight/*=2*/) {
+void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, vector<double> &weights, int cSeq/*=1*/, int cWeight/*=2*/) {
 	// minimum number of columns in input
 	int nCol = max(cSeq,cWeight)+1;
 	
@@ -118,17 +393,15 @@ void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, v
     string line;
     vector<string> flds;
 
-	// skip header lines
-	int i=0;
-	while(i<skip) getline(fin,line);
-	
     while(fin)
     {
         getline(fin,line);
         if (line.length() == 0)
             continue;
 
-        flds = string_split(line,"\t");
+		if(line[0] == '#') continue;
+
+        flds = string_split(line);
 		if (flds.size() < nCol) message("too few columns in line: "+line);
 		else
 		{
@@ -141,9 +414,8 @@ void load_weighted_sequences_to_vectors(string filename, vector<string> &seqs, v
 
 // load ranked sequences to vectors
 // default: no header, first column is id, second column is sequence
-// r: number of header lines to skip.
 // c: column for sequence, 0-based, i.e. first column is 0
-vector<string> load_ranked_sequences_to_vectors(string filename, int skip/*=0*/, int cSeq/*=1*/){
+vector<string> load_ranked_sequences_to_vectors(string filename, int cSeq/*=1*/){
 	vector<string> seqs;
 	
 	ifstream fin;
@@ -159,15 +431,14 @@ vector<string> load_ranked_sequences_to_vectors(string filename, int skip/*=0*/,
 	        getline(fin,line);
 	        if (line.length() == 0)
 	            continue;
+			if(line[0] == '#') continue;
+			
 			if(line[0] != '>') seqs.push_back(line);
 		}
 		fin.close();
 		return seqs;	
 	}
 	
-	// skip header lines
-	int i=0;
-	while(i<skip) getline(fin,line);
 
 	// read sequences into a vector
     while(fin)
@@ -175,8 +446,10 @@ vector<string> load_ranked_sequences_to_vectors(string filename, int skip/*=0*/,
         getline(fin,line);
         if (line.length() == 0)
             continue;
+		
+		if(line[0] == '#') continue;
 
-        flds = string_split(line,"\t");
+        flds = string_split(line);
 		if (flds.size() < cSeq+1) message("skip lines with not enough columns: "+line);
 		else seqs.push_back(flds[cSeq]);
 	}
@@ -202,6 +475,44 @@ vector<int> filter_sequences_by_size(vector<string> &seqs, int lSeq/*=0*/)
 		}
 	}
 	return removed;
+}
+
+
+// any of a list positional kmer is present in sequence
+bool seq_has_any_of_positional_kmer(string seq, vector<positional_kmer> pkmers)
+{
+	//cout << pkmers.size() << endl;
+
+	for (int i=0;i<pkmers.size();i++)
+	{
+		//cout << pkmers[i].as_string() << endl;
+		if (pkmers[i].is_present_in(seq))
+		    return true;
+	}
+	return false;
+}
+
+// filter sequence by positional kmer
+// seqs: original sequence and negative after filering
+// positives: positive after filtering
+// value: bool vector indicating positives
+vector<bool> filter_sequences_by_kmer(vector<string> &seqs, vector<string> &positives, vector<positional_kmer> pkmers)
+{
+    vector<bool> is_positive;
+
+    for(int i=seqs.size()-1;i>=0;i--)
+    {  
+        if(seq_has_any_of_positional_kmer(seqs[i],pkmers))
+        {  
+			positives.push_back(seqs[i]);
+            seqs.erase(seqs.begin()+i);
+            is_positive.push_back(true);
+        }
+		else is_positive.push_back(false);
+    }
+	// note that the order needs to be reversed
+    reverse(is_positive.begin(),is_positive.end());
+	return is_positive;
 }
 
 
@@ -248,7 +559,7 @@ int find_significant_kmer_from_ranked_sequences(
 			for( int pos=0; pos < lSeq-k+1; pos ++) // at each position
 			{
 				// ranks of sequences with this kmer at this position
-				vector<int> ranks;
+				vector<double> ranks;
 				// for each sequence, 
 				for( int j=0;j<nSeq;j++) 
 				{
@@ -327,7 +638,7 @@ int find_significant_kmer_from_weighted_sequences(
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
 	
 	//message(to_string(nSeq)+" sequences");
-	//message(to_string(lSeq)+" length");
+//	message(to_string(lSeq)+" length");
 	
 	// the number of significant positional kmers found
 	int nSig = 0;
@@ -394,6 +705,9 @@ int find_significant_kmer_from_weighted_sequences(
 				{
 					continue;
 				}
+
+				//cout << kmers[i] << "\t" << pos-startPos+2 << "\t" << weights1.size() << "," << weights2.size() << endl;
+
 				array<double,6> ttest = t_test(weights1,weights2,false);
 				if (ttest[1] < pCutoff)
 				{
@@ -479,6 +793,9 @@ int find_significant_degenerate_shift_kmer_from_one_set_unweighted_sequences(
 			
 	        int total_counts = sum(counts);
 			
+            // if this kmer is not present anywhere, skip it
+            if (total_counts == 0) continue;
+
 			double expected = double(total_counts)/counts.size();
 			
 			// calculate background f2
@@ -503,13 +820,12 @@ int find_significant_degenerate_shift_kmer_from_one_set_unweighted_sequences(
 	                nSig++;
 					double f1 = float(counts[x])/nSeq;
 	                double z = (counts[x] - expected) / sqrt(expected*(1-f2));
-	                double local_r = f1/f2;
+	                double local_r = f1 / ((f2 * nSeq - f1)/(nSeq-1));// double(counts[x])/(total_counts-counts[x])*(nSeq-1);
 					int position = x-startPos+2;
 					if (position < 1) position -= 1;
-	                outstream << kmers[i] << "\t" << position << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << local_r << "\t"  << local_r << endl;
+	                outstream << kmers[i] << "\t" << position << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
 	            }
 			}
-			
 		}
 	}
 
@@ -625,8 +941,6 @@ int find_significant_pairs_from_weighted_sequences(
     return nSig;
 } // end of function
 
-
-
 // nucleotide plot from PKA2 weighted output
 // no shift, k=1
 // plot column 
@@ -735,61 +1049,6 @@ void plot_most_significant_kmers(string infile, string outfile, int lSeq, int co
 }
 
 
-positional_kmer::positional_kmer(string seq1, int pos1, int size1, double weight1, int group1){
-	seq = seq1;
-	pos = pos1;
-	size = size1;
-	weight = weight1;
-	group = group1;
-}
-
-positional_kmer::positional_kmer() 
-{
-  // allocate variables
-	seq = "";
-	pos = -1;
-	size = -1;
-	weight = -1.0;
-	group = -1;
-}
-
-positional_kmer::positional_kmer(const positional_kmer &a) 
-{
-  // allocate variables
-  positional_kmer();
-  // copy values
-  operator = (a);
-}
-
-bool positional_kmer::equals(positional_kmer a)
-{
-	return seq == a.seq && pos == a.pos && size == a.size;
-}
-
-bool positional_kmer::is_part_of(positional_kmer a)
-{
-	// only if a is part of this at the same position
-	if (pos >= a.pos && ( (pos + seq.size()) <= (a.pos + a.seq.size()) ) && seq.size() != a.seq.size())
-		if (a.seq.substr(pos - a.pos, seq.size()) == seq)
-			return true;
-	return false;
-}
-
-const positional_kmer &positional_kmer::operator = (const positional_kmer &a)
-{
-	seq = a.seq;
-	pos = a.pos;
-	size = a.size;
-	weight = a.weight;
-	group = a.group;
-	return *this;
-}
-
-string positional_kmer::as_string(string del/*="_"*/)
-{
-	return seq+del+to_string(pos)+del+to_string(size)+del+to_string(weight)+del+to_string(group);
-}
-
 
 paired_kmer::paired_kmer(string seqa, string seqb, int distance, int offset, int position, double score)
 {
@@ -859,10 +1118,40 @@ int paired_kmer::gap()
 	return dist - int(seq1.size());
 }
 
+// use motif end position instead of start position
+void use_end_position(string filename)
+{
+    ifstream fin(filename.c_str());
+	string output = filename + ".tmp";
+	ofstream fout(output.c_str());
+    string line;
+    vector<string> flds;
+
+    while(fin)
+    {
+        getline(fin,line);
+        if (line.length() == 0)
+            continue;
+
+        if(line[0] == '#') continue;
+
+        flds = string_split(line);
+		int oldpos = stoi(flds[1]);
+		int pos  = stoi(flds[1])+int(flds[0].size())+stoi(flds[2])-1;
+		if (oldpos < 0 && pos >=0) pos = pos + 1;
+		fout << flds[0] << "\t" << to_string(pos);
+		for(int i=2;i<flds.size();i++)
+			fout << "\t" << flds[i];
+		fout  << endl;
+	}
+	fin.close();
+	fout.close();
+	system_run("mv "+output+" "+filename);
+}
+
 // note input should be sorted by weight
 vector<positional_kmer> build_model_from_PKA_output(string filename, int startPos)
 {
-	int skip = 0;
 	int cKmer = 0;
 	int cStart = 1;
 	int cShift = 2;
@@ -884,9 +1173,6 @@ vector<positional_kmer> build_model_from_PKA_output(string filename, int startPo
 	
 	string line;
 	vector<string> flds;
-	// skip header lines
-	int i=0;
-	while(fin && i++ < skip) getline(fin,line);
 
 	int group = 0;
     while(fin)
@@ -895,7 +1181,9 @@ vector<positional_kmer> build_model_from_PKA_output(string filename, int startPo
         if (line.length() == 0)
             continue;
 
-        flds = string_split(line,"\t");
+		if(line[0] == '#') continue;
+		
+        flds = string_split(line);
 		
 		double weight = stof(flds[cWeight]);
 				
@@ -958,7 +1246,6 @@ vector<positional_kmer> build_model_from_PKA_output(string filename, int startPo
 // no degenerate nucleotides
 vector<paired_kmer> build_paired_kmer_model(string filename)
 {
-	int skip = 0; // no header
 	int cKmer = 0; // first column is kmer
 	int cStart = 1; // second column is start 
 	int cStat = 3; // statistics, tells you sign of signficance
@@ -972,9 +1259,6 @@ vector<paired_kmer> build_paired_kmer_model(string filename)
 	string line;
 	vector<string> flds;
 	
-	// skip header lines
-	int i=0;
-	while(fin && i++ < skip) getline(fin,line);
 
     while(fin)
     {
@@ -982,7 +1266,8 @@ vector<paired_kmer> build_paired_kmer_model(string filename)
         if (line.length() == 0)
             continue;
 
-        flds = string_split(line,"\t");
+		if(line[0] == '#') continue;
+        flds = string_split(line);
 		
 		string kmer = flds[cKmer];
 		int pos = stoi(flds[cStart]);
@@ -1029,7 +1314,7 @@ vector<positional_kmer> load_model_from_file(string filename)
         if (line.length() == 0)
             continue;
 
-        flds = string_split(line,"\t");
+        flds = string_split(line);
 		positional_kmer x(flds[0],stoi(flds[1]),stoi(flds[2]),stof(flds[3]),stoi(flds[4]));
 		ranked_kmers.push_back(x);
 	}
@@ -1044,7 +1329,7 @@ double score_sequence_using_PKA_model(vector<positional_kmer> ranked_kmers,  str
 	for( int i=0;i<ranked_kmers.size();i++)
 	{
 		//cout << i << "\t"<< ranked_kmers[i].as_string() ;
-		//cout << "\t" << seq.substr(ranked_kmers[i].pos,ranked_kmers[i].size) ;
+		//cout << "\t" << seq.substr(ranked_kmers[i].pos-1,ranked_kmers[i].size) ;
 		size_t found = seq.substr(ranked_kmers[i].pos,ranked_kmers[i].size).find(ranked_kmers[i].seq);
 		if (found != std::string::npos) 
 		{
@@ -1053,6 +1338,7 @@ double score_sequence_using_PKA_model(vector<positional_kmer> ranked_kmers,  str
 		}
 		//cout << endl;
 	}
+	//cout << "done with seq: " << seq << endl;
 	return score;
 }
 
@@ -1141,7 +1427,7 @@ void score_tabular_using_PKA_model(string tabfile, int col, string outputfile, v
     {
 		getline(fin,line);
 		if(line.length() == 0) continue;
-		flds = string_split(line,"\t");
+		flds = string_split(line);
      	double score = score_sequence_using_PKA_model(ranked_kmers, flds[col]);
   		fout << line << "\t" << score << endl;		
     }
@@ -1228,16 +1514,15 @@ void read_significant_positional_kmer_from_file(string inputfile, vector<string>
 	
 	string line;
 	vector<string> flds;
-	// skip header lines
-	getline(fin,line);
 
     while(fin)
     {
         getline(fin,line);
         if (line.length() == 0)
             continue;
+		if(line[0] == '#') continue;
 
-        flds = string_split(line,"\t");
+        flds = string_split(line);
 		
 		kmers.push_back(flds[0]);
 		positions.push_back(stoi(flds[2]));
@@ -1253,16 +1538,16 @@ void read_significant_positional_kmer_from_PKA2_output(string inputfile, vector<
 	
 	string line;
 	vector<string> flds;
-	// skip header lines
-	getline(fin,line);
 
     while(fin)
     {
         getline(fin,line);
         if (line.length() == 0)
             continue;
+		
+		if(line[0]=='#') continue;
 
-        flds = string_split(line,"\t");
+        flds = string_split(line);
 		
 		kmers.push_back(flds[0]);
 		positions.push_back(stoi(flds[1]));
@@ -1407,16 +1692,15 @@ int non_overlapping_sig_motifs(string inputfile, string outputfile)
     string line;
     vector<string> flds;
 
-    // skip header;
-    getline(fin,line);
-
     while(fin)
     {  
         getline(fin,line);
         if (line.length() == 0)
             continue;
+		
+		if(line[0]=='#') continue;
 
-        flds = string_split(line,"\t");
+        flds = string_split(line);
         length.push_back(flds[0].size());
         position.push_back(stoi(flds[2]));
         removed.push_back(false);
@@ -1440,7 +1724,7 @@ int non_overlapping_sig_motifs(string inputfile, string outputfile)
             {
                 int start2 = position[i];
                 int end2 = start2+ length[i] - 1;
-                if (start <= start2 && end >= start2 || start <= end2 && end >= end2) // overlap
+                if ( ((start <= start2) && (end >= start2)) || ((start <= end2) && (end >= end2))) // overlap
                 {
                     removed[i] = true;        
                 }
@@ -1503,6 +1787,34 @@ set<int> findall(string seq, string motif)
     return allpos;
 }
 
+int count(string seq,string motif)
+{
+    // count the number of matches, allowing overlap 
+    int n = 0;
+    size_t pos = 0; //start at pos
+    pos = seq.find(motif); // the first match
+    while(pos != string::npos)
+    {  
+        n++;
+        pos = seq.find(motif,pos+1); // start search for the next match from pos + 1
+    }
+    return n;
+}
+
+int count_non_overlap(string seq,string motif)
+{
+    // count the number of matches, not allowing overlap 
+	int motif_size = motif.size();
+    int n = 0;
+    size_t pos = 0; //start at pos
+    pos = seq.find(motif); // the first match
+    while(pos != string::npos)
+    {  
+        n++;
+        pos = seq.find(motif,pos+motif_size); // start search for the next match from pos + motif_size
+    }
+    return n;
+}
 
 // dict for IUPAC degenerate nucleotides
 map<char,string> define_IUPAC()
@@ -1636,6 +1948,7 @@ vector<string> expand_degenerate_kmer(string seq, map<char,string> iupac)
     return res;
 }
 
+
 // implant a motif to a set of sequences
 // motif can contain degenerate nucleotides
 void implant_motif(map<string,string> &seqs, int position, string motif, double fraction)
@@ -1652,6 +1965,468 @@ void implant_motif(map<string,string> &seqs, int position, string motif, double 
         nSeq--;
         if (nSeq==0) return ;     
     }
+}
+
+
+// for max_shift > 0: take the most strongest
+boost::numeric::ublas::matrix<double> position_weight_matrix_from_PKA_output(string filename, string alphabet, int seqLen, int startPos, int cScore)
+{
+	int cSeq = 0;
+	int cPos = 1; 
+	int cStat = 3;
+ 	cScore -= 1;
+	
+	// initialize an empty matrix
+    boost::numeric::ublas::matrix<double> pwm (alphabet.size(),seqLen);
+    for (int i = 0; i < pwm.size1(); ++ i)
+        for (int j = 0; j < pwm.size2(); ++ j)
+            pwm(i,j) = 0.0;
+  
+    //cout << "matrix initiaze ok" << endl;
+
+    // nucleotide to position
+    map<string,int> letter2pos;
+	for(int i=0;i<alphabet.size();i++)
+	{
+		letter2pos[alphabet.substr(i,1)] = i;
+	}
+ 
+ 	ifstream fin(filename.c_str());
+	string line;
+	vector<string> flds;
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length() == 0) continue;
+		flds = string_split(line);
+		if(letter2pos.find(flds[cSeq]) != letter2pos.end())
+		{
+			double score = stof(flds[cScore]);
+			if (stof(flds[cStat]) < 0) 
+			{
+				if (cScore != cStat) score = -score;
+			}
+			int pos = stoi(flds[cPos]);
+			if (pos < 0) pos += 1;
+			pos = pos + startPos - 2;
+			//cout << pos << "," << line << endl;
+			if(abs(pwm(letter2pos[flds[cSeq]],pos)) < abs(score)) // for multiple shift values
+			{
+				pwm(letter2pos[flds[cSeq]],pos) = score;
+			}
+		}
+	}
+	fin.close();
+
+    return pwm;
+}
+
+
+
+// one text all the same color
+string postscript_text(string text, double x, double y, double width, double height, string color, double rotate)
+{
+	string res = "\n"
+    "gsave \n "
+    "  "+to_string(x)+" "+to_string(y)+" moveto \n"
+    "  "+to_string(width) +" "+to_string(height) + " scale \n "
+	"  "+to_string(rotate)+ " rotate\n"
+    "  "+color + " setrgbcolor ("+text+") dup stringwidth pop 2 div neg 0 rmoveto show  \n"
+    "grestore \n"
+	"\n";	
+	
+	return res;
+}
+
+string postscript_line(double x1, double y1, double x2, double y2)
+{
+	string res = "\n"
+	"gsave \n"
+	"     newpath \n"
+	"     " + to_string(x1) + " " + to_string(y1) +" moveto \n"
+	"     " + to_string(x2) + " " + to_string(y2) +" lineto \n"
+	"stroke \n\n";
+	
+	return res;
+}
+
+// to avoid calculating information content, set nSeq=0
+// if nSeq > 0, calculate information content and small sample correction
+// if nSeq == 0, do not calculate information content
+// if nSeq < 0, calculate info content without small sample correction
+// small sample correction: subtract the following term from each value: (alphabet.size-1)/ln2/2/n
+// descending: false. if true, will put important letter at the bottom
+void generate_ps_logo_from_pwm(boost::numeric::ublas::matrix<double> pwm, string filename, string alphabet,vector<int> fixed_position, vector<string> fixed_letter, map<char,string> colors, double score_cutoff, int startPos, int fontsize, string y_label, double max_scale, int nSeq, bool bottom_up)
+{
+
+	// fontsize
+	//int fontsize = 20;
+	
+	// the actual size of each character is smaller than fontsize
+	double scalex = 0.75;
+	double scaley = 0.75;
+	
+	// max score will be used to normalize
+	// this will be the max value in pwm after normalization
+	// double max_scale = 6;
+	
+	// distance between pos and neg, for plotting coordinates
+	
+	double xstep = fontsize * scalex;
+	double ystep = fontsize * scaley;
+	double coord_size = fontsize * scaley * 2;
+	
+	int L = pwm.size2();
+
+	double small_sample_correction = 0;
+	
+	if (nSeq != 0) 
+	{
+		if(nSeq > 0)
+		{
+			small_sample_correction = (alphabet.size()-1.0)/log(2.0)/2.0/nSeq;
+		}
+
+		vector<double> info_content = matrix_column_information_content(pwm);
+
+		for (int i=0;i<pwm.size2();i++)
+		{
+			info_content[i] -= small_sample_correction;
+			if(info_content[i] < 0) info_content[i] = 0;
+			for (int j=0;j<pwm.size1();j++)
+			{
+				pwm(j,i) *= info_content[i];
+			}
+		}
+	}
+
+	//print_matrix(pwm);
+
+
+	double maxv = matrix_max(pwm);
+	double minv = matrix_min(pwm);
+	vector<double> col_max = matrix_column_max(pwm);
+	vector<double> col_min = matrix_column_min(pwm);
+		
+	// for fixed position
+	double max_col_sum = max(matrix_column_sum(pwm,1));
+	for (int i=0;i<fixed_position.size();i++)
+	{
+		for(int j=0;j<alphabet.size();j++)
+		{
+			if(fixed_letter[i] == alphabet.substr(j,1))
+			{
+				pwm(j,fixed_position[i]) = 1.1 * max_col_sum;
+			}
+			else pwm(j,fixed_position[i]) = 0 ;
+		}
+	}
+
+
+	vector<bool> significant;
+	for (int i=0;i<L;i++)
+	{
+		if (col_max[i] > score_cutoff || col_min[i] < -score_cutoff) significant.push_back(true);
+		else significant.push_back(false);
+	}
+	
+
+	
+	double absmax = max(maxv,-minv);
+		
+	pwm = pwm / absmax * max_scale;
+	
+	vector<double> colum_sum_pos = matrix_column_sum(pwm, 1);
+	
+	vector<double> colum_sum_neg = matrix_column_sum(pwm, -1);
+	//for (int i=0;i<colum_sum_neg.size();i++) cout << colum_sum_neg[i] << ",";
+	//cout << y_label << endl;
+
+	double height_pos = max(colum_sum_pos)  ;
+	double height_neg = max(0.0,-min(colum_sum_neg)) ;	
+	
+    //print_matrix(pwm);
+	
+	//cout << height_pos << endl;
+	//cout << height_neg << endl;
+	
+	
+	// origin in the plot: left, center
+	int x0 = 5 * xstep;
+	int y0 = (height_neg + 2) * ystep;
+	
+	// ps file header, define plot window
+	string header = ""
+		"%!PS-Adobe-3.0 EPSF-3.0            \n"
+		"%%Title: Sequence Logo : Logo      \n"
+		"%%Creator: PKA 					\n"
+		"%%CreationDate: "+current_time()+" \n"
+		"%%BoundingBox:   0  0  "+to_string(L * xstep + x0 * 1.5)+" "+to_string( (height_pos+height_neg + 6) * ystep )+" \n"
+		"%%Pages: 0                         \n"
+		"%%DocumentFonts:                   \n"
+		"%%EndComments                      \n"
+		"\n"
+		"/Helvetica-Narrow-Bold findfont "+to_string(fontsize)+" scalefont setfont\n";
+	
+	ofstream out(filename.c_str());
+	out << header << endl;
+	
+
+    // draw y axis, +
+    out << postscript_line(x0-xstep*1.5, y0+coord_size,  x0-xstep*1.5, y0 + coord_size + height_pos * ystep);
+    //  out << postscript_text("0", x0-xstep, y0+ystep/2, 0.6,0.6, "0 0 0", 0);
+    double y_max = height_pos * absmax / max_scale;
+    out << postscript_text(to_string_with_precision(y_max), x0 - xstep*1.5 , y0+coord_size + (height_pos+0.4) * ystep, 0.6,0.6, "0 0 0", 0);
+    // draw y axis, -
+    if(minv < 0)
+    {
+        out << postscript_line(x0-xstep*1.5, y0,  x0-xstep*1.5, y0 - height_neg * ystep);
+        //out << postscript_text("0", x0-xstep*1.5, y0-ystep/2, 1, 1, "0 0 0", 0);
+        double ymax = height_neg* absmax / max_scale;
+        out << postscript_text(to_string_with_precision(ymax), x0-xstep*1.5, y0-(height_neg+1) * ystep , 0.6,0.6, "0 0 0", 0);
+        out << postscript_text(y_label, x0-xstep*3, y0+coord_size/2+(height_pos - height_neg)*ystep/2, 0.6, 0.6, "0 0 0", 90);
+    }
+    // yaxis label
+	else out << postscript_text(y_label, x0-xstep*3, y0+coord_size+(height_pos - height_neg)*ystep/2, 0.6, 0.6, "0 0 0", 90);
+
+	
+	// x axis
+	for(int i = 0 ; i < L; i++) 
+	{
+		int pos = i - startPos + 2;
+		if (pos < 1) pos -= 1;
+		string color_sig = "0.5 0.5 0.5";
+		if (significant[i]) color_sig = "1 0 0";
+		// fixed position
+		if (find (fixed_position.begin(), fixed_position.end(), i) != fixed_position.end() )  color_sig = "0 0 0";
+		out << postscript_text(to_string(pos),x0 + xstep * (i+0.3) ,y0+ystep,0.6,0.6,color_sig,90);
+	}
+	
+
+	// plot logo at each position
+	for (int i=0;i<L; i++)
+	{
+		double x = x0 + xstep * i;
+		double y_pos = y0+coord_size;
+		double y_neg = y0;
+		double y;
+
+		// sort and return index, ascending order
+		vector<double> w;
+
+		for(int j=0;j<alphabet.size();j++) w.push_back(pwm(j,i));
+		vector<size_t> idx = sort_indexes(w,bottom_up);
+		//for(int j=0;j<4;j++) cout << i << "\t" << letters[idx[j]] << "\t"<< idx[j] << "\t" << w[idx[j]] << endl;
+		
+		for(int j=0;j<alphabet.size();j++)
+		{
+			if (w[idx[j]] > 0)
+			{		
+                string color;
+                if (colors.find(alphabet[idx[j]]) != colors.end()) {color = colors[alphabet[idx[j]]];}
+                else {color = "0.5 0.5 0.5";}
+                 	
+				out << postscript_text(alphabet.substr(idx[j],1),x, y_pos, 1, w[idx[j]],color); 
+				y_pos += w[idx[j]] * ystep ;
+			}
+		}
+		for(int j=alphabet.size()-1;j>=0;j--)		
+		{
+			if (w[idx[j]] < 0)
+			{
+				y_neg += w[idx[j]] * fontsize * scaley;
+                string color;
+                if (colors.find(alphabet[idx[j]]) != colors.end()) {color = colors[alphabet[idx[j]]];}else {color = "0.5 0.5 0.5";}
+				out << postscript_text(alphabet.substr(idx[j],1), x, y_neg, 1, -w[idx[j]],color); 
+				//y_neg += w[idx[j]] * ystep * 0.05;
+			}
+		}
+		//cout << i << "," << w[idx[0]] * absmax / max_scale << "," << w[idx[3]] * absmax / max_scale<< "," << score_cutoff << endl;
+		//if (w[idx[3]] * absmax / max_scale > score_cutoff)	out << postscript_text("*",x+0.25*xstep,max(y_pos+0.5*ystep, y0+coord_size + int(height_pos) * ystep),0.6,0.6,"1 0 0",0);
+		//if (w[idx[0]] * absmax / max_scale < -score_cutoff) out << postscript_text("*",x+0.25*xstep,min(y_neg-0.5*ystep, y0-int(height_neg) * ystep) ,0.6,0.6,"1 0 0",0);
+		
+	}
+
+	out << "showpage" << endl;
+	out << "%%EOF" << endl;
+	
+	out.close();
+						
+}
+
+
+// vertical kmer, color each bases differently	  
+// height: total height, can be negative
+string postscript_kmer(string seq, double x, double y, int fontsize, double scaley, double width, double height, map<char,string> colormap, double rotate)
+{
+	// length of the sequence
+	int L = seq.size();
+	
+	// determine height for each base
+	if (height < 0) 
+	{
+		y = y + height * fontsize * scaley;
+		height = - height / L;
+	}
+	else height = height / L;
+	
+	string res,color;
+	
+	for(int i = L-1;i >= 0;i--)
+	{
+		if (colormap.find(seq[i]) == colormap.end()) color = "0.5 0.5 0.5";
+        else color = colormap[seq[i]];
+		//cout << i << endl;
+		res += "\n"
+   		 "gsave \n "
+    	 "  "+to_string(x)+" "+to_string(y + fontsize * scaley * (L-i-1) * height)+" moveto \n"
+         "  "+to_string(width) +" "+to_string(height*0.95) + " scale \n "
+	     "  "+to_string(rotate)+ " rotate\n"
+         "  "+color + " setrgbcolor ("+seq[i]+") dup stringwidth pop 2 div neg 0 rmoveto show  \n"
+         "grestore \n"
+	     "\n";
+	}	
+	return res;
+}
+
+
+void postscript_logo_from_PKA_output(string infile, string outfile, map<char,string> colors, int seqLen, double score_cutoff, int startPos, int fontsize, int cScore,string y_label, double max_scale)
+{
+	int cSeq = 0;
+	int cPos = 1; 
+	int cStat = 3;
+ 	cScore -= 1;
+	
+	int L = seqLen;
+	vector<bool> significant;
+	for(int i=0;i<L;i++) significant.push_back(false);
+	
+	// determine the max / min scores
+	double maxv = -1;	
+	double minv = 1e100;
+	
+ 	ifstream fin(infile.c_str());
+	string line;
+	vector<string> flds;
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length() == 0) continue;
+		flds = string_split(line);
+		double score = stof(flds[cScore]);
+		int pos = stoi(flds[cPos]);
+		if (pos < 0) pos += 1;
+		pos = pos + startPos - 1;
+		if (score > score_cutoff) significant[pos-1] = true;
+		if(stof(flds[cStat]) < 0 ) 
+		{
+			if (cScore != cStat) score = -score;
+		}
+		if (score > maxv) maxv = score;
+		if (score < minv) minv = score;
+
+	}
+	fin.close();
+	
+	// fontsize
+	//int fontsize = 20;
+	
+	double scalex = 0.75;
+	double scaley = 0.75;
+	
+
+	double xstep = fontsize * scalex;
+	double ystep = fontsize * scaley;
+	double coord_size = fontsize * scaley * 2;
+	
+	double absmax = max(maxv,-minv);
+				
+	double height_pos = maxv  / absmax * max_scale ;
+	double height_neg = max(0.0,-minv/absmax * max_scale) ;	
+	
+	//cout << minv << endl;
+	//cout << height_pos << endl;
+	//cout << height_neg << endl;
+	
+
+	
+	// origin in the plot: left, center
+	int x0 = 5 * xstep;
+	int y0 = (height_neg + 1.5) * ystep;
+	
+	// ps file header, define plot window
+	string header = ""
+		"%!PS-Adobe-3.0 EPSF-3.0            \n"
+		"%%Title: Sequence Logo : Logo      \n"
+		"%%Creator: PKA 					\n"
+		"%%CreationDate: "+current_time()+" \n"
+		"%%BoundingBox:   0  0  "+to_string(L * xstep + x0 * 1.5)+" "+to_string( (height_pos+height_neg + 5) * ystep )+" \n"
+		"%%Pages: 0                         \n"
+		"%%DocumentFonts:                   \n"
+		"%%EndComments                      \n"
+		"\n"
+		"/Helvetica-Narrow-Bold findfont "+to_string(fontsize)+" scalefont setfont\n";
+	
+	ofstream out(outfile.c_str());
+	out << header << endl;
+	
+	// draw y axis, +
+	out << postscript_line(x0-xstep*1.5, y0+coord_size,  x0-xstep*1.5, y0 + coord_size + height_pos * ystep);
+    //	out << postscript_text("0", x0-xstep, y0+ystep/2, 0.6,0.6, "0 0 0", 0);
+	double y_max = height_pos * absmax / max_scale;
+	out << postscript_text(to_string_with_precision(y_max), x0 - xstep*1.5 , y0+coord_size + (0.4+height_pos) * ystep, 0.6,0.6, "0 0 0", 0);
+	// draw y axis, -
+	if(minv < 0)
+	{
+		out << postscript_line(x0-xstep*1.5, y0,  x0-xstep*1.5, y0 - height_neg * ystep);
+		//out << postscript_text("0", x0-xstep*1.5, y0-ystep/2, 1, 1, "0 0 0", 0);
+		double ymax = height_neg* absmax / max_scale;
+	    out << postscript_text(to_string_with_precision(ymax), x0-xstep*1.5, y0-(height_neg+1) * ystep , 0.6,0.6, "0 0 0", 0);
+	    out << postscript_text(y_label, x0-xstep*3, y0+coord_size/2+(height_pos - height_neg)*ystep/2, 0.6, 0.6, "0 0 0", 90);
+	}
+	// yaxis label
+	else out << postscript_text(y_label, x0-xstep*3, y0+coord_size+(height_pos - height_neg)*ystep/2, 0.6, 0.6, "0 0 0", 90);
+
+	// x axis
+	for(int i = 0 ; i < L; i++) 
+	{
+		int pos = i - startPos + 2;
+		if (pos < 1) pos -= 1;
+		string color_sig = "0.5 0.5 0.5";
+		if (significant[i]) color_sig = "1 0 0";
+		out << postscript_text(to_string(pos),x0 + xstep * (i+0.3) ,y0+ystep,0.6,0.6,color_sig,90);
+	}
+	
+	
+	fin.open(infile.c_str());
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length() == 0) continue;
+		flds = string_split(line);
+		double score = stof(flds[cScore]) ; 
+		if(stof(flds[cStat]) < 0 ) 
+		{
+			if (cScore != cStat) score = -score;
+		}
+		int pos = stoi(flds[cPos]);
+		if (pos < 0) pos += 1;
+		pos = pos + startPos - 1;
+		//cout << flds[cSeq] << endl;
+		if (score > 0 ) out << postscript_kmer(flds[cSeq], x0+ xstep * (pos-1), y0+coord_size, fontsize, scaley, 1, score/ absmax * max_scale, colors, 0);
+		else if (score < 0) out << postscript_kmer(flds[cSeq], x0+ xstep * (pos-1), y0, fontsize, scaley, 1, score/ absmax * max_scale, colors, 0);
+		//cout << pos << "," <<  score_cutoff << "," << score<< endl;
+		//if (score > score_cutoff)	out << postscript_text("*",x0+ xstep * (pos-0.75),y0+coord_size + int(height_pos) * ystep,0.6,0.6,"1 0 0",0);
+		//else if (score <  -score_cutoff) out << postscript_text("*",x0+ xstep * (pos-0.75),y0-int(height_neg) * ystep ,0.6,0.6,"1 0 0",0);
+			
+	}
+	fin.close();
+	
+	out << "showpage" << endl;
+	out << "%%EOF" << endl;
+	
+	out.close();
+			
 }
 
 
@@ -1677,6 +2452,39 @@ void write_pwm_in_meme_format(boost::numeric::ublas::matrix<double> pwm, string 
     }
     out << endl;
     out.close();
+}
+
+
+// build position weight matrix from a set of sequences of the same length
+boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_seqs(vector<string> seqs,string alphabet)
+{
+
+    // length of sequences
+    int L = seqs[0].size();
+
+    // initialize an empty matrix
+    boost::numeric::ublas::matrix<double> pwm (alphabet.size(),L);
+    for (int i = 0; i < alphabet.size(); ++ i)
+        for (int j = 0; j < pwm.size2(); ++ j)
+            pwm(i,j) = 0.0;
+  
+    //cout << "matrix initiaze ok" << endl;
+
+    // nucleotide to position
+    map<char,int> letter2pos;
+	for(int i=0;i<alphabet.size();i++) letter2pos[alphabet[i]] = i;
+ 
+    for(int k=0;k<seqs.size();k++)
+    {
+        for( int i =0;i<L;i++)
+        {
+        	pwm(letter2pos[seqs[k][i]],i) += 1;
+        }
+    }
+	
+	pwm = pwm / seqs.size();
+	
+    return pwm;
 }
 
 
@@ -1775,15 +2583,15 @@ void create_logo_for_topN_sig_kmer_per_position(vector<string> seqs, string file
 
     map<char,string> iupac = define_IUPAC();
 
-    // skip header;
-    getline(fin,line);
 
     while(fin)
     {  
         getline(fin,line);
         if (line.length() == 0)
             continue;
-        flds = string_split(line,"\t");
+		
+		if(line[0] == '#') continue;
+        flds = string_split(line);
         //cout << flds[9] <<","<< pCutoff << endl;
         if(stod(flds[9]) < pCutoff)
         {
@@ -2006,9 +2814,10 @@ int find_significant_kmer_from_one_seq_set(
 	                double z = (counts1[m] - expected) / sqrt(expected*(1-f2));
 	                // local enrichment
 	                double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
-										
-	                outstream << it->first << "\t" << m-startPos << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
-	                outcounts << it->first << ":" << m-startPos;
+					int position = m-startPos + 2;
+					if(position < 1) position --;
+	                outstream << it->first << "\t" << position << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
+	                outcounts << it->first << ":" << position;
 	                for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
 	                outcounts << endl;
 	            }
@@ -2037,7 +2846,7 @@ int find_significant_kmer_from_one_seq_set(
 	            vector<string> dkmersexp = expand_degenerate_kmer(dkmers[i],define_iupac);
 
 	            // for output only, also generate regex version of the degenerate kmer
-	            string dkmersexp_readable = degenerate_kmer_to_regex(dkmers[i],define_iupac);
+	            // string dkmersexp_readable = degenerate_kmer_to_regex(dkmers[i],define_iupac);
 
 	            // initialize the count at each position with the first element kmer
 	            vector<int> counts1  = data1[dkmersexp[0]];
@@ -2050,7 +2859,7 @@ int find_significant_kmer_from_one_seq_set(
 	            //f2 = f2 * (1+shift); // can't have shift on degenerate kmers
 
 	            // for output only
-	            string regex_format = degenerate_kmer_to_regex(dkmers[i],define_iupac);
+	            //string regex_format = degenerate_kmer_to_regex(dkmers[i],define_iupac);
 
 	            // total counts
 	            int total_counts1 = sum(counts1);
@@ -2071,10 +2880,13 @@ int find_significant_kmer_from_one_seq_set(
 	                    double expected = nSeq1 * f2;
 	                    double z = (counts1[m] - expected) / sqrt(expected*(1-f2)); 
 	                    double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
+						
+						int position = m-startPos+2;
+						if(position < 1) position--;
 												
-	                    outstream  << dkmers[i] << "\t" << m-startPos << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
+	                    outstream  << dkmers[i] << "\t" << position << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
 	        
-                       outcounts << dkmers[i] << ":" << m-startPos;
+                       outcounts << dkmers[i] << ":" << position;
                        for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
                        outcounts << endl;
 	                }
@@ -2149,9 +2961,9 @@ int find_significant_kmer_from_two_seq_sets(vector<string>seqs1, vector<string>s
 	                // local enrichment
 	                double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
 					
-	                outstream << it->first << "\t"  << m-startPos << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
+	                outstream << it->first << "\t"  << m-startPos + 2 << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r << endl;
 	               
-	                    outcounts << it->first << ":" << m-startPos;
+	                    outcounts << it->first << ":" << m-startPos +2;
 	                    for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
 	                    outcounts << endl;
 	               
@@ -2219,8 +3031,8 @@ int find_significant_kmer_from_two_seq_sets(vector<string>seqs1, vector<string>s
 	                    double local_r = double(counts1[m]) / (total_counts1 - counts1[m]) * (counts1.size()-1);
 						
 						
-	                    outstream  << dkmers[i] << "\t" << m-startPos << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r  << endl;
-	                        outcounts << dkmers[i] << ":" << m-startPos;
+	                    outstream  << dkmers[i] << "\t" << m-startPos + 2 << "\t" << shift << "\t" << z << "\t" << -log10(p) << "\t" << -log10(corrected_p) << "\t" << f1 << "\t" << f2 << "\t" << f1/f2 << "\t"  << local_r  << endl;
+	                        outcounts << dkmers[i] << ":" << m-startPos + 2;
 	                        for( int x=0;x<counts1.size();x++) outcounts << "\t" << double(counts1[x])/nSeq1;
 	                        outcounts << endl;
 
@@ -2372,7 +3184,40 @@ vector<string> last_n_bases(vector<string> seqs,int n){
     return res;
 }
 
+// start from position a and ends at b
+// 1-based
+// if a or b < 1: distance from end
+// examples
+// from position 10 to the end: a=10, b=0
+// the last 10 letters except the last one: a=-10,b=-1
+// first 10: a=1;b=10
+// last 10: a=-9,b=0;
+vector<string> sub_sequences(vector<string> seqs, int a, int b)
+{
+    vector<string> res;
+    int start,end;
+    for (int i=0;i<seqs.size();i++)
+    {  
+		int L = seqs[i].size();
+		if (a>0) start = a - 1;
+        else start = L + a -1;
+		if (b>0) end = b - 1;
+		else end = L + b - 1;  
 
+		if( (start >= 0 && start <= end) && (end>=0 && end < L))      	
+        {  
+            res.push_back(seqs[i].substr(start,end-start+1));
+        }
+    }
+
+	if(res.size()<1)
+	{
+		message("ERROR: sub_sequences: no sequences survive the triming!");
+		exit(1);
+	}
+
+    return res;
+}
 // convert fasta file to a letter matrix
 void fasta_to_letter_matrix(string input, string output){
 	ofstream out(output.c_str());
@@ -2396,7 +3241,7 @@ void fasta_to_letter_matrix(string input, string output){
 }
 
 // convert fasta file to a letter matrix, no header
-void tab_seq_to_letter_matrix(string input, string output, int k_min, int k_max, int col, int skip){
+void tab_seq_to_letter_matrix(string input, string output, int k_min, int k_max, int col){
 	col = col - 1;
 		
 	ifstream in(input.c_str());
@@ -2404,15 +3249,13 @@ void tab_seq_to_letter_matrix(string input, string output, int k_min, int k_max,
 
 	string line;
 	vector<string> flds;
-
-	int i = 0;
-	while(in.good() && i++ < skip) getline(in,line);
 	
 	while(in.good())
 	{
 		getline(in,line);
 		if(line.length()==0) continue;
-		flds = string_split(line,"\t");
+		if(line[0] == '#') continue;
+		flds = string_split(line);
 		// output other columns first
 		for (int i=0;i<flds.size();i++) 
 		{
@@ -2626,7 +3469,7 @@ int tab2bed_galaxy(string infile, string outfile){
     getline(fin,line);
     if (line.length() == 0)
       continue;
-    flds = string_split(line,"\t");
+    flds = string_split(line);
     pos = string_split(flds[0],"_");
     if (pos.size() < 5)
     {
@@ -2694,7 +3537,7 @@ int tab2bed_bedtools(string infile, string outfile){
     getline(fin,line);
     if (line.length() == 0)
       continue;
-    flds = string_split(line,"\t");
+    flds = string_split(line);
     flds0 = string_split(flds[0],":");
     chr = flds0[0];
     strand = "+";

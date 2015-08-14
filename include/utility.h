@@ -6,20 +6,35 @@
 #include <vector>
 #include <set>
 
+#include <sstream>
+#include <iomanip> // setprecision
+
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
+string combine_spaces(string str,char ch=' ');
+
 // generate a random string of letters and numbers of certain length
-string random_string( size_t length );
+string random_string( int length );
 
 string to_upper(string str);
 
 string to_string(vector<string> str, string del="\t");
+string to_string(vector<int> str, string del="\t");
 string to_string(set<string> str, string del="\t");
+
+template <typename T>
+string to_string_with_precision(const T a_value, const int n = 3)
+{
+    ostringstream out;
+    out << setprecision(n) << a_value;
+    return out.str();
+}
 
 
 // split string
-vector<string>  string_split(string str, string separator);
+vector<string>  string_split(string str, string separator="\t,| ");
 
 vector<string> set_overlap(set<string> first, set<string> second);
 
@@ -32,7 +47,7 @@ string current_time();
 void message(string text, bool stdout=false);
 
 // run system command
-int system_run(string cmd);
+void system_run(string cmd);
 
 // run R script, can be multiple lines, such as
 /*
@@ -52,7 +67,7 @@ int system_run(string cmd);
     "dev.off() \n";
 
 */
-int R_run(string script,bool clean=true, string Rcmd="R CMD BATCH");
+void R_run(string script,bool clean=true, string Rcmd="R CMD BATCH");
 
 void sort_file_and_add_header(string filename, string header, string sort_options);
 

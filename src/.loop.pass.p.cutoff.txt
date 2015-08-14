@@ -1,0 +1,1 @@
+kmer	position	shift	z_score	p	Bonferroni	frac1	frac2	ratio	local_r	FDR

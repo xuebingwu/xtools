@@ -43,8 +43,74 @@ std::vector<T> &operator+=(std::vector<T> &A, const std::vector<T> &B)
     return A;                                        // here A could be named AB
 }
 
+// sort return index
+template <typename T>
+vector<size_t> sort_indexes(const vector<T> &v, bool descending=false) {
+
+  // initialize original index locations
+  vector<size_t> idx(v.size());
+  for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
+
+  // sort indexes based on comparing values in v
+  sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+
+  if(descending) reverse(idx.begin(),idx.end());
+
+  return idx;
+}
+
+
+// return the rank
+template <typename T>
+vector<double> get_ranks(vector<T> &v, bool descending=false)
+{
+	vector<size_t> s = sort_indexes(v);
+
+	vector<double> rk(v.size(),0) ;
+	for(int i=0;i<s.size();i++) 
+	{
+		rk[s[i]] = i+1;
+	}
+	// ties
+	int tie_start = 0;
+	for(int i=1;i<s.size();i++)
+	{
+		if(v[s[i]] != v[s[i-1]]) // a change in value
+			{
+				// tie from tie_start to i-1
+				double new_rank = (tie_start + i + 1)/2.0;
+				for(int j= tie_start;j<i;j++)
+				{
+					rk[s[j]] = new_rank;
+				}
+				tie_start = i; 
+			}
+			else if (i==s.size()-1)
+			{
+				double new_rank = (tie_start + i + 2)/2.0;
+				for(int j= tie_start;j<=i;j++)
+				{
+					rk[s[j]] = new_rank;
+				}
+			}
+	}
+	return rk;
+}
+	
+	
+
+vector<double> matrix_column_information_content(boost::numeric::ublas::matrix<double> x);
+vector<double> matrix_column_sum(boost::numeric::ublas::matrix<double> x, int positive=0);
+vector<double> matrix_column_min(boost::numeric::ublas::matrix<double> x);
+vector<double> matrix_column_max(boost::numeric::ublas::matrix<double> x);
+
 // print a matrix
 void print_matrix(boost::numeric::ublas::matrix<double> m);
+
+double matrix_min(boost::numeric::ublas::matrix<double> x);
+
+double matrix_max(boost::numeric::ublas::matrix<double> x);
 
 // sum of two vectors
 template<typename T>

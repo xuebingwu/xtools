@@ -12,6 +12,68 @@
 #include <iostream>
 
 
+// load tabular files, one column gives name, the other gives score
+// ignore # lines
+int load_scores(string filename, vector<string> &names, vector<double> &scores, int c1/*=1*/, int c2/*=2*/) {
+	
+	int total = 0;
+	
+	// minimum number of columns in input
+	int nCol = max(c1,c2)+1;
+	
+	ifstream fin;
+	fin.open(filename.c_str());
+
+    string line;
+    vector<string> flds;
+	
+    while(fin)
+    {
+        getline(fin,line);
+        if (line.length() == 0)
+            continue;
+		
+		line.erase(line.find_last_not_of(" \n\r\t")+1);
+		
+		if(line[0] == '#') continue;
+
+        flds = string_split(line);
+		if (flds.size() < nCol) message("too few columns in line: "+line);
+		else
+		{
+			names.push_back(flds[c1]);
+			scores.push_back(stof(flds[c2]));
+			total++;
+		}
+	}
+	fin.close();
+	return total;
+}
+
+map<string,double> load_weight(string filename, int c1, int c2)
+{
+	c1 = c1 - 1;
+	c2 = c2 - 1;
+		
+	ifstream fin;
+	fin.open(filename.c_str());
+
+	string line;
+	vector<string> flds;
+	
+	map<string,double> weights;
+		
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length()==0) continue;
+		flds = string_split(line,"\t");
+		weights[flds[c1]] = stof(flds[c2]);
+	}
+	fin.close();
+	return weights;
+}
+
 
 // split files for crossvalidation
 // if each fold has less than 2 samples,do leave-one-out
@@ -76,8 +138,10 @@ int split_file_for_cross_validation(string input, string output, int nfold)
 
 // input file contine multi-line records such as fasta/fastq or others
 // col is 1 based
-void select_multi_lines(string inputfile, string idfile, string outputfile, int nline, int id_col, string id_prefix)
+int select_multi_lines(string inputfile, string idfile, string outputfile, int nline, int id_col, string id_prefix)
 {
+	int selected = 0;
+	
 	id_col = id_col - 1;
 	
 	set<string> ids;
@@ -105,10 +169,11 @@ void select_multi_lines(string inputfile, string idfile, string outputfile, int 
 	{
 		getline(fin,line);
 		if(line.length()==0) continue;
-		if(line[0] == '>')
+		if(line.substr(0,id_prefix.size()) == id_prefix)
 		{
 			if (ids.find(line) != ids.end())
 			{
+				selected++;
 				out << line << endl; // id
 				for (int i =0;i< nline-1;i++)
 				{
@@ -127,6 +192,7 @@ void select_multi_lines(string inputfile, string idfile, string outputfile, int 
 	}
 	fin.close();
 	out.close();
+	return selected;
 }
 
 
@@ -268,14 +334,23 @@ void mergeTab(string file1, string file2, string outputfile, unsigned col1/*=0*/
     f1.close();      
 	out.close();     
 }
-		
-void remove_duplicates(string input, string output, int col, int max, string sort_opts="")
+
+
+/*
+keep the top N lines with matched columns
+
+print_rank: bool variable indicating whether print a column indicating the rank
+*/
+	
+void remove_duplicates(string input, string output, int col, int max, string sort_opts, bool print_rank)
 {
+	string tmp = random_string(10);
+
     if (sort_opts.size()>0)
     {
-        string cmd = "sort "+sort_opts+" "+input+" > xxx.tmp";
+        string cmd = "sort "+sort_opts+" "+input+" > " + tmp;
         system(cmd.c_str());
-        input="xxx.tmp";
+        input=tmp;
     }
 
 
@@ -296,20 +371,24 @@ void remove_duplicates(string input, string output, int col, int max, string sor
         if (line.length() == 0)
             continue;
         flds = string_split(line,"\t");
-        if (curr != flds[col])
+        if (curr != flds[col]) // a new line
         {
-            fout << line << endl;;
+            fout << line ;
+			if(print_rank) fout << "\t1";
+			fout << endl;
             k = max - 1;
             curr = flds[col];
         }
         else if (k>0)
         {
-            fout << line << endl;
-            k--;
+			k--;
+            fout << line ;
+			if(print_rank) fout << "\t" << max-k;
+			fout << endl;
         }
     }
 
-    if(sort_opts.size()>0) system("rm xxx.tmp");
+    if(sort_opts.size()>0) system_run("rm "+tmp);
 
 }
 
@@ -329,10 +408,11 @@ int count_lines(string filename)
 // find lines the key column is unique
 int find_unique_lines(string input, string output, int col)
 {
-    string cmd = "sort -k"+to_string(col)+","+to_string(col)+ " "+input+" > xxx.tmp";
+	string tmp = random_string(10);
+    string cmd = "sort -k"+to_string(col)+","+to_string(col)+ " "+input+" > " + tmp;
 	//message("sort input file: "+ cmd);
     system(cmd.c_str());
-    input="xxx.tmp";
+    input=tmp;
 
     col = col - 1;
     ifstream fin;
@@ -372,9 +452,19 @@ int find_unique_lines(string input, string output, int col)
     }
 
 	
-   	system("rm xxx.tmp");
+   	system_run("rm "+tmp);
 
 	return n;
+}
+
+void insert_header(string filename, string header)
+{
+	string tmp = random_string(10);
+	ofstream fout(tmp.c_str());
+	fout << header << endl; 
+	fout.close();
+	system_run("cat "+filename+" >> "+tmp);
+	system_run("mv "+tmp +" "+ filename);
 }
 
 

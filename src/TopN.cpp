@@ -20,6 +20,7 @@ void help()
     "   -c  column  column number, 1-based\n"
     "   -n  number  number of lines to keep\n"
     "   -s  options sort input with given options\n"
+	"   -r  print rank as the last column\n"
     "\n";
 
     cerr << str;
@@ -37,6 +38,7 @@ int main(int argc, char* argv[]) {
     int col=0;
     int topn=1;
     string sortOpts="";
+	bool print_rank  = false;
 
     // parse arguments
     string str;
@@ -55,6 +57,8 @@ int main(int argc, char* argv[]) {
             } else if (str == "-n") {    
                 topn = atoi(argv[i + 1]);
                 i=i+1;
+            } else if (str == "-r") {    
+                print_rank=true;
             } else if (str == "-s") {
                 sortOpts = argv[i + 1];
                 i=i+1;
@@ -65,7 +69,7 @@ int main(int argc, char* argv[]) {
         }
     }   
 
-    remove_duplicates(input,output,col,topn,sortOpts);
+    remove_duplicates(input,output,col,topn,sortOpts,print_rank);
 
     return 0;
 }

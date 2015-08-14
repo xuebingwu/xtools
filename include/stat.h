@@ -5,6 +5,9 @@
 #include <array>
 #include <algorithm>
 #include <math.h>
+#include <container.h>
+
+
 
 using namespace std;
 
@@ -15,13 +18,33 @@ double binom_test(int trials,int success,double success_fraction);
 
 double hypergeometric_test(unsigned k, unsigned r, unsigned n, unsigned N);
 
-array<double,2> Mann_Whitney_U_test(vector<int> ranks, int N);
+array<double,2> Mann_Whitney_U_test(vector<double> ranks, int N);
 
 array<double,2> two_samples_t_test_equal_sd(double Sm1, double Sd1, unsigned Sn1, double Sm2, double Sd2, unsigned Sn2);
 
 array<double,2> two_samples_t_test_unequal_sd(double Sm1, double Sd1, unsigned Sn1, double Sm2, double Sd2, unsigned Sn2);
 
 array<double,6> t_test(vector<double> x, vector<double> y, bool equal_var=false);
+
+template<typename T>
+T max(vector<T> v)
+{
+	T s = -1e100;
+	for(int i=0;i< v.size();i++) 
+		if (s < v[i])
+			s = v[i];
+	return s;
+}
+
+template<typename T>
+T min(vector<T> v)
+{
+	T s = 1e100;
+	for(int i=0;i< v.size();i++) 
+		if (s > v[i])
+			s = v[i];
+	return s;
+}
 
 template<typename T>
 T sum(vector<T> v)
@@ -33,6 +56,7 @@ T sum(vector<T> v)
 	// the following implementation does not compile on mac os x yosemite
 	// return accumulate(v.begin(), v.end(), 0.0); 
 }
+
 
 template<typename T>
 double mean(vector<T> v)
@@ -77,5 +101,6 @@ double sd(vector<T> v)
 {
 	return sqrt(var(v));
 }
+
 
 #endif

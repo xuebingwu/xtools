@@ -2,7 +2,9 @@
 #include "iostream"
 
 
+#include "structure.h"
 #include "sequence.h"
+
 
 using namespace std;
 
@@ -26,6 +28,7 @@ void help()
 
     exit(0);
 }
+
 
 
 
@@ -60,10 +63,26 @@ int main(int argc, char* argv[]) {
             }
         }
     }   
-
-	 tab_seq_to_letter_matrix( input,  output,  1,2, 1,  0);
-   
+	
+	plot_hairpin_from_file(input);
 		
-
+	
+	
+	/*
+	
+	AGAGAGAAGAUAU    ---    -GUUGC    A   CG     C   A      GUAU 
+	             UGAG   GCCU      CACA ACC  UAGAU CGA CUUGUG    U
+	             ||||   ||||      |||| |||  ||||| ||| ||||||    A
+	             ACUC   CGGA      GUGU UGG  AUCUA GUU GAACAC    C
+	--GGGGUCCAGGC    UAA    UUGUCU    A   AU     U   C      GCCU 
+					 */
+	//mirna_loop_definition(id,seq,fold,35);
+	
+	//cout << endl;
+	
+	//mirna_basal_stem_definition(id,seq,fold,35);
+	//remove_short_stem_from_file(input, input+".no.short.stem", 20, 25,10);
+	//mirna_feature_from_file(input+".no.short.stem",output,35);
+	
     return 0;
 }

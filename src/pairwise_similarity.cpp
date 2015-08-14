@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
         }
     }   
 
-	vector<string> seqs = load_ranked_sequences_to_vectors(input,0,0);
+	vector<string> seqs = load_ranked_sequences_to_vectors(input,0);
 	pairwise_sequence_similarity_matrix( seqs,  output);
    
 		

@@ -110,8 +110,11 @@ int getSeqfromFasta(FILE *in, char descr[], char seq[])
                 return -1;
 
         d = fscanf(in, "%[^\n]%*c", tmp); // read until '\n' is found
+
         remove_char(tmp,descr,'>');
+
         s = fscanf(in, "%[^>]%n%*c", tmp, &length); // read until '>' is found
+
         if(d == EOF || s == EOF)
                 return -1;
         remove_char(tmp,seq,'\n');
@@ -163,7 +166,7 @@ void backtrack(int **I_i, int **I_j, int i_max, int j_max, string seq_a, string 
   int tick=0;
   char consensus_a[N_a+N_b+2],consensus_b[N_a+N_b+2];
 
-  while(((current_i!=next_i) || (current_j!=next_j)) && (next_j!=0) && (next_i!=0)){
+  while(((current_i!=next_i) || (current_j!=next_j)) && (next_j != 0) && (next_i != 0)){
 
     if(next_i==current_i)  consensus_a[tick] = '-';                  // deletion in A
     else                   consensus_a[tick] = seq_a[current_i-1];   // match/mismatch in A

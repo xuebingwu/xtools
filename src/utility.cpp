@@ -12,9 +12,26 @@
 #include <algorithm>
 
 #include "utility.h"
+#include <boost/regex.hpp>
+
 
 using namespace std;
 
+
+//
+
+// combine multiple spaces into one
+bool BothAreSpaces(char lhs, char rhs) { return (lhs == rhs) && (lhs == ' '); }
+bool BothAreTabs(char lhs, char rhs) { return (lhs == rhs) && (lhs == '\t'); }
+
+string combine_spaces(string str, char ch)
+{
+	std::string::iterator new_end;
+	if(ch == ' ') new_end = std::unique(str.begin(), str.end(), BothAreSpaces);
+	else new_end = std::unique(str.begin(), str.end(), BothAreTabs);
+	str.erase(new_end, str.end());   
+	return str;
+}
 
 // generate a random string of letters and numbers of certain length
 /*
@@ -37,7 +54,7 @@ string random_string( size_t length )
 */
 
 /**/
-string random_string(const int len) {
+string random_string( int len) {
 	string s;
     static const char alphanum[] =
         "0123456789"
@@ -50,6 +67,15 @@ string random_string(const int len) {
 	return s;
 }
 /**/
+
+string to_string(vector<int> str, string del/*="\t"*/)
+{
+	string res = to_string(str[0]);
+	for(unsigned i=1;i<str.size();i++)
+		res += del + to_string(str[i]);
+	return res;
+}
+
 
 string to_string(vector<string> str, string del/*="\t"*/)
 {
@@ -83,6 +109,7 @@ set<string> set_subtract(set<string> s1, set<string> s2)
 	return res;
 }
 
+/*
 // split string
 vector<string>  string_split(string str, string separator){
     size_t found;
@@ -99,6 +126,13 @@ vector<string>  string_split(string str, string separator){
         results.push_back(str);
     }
     return results;
+}
+*/
+
+vector<string>  string_split(string str, string separator/*="\t,| "*/){
+	vector<string> parts;
+	boost::split(parts, str, boost::is_any_of(separator));
+	return parts;
 }
 
 string to_upper(string strToConvert)
@@ -126,9 +160,9 @@ void message(string text, bool stdout/*=false*/)
 }
 
 // run system command
-int system_run(string cmd)
+void system_run(string cmd)
 {
-    return system(cmd.c_str());
+    system(cmd.c_str());
 }
 
 // sort a file with no header, add header
@@ -167,11 +201,11 @@ void sort_file_and_add_header(string filename, string header, string sort_option
     "dev.off() \n";
 
 */
-int R_run(string script, bool clean/*=true*/, string Rcmd/*="R CMD BATCH"*/)
+void R_run(string script, bool clean/*=true*/, string Rcmd/*="R CMD BATCH"*/)
 {
     // create tmp R script file
 	srand(time(NULL));
-    string tmp = random_string(10)+".r";
+    string tmp = random_string(11)+".r";
     ofstream out;
     out.open(tmp.c_str());
     out << script;
@@ -179,15 +213,13 @@ int R_run(string script, bool clean/*=true*/, string Rcmd/*="R CMD BATCH"*/)
 
     // run the script
     string cmd = Rcmd + " "+tmp;
-    int ret = system(cmd.c_str());
+    system(cmd.c_str());
 
     // remove the script and .Rout file
 	if(clean)
 	{
-    	cmd = "rm "+tmp+"*";
+    	cmd = "rm "+tmp+" "+tmp+".Rout";
     	system(cmd.c_str());    
-	}
-	
-    return ret;
+	}	
 }
 

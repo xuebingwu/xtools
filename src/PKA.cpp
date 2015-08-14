@@ -4,7 +4,6 @@
 #include "utility.h"
 #include "text.h"
 
-#include <boost/algorithm/string.hpp>
 
 void print_help()
 {
@@ -17,11 +16,7 @@ void print_help()
 	"   at every position in a set of aligned sequences, weighted or unweighted. \n"
 	"   Degenerate nucleotides and small shift in positions can be allowed.\n"
     "\n"
-    "Usage: PKA input.fa [options]\n"
-    "\n"
-    "       PKA input-fixed-length.fa \n" 
-    "       PKA input-fixed-length.fa -bgfile background.fa\n"
-    "       PKA input-variable-length.fa -first 60 \n"
+    "Usage: PKA inpu_file [options]\n"
     "\n"
     "Options\n"
     "\n"
@@ -39,9 +34,13 @@ void print_help()
 	"                              'protein' is equivalent to 'ACDEFGHIJKLMNOPQRSTUVWY'\n"
 	"   -seq INT             for tabular input: sequences are in column INT. Default 1\n"
 	"   -weight INT          for tabular input: weights are in column INT. Default 2\n"
-	"   -skip INT            for tabular input: skip the first INT lines, such as headers. Defaut 0\n"  
-    "   -first INT           only take the first INT bases of each input sequence\n"
-    "   -last INT            only take the last INT bases of each input sequence\n"
+    "   -region n1,n2        only consider subsequences from position n1 to n2 (start at 1). \n"
+    "                        non-positive numbers interpreted as distance from the end\n"
+    "   -select a,b,c,...    keep sequences contain any of specified kmers a, b, c, etc\n"
+    "                        kmer format: seq:position:shift, e.g. CNNC:47:0 \n"
+    "   -remove a,b,c,...    remove sequences contain any of specified kmers.\n"  
+    "   -fix maxFreq         fix a position with a specific letter if it occurs in more than maxFreq of the sequences\n"  
+	"                        fixed letters will be plotted as 1.1x of hight of the position with the highest total height\n"
     "Kmer counting\n"
     "   -k INT               use fixed kmer length INT\n"
 	"   -max_k INT           consider all kmers of length 1,2,...,INT. default=4 \n"
@@ -51,29 +50,49 @@ void print_help()
 	"                        letters (ACGTRYMKWSBDHVN, equivalent to 'all'). One can use \n"
 	"                        ACGTN to search gapped-kmers. Only work for DNA/RNA sequences\n"
 	"   -gapped              allowing gapped kmer, equivalent to '-degenerate ACGTN' \n"
-	"   -pair                also test all possible pairs of positional monomers\n"  	 	
+	"   -pair                also test all possible pairs of positional monomers\n"  			 	
     "Statistics & output\n"
     "   -o STR               prefix for all output files, default=PKA\n"
 	"   -minCount NUM        minimum number of sequences to have this kmer to include in output\n"
 	"                        if smaller than 1, treat as fraction of sequences (default=5)\n"
-    "   -p FLOAT             p-value cut-off, default=0.05, adjusted by Bonferroni (default) or FDR\n"
-    "   -FDR                 adjust p value by FDR method instead of Bonferroni. Note FDR is slower\n"
+    "   -p FLOAT             p-value cut-off, default=1.01 (i.e. output all possible kmers)\n"
+    "   -pc FLOAT            Bonferroni corrected p-value cut-off, default=0.05\n"
+    "   -FDR                 adjust p value by FDR method ( default is Bonferroni correction)\n"
     "   -startPos INT        re-number position INT (1,2,3,..) as 1. The position before it will be -1\n"
+    "   -last_letter         use a kmer's last letter position as the kmer's position. Default is first letter\n"
     "   -pseudo FLOAT        pseudocount added to background counts. default=1e-9. Ignored by -markov\n"
+	"   -fontsize INT        font size for plotting sequence logos, default 20\n"
+	"   -colorblind          use colorblind friendly color scheme\n"
+    "   -email STR           send email notification to this address\n"
+    "   -subject STR         email subject (quoted, default='PKA job done')\n"
+    "   -content STR         email content (quoted, default='PKA job done')\n"
+	"   -small_sample        correct for small sample size\n"
+    "   -plot STR            which statistics to plot: p: raw p-value (default), b: Bonferroni corrected p, f: FDR, s: statisitcs\n"
+    "   -bottom_up           stack letters from bottom to top, starting with the most significant one\n"
+    "   -save                save shuffled sequences (*.shuffled.input) or the learned markov model (*.markov.model)\n"
+	"                        in -predict mode, save feature matrix (*.feat.mat)\n"
     "Background model for unweighted & unranked sequences (ignore if using -ranked or -weighted)\n"
 	"   (default)            compare to the same kmer at other positions \n"
 	"   -bgfile FILE         background sequence file\n"	
     "   -markov INT          N-th order markov model trained from input or background (with -bgfile)\n"
     "                        N=0,1,or 2. Default N=1: first order captures upto di-nucleotide bias\n"
     "   -shuffle N,M         shuffle input N times, preserving M-nucleotide frequency\n"
-    "   -save FILE           save shuffled sequences or the learned markov model to a file\n"
-    "   -no_bg_trim          no background sequence trimming (-first/last). valid with -markov and -bgfile\n"
+    "   -no_bg_trim          no background sequence trimming (-region). valid with -markov and -bgfile\n"
     "\n\n";
 	cout << txt;
 }
 
  
 int main(int argc, char* argv[]) {
+
+	/*
+	string commandline = argv[0];
+	for (int i = 1; i < argc; i++) {
+		commandline += " " + string(argv[i]);
+	}
+	message("The command line you have entered is:");
+	message(commandline);
+	*/
 
     ///////////////////////////////////////////////////////////////
     //       part 1: parameters and default settings             //
@@ -114,32 +133,90 @@ int main(int argc, char* argv[]) {
 	// tabular input format
 	int cSeq=0; // -seq, sequence in this column, first column is 0
 	int cWeight = -1; // -weight, -1 means no weight
-	int skip=0; // skip this number of lines at the beginning
-    int first=-1; //    no 3' trim
-    int last=-1; //     no 5' trim
+    int first=1; //    no 3' trim
+    int last=0; //     no 5' trim
+    string select_pkmers;  // select sequences with some pkmers 
+    string remove_pkmers;  // remove sequences with some pkmers
     bool no_bg_trim = false;    // only valid when -b and -markov used
 	
 	// statistics
     double pseudo = 1e-9;   // pseudocounts, only used when -b or -shift used
-    double pCutoff=0.05;    // binomial p cutoff
+    double pCutoff=1.01;    // binomial p cutoff
+	double pCutoff_corrected = 0.05;
 	bool Bonferroni = true;
+	int small_sample_correction = -1; // -1 or 1
 	
 	// output
     int startPos= 1; // coordinates
+	int fontsize=40;
+	string plot = "p"; // or b or f or s
+    bool last_letter = false;
+	bool bottom_up = false;
+
+	// color blind
+	bool colorblind = false;
+	map<char,string> colors;
+    colors['A'] = "0.05 0.75 0.05";
+    colors['C'] = "0 0 1";
+    colors['G'] = "1 0.75 0";
+    colors['T'] = "1 0 0";
+    colors['N'] = "0.5 0.5 0.5";
+    colors['Y'] = "1 1 0";
+    colors['R'] = "0 1 1";
+    colors['D'] = "0 0.5 0.5";
+    colors['E'] = "0 0 0.5";
+    colors['F'] = "0 0.5 0";
+    colors['H'] = "0.5 0 0";
+    colors['I'] = "1 0.5 0.5";
+    colors['J'] = "0.5 1 0.5";
+    colors['K'] = "0.5 0.5 1";
+    colors['L'] = "1 0 0.5";
+    colors['M'] = "0 1 0.5";
+    colors['O'] = "0 0.5 1";
+    colors['P'] = "1 0.5 0";
+    colors['Q'] = "0.5 1 0";
+    colors['S'] = "0.5 0 1";   
+	colors['U'] = "1 0.5 1";
+    colors['V'] = "0.5 0.75 1";
+    colors['W'] = "1 0 1"; 
+    colors['X'] = "0.5 0 0.5";
+    colors['Z'] = "0.5 0.5 0";
+    colors['B'] = "0.5 0.5 0.75";
+
+
+    map<char,string> colorblind_colors = colors;
+    colorblind_colors['A'] = "0 0.620 0.451";
+    colorblind_colors['C'] = "0 0.450 0.698";
+    colorblind_colors['G'] = "0.941 0.894 0.259";
+    colorblind_colors['T'] = "0.835 0.369 0";
+    colorblind_colors['N'] = "0.5 0.5 0.5";
+	
 		
 	// background 
 	bool local = true;
     int shuffle_N = 0;  // shuffle N times of each input sequence
     int preserve = 2;   // preserving dinucleotide
     int markov_order = -1;  // order of markov model, -1 means not used
+	string mmmodel_str;
 	
 	double minCount = 5.0; // minimum number of sequences to have this kmer to be reported in output
+	double maxFrac = 0.75; // if a letter is present in more than maxFrac * 100% of the foreground, fix it
+	// for fixed positions, ignore it during p value calculation
+	// for visualization, assign the p-value to be the most significant one * 1.1, color will be black?
+	vector<int> fixed_position;
+	vector<string> fixed_letter;
 	
 	bool pair = false; // test all pairs of monomers
 	
 	bool build_model = false;
-	
-    string seqfile1,seqfile2,save_to_file,str;
+
+    // email
+    string email = "";
+    string subject = "PKA job done";
+    string content = "PKA job done";
+
+	bool save_to_file = false;	
+    string seqfile1,seqfile2,str;
 
 	///////////////////////////////////////////////////////////////
     /*******        part 2: get commandline arguments   */
@@ -216,30 +293,47 @@ int main(int argc, char* argv[]) {
 			} else if (str == "-seq") {
 				cSeq = atoi(argv[i + 1]) - 1;
 				i=i+1;
-			} else if (str == "-skip") {
-				skip = atoi(argv[i + 1]);
-				i=i+1;
-            } else if (str == "-first") {
-                first = atoi(argv[i + 1]);
-                i=i+1;
-            } else if (str == "-last") {
-                last = atoi(argv[i + 1]);
-                i=i+1;
             } else if (str == "-no_bg_trim") {
                 no_bg_trim = true;
+            } else if (str == "-select") { 
+                select_pkmers = argv[i + 1];
+                i=i+1;
+            } else if (str == "-remove") {   
+                remove_pkmers = argv[i + 1];
+                i=i+1; 
             } else if (str == "-pseudo") {
                 pseudo = atof(argv[i + 1]);
                 i=i+1;
             } else if (str == "-p") {
                 pCutoff = atof(argv[i + 1]);
                 i=i+1;
+            } else if (str == "-pc") {
+                pCutoff_corrected = atof(argv[i + 1]);
+                i=i+1;
             } else if (str == "-FDR") {
                 Bonferroni = false;
+            } else if (str == "-last_letter") {
+                last_letter = true;
             } else if (str == "-startPos") {
                 startPos = atoi(argv[i + 1]);
                 i=i+1;
+			} else if (str == "-fontsize") {
+				fontsize = atoi(argv[i + 1]);
+				i=i+1;
+            } else if (str == "-colorblind") {
+                colorblind = true;
+            } else if (str == "-bottom_up") {
+                bottom_up = true;
+            } else if (str == "-small_sample") {
+				small_sample_correction = 1;
             } else if (str == "-markov") {
-                markov_order = atoi(argv[i + 1]);
+				str = argv[i+1];
+				if(str.find(',') == std::string::npos)
+				{
+					markov_order = atoi(argv[i + 1]);
+				} else {
+					mmmodel_str = str;
+				}
 				local = false;
                 i=i+1;
             } else if (str == "-shuffle") {
@@ -249,11 +343,31 @@ int main(int argc, char* argv[]) {
                 preserve = atoi(ss[1].c_str());
 				local = false;
                 i=i+1;
+            } else if (str == "-region") {
+                string s(argv[i+1]);
+                vector<string> ss = string_split(s,",");
+                first = atoi(ss[0].c_str());
+                last = atoi(ss[1].c_str());
+                i=i+1;
             } else if (str == "-minCount") {
                 minCount = atof(argv[i + 1]);
                 i=i+1;
+            } else if (str == "-fix") {
+                maxFrac = atof(argv[i + 1]);
+                i=i+1;
             } else if (str == "-save") {
-                save_to_file = argv[i + 1];
+                save_to_file = true;
+            } else if (str == "-plot") {
+                plot = argv[i + 1];
+                i=i+1;
+            } else if (str == "-email") {
+                email = argv[i + 1];
+                i=i+1;            
+			} else if (str == "-subject") {
+                subject = argv[i + 1];
+                i=i+1;
+            } else if (str == "-content") {
+                content = argv[i + 1];
                 i=i+1;
             } else {
                 message("ERROR: Unknown options: "+str);
@@ -263,6 +377,8 @@ int main(int argc, char* argv[]) {
         }
     }
 	
+
+	if(colorblind) colors = colorblind_colors;
 	
 	if(boost::algorithm::to_lower_copy(alphabet) == "dna") 
 		alphabet="ACGT";
@@ -287,6 +403,11 @@ int main(int argc, char* argv[]) {
 		max_shift = shift;
 	}
 	
+    if(analysis != "weighted")
+		{
+			cWeight = -1;
+		}
+	
 	// both shift and degenerate for unranked unweighted
 	if(analysis == "default" && degenerate == true && max_shift > 0 && local == false) 
 	{
@@ -296,7 +417,7 @@ int main(int argc, char* argv[]) {
 
     // determine background model
     if(analysis == "default" && seqfile2.size()==0 && local == false){ // no file specified using -b
-        if (markov_order > -1) // markov model
+        if (markov_order > -1 || mmmodel_str.size()>0) // markov model
         {
             shuffle_N = 0; // ignore -shuffle
             if (markov_order>2)
@@ -314,13 +435,10 @@ int main(int argc, char* argv[]) {
     // print out parameters used
         message("Summary: ");
         message("   Input       :   " + seqfile1);
-    if(first>0)
+    if(first != 1 || last != 0)
 	{
-    	message("                   take " + to_string(first) + " bases from 5' end");
-    } else if (last >0)
-    {
-    	message("                   take " + to_string( last) + " bases from 3' end");
-    }
+    	message("   Subsequence :   " + to_string(first) + ","+to_string(last));
+    } 
     if(local)
 	{
 		message("   Background  :   local");
@@ -368,7 +486,7 @@ int main(int argc, char* argv[]) {
 	}
 	else 
 	{
-		load_sequences_from_tabular(seqfile1,seqs1,weights,skip,cSeq,cWeight);
+		load_sequences_from_tabular(seqfile1,seqs1,weights,cSeq,cWeight);
 	}
 
     if (seqs1.size() == 0)
@@ -380,11 +498,12 @@ int main(int argc, char* argv[]) {
     message(to_string(seqs1.size()) + " sequences loaded from " + seqfile1);
 
     // trim if -first or -last specified, note that too short sequences will be discarded
-    if (first >  0) seqs1 = first_n_bases(seqs1,first);
-    else if (last > 0) seqs1 = last_n_bases(seqs1,last);
-	if (first >0 || last > 0) message(to_string(seqs1.size()) + 
-		" sequences remain after trimming back to " + 
-			to_string( seqs1[0].size() ) + " bases ");
+    if (first != 1 || last != 0) 
+	{
+		seqs1 = sub_sequences(seqs1,first,last);
+		message(to_string(seqs1.size()) + 
+		" sequences remain after trimming");
+	}
 
     //debug
     //WriteFasta(vector2map(seqs1),"trimmed.fa");
@@ -406,37 +525,40 @@ int main(int argc, char* argv[]) {
 	    // if background not available, use markov model or shuffle the foreground
 	    if (seqfile2.size() == 0) // no background file specified using -b
 	    {
-	        if (markov_order < 0) // shuffle
+	        if (markov_order < 0 && mmmodel_str.size()==0) // shuffle
 	        {
 	            // shuffle sequence preserving m-let frequency, m specified by -preserve
 	            seqs2 = shuffle_seqs_preserving_k_let(seqs1,shuffle_N,preserve);
-			    // replace U with T
-			    if (alphabet == "ACGT")
-			    {
-			        for (int i=0;i<seqs2.size();i++)
-			        {
-			            replace(seqs2[i].begin(),seqs2[i].end(),'U','T');
-			        }
-			    }
 
 	            message(to_string(seqs2.size()) + " shuffled sequences generated, " + to_string( shuffle_N ) + " from each input sequence");
 
-	            if (save_to_file.size() > 0) // save shuffled sequences
+	            if (save_to_file) // save shuffled sequences
 	            {        
-	                WriteFasta(vector2map(seqs2),save_to_file);
-	                message("Shuffled sequences saved to: "+save_to_file);
+	                WriteFasta(vector2map(seqs2),output+".shuffled.input");
+	                message("Shuffled sequences saved to: "+output+".shuffled.input");
 	            }
-	        } else // generate markov model from input
+	        } else if(markov_order > -1)// generate markov model from input
 	        {
 	            markov = markov_model(markov_order,alphabet,seqs1);
-	        }
+	        } else { // generate markov model from string
+				markov = markov_model(alphabet,mmmodel_str);
+			}
 	    }
 	    // else load background sequence
 	    else 
 	    {
 			if(is_fasta(seqfile2)) ReadFastaToVectors(seqfile2, names, seqs2);
-			else load_sequences_from_tabular(seqfile2,seqs2,weights,skip,cSeq,cWeight);
+			else load_sequences_from_tabular(seqfile2,seqs2,weights,cSeq,cWeight);
 	
+		    // replace U with T
+		    if (alphabet == "ACGT")
+		    {
+		        for (int i=0;i<seqs2.size();i++)
+		        {
+		            replace(seqs2[i].begin(),seqs2[i].end(),'U','T');
+		        }
+		    }
+			
 	        if (seqs2.size() == 0)
 	        {
 	            message("No sequence present in file: " + seqfile2);
@@ -448,11 +570,12 @@ int main(int argc, char* argv[]) {
 	        if (no_bg_trim == false || markov_order < 0)
 	        {
 	            // trim if -first or -last specified, note that too short sequences will be discarded
-	            if (first >  0) seqs2 = first_n_bases(seqs2,first);
-	            else if (last > 0) seqs2 = last_n_bases(seqs2,last);
-	            if (first>0 || last>0) message( to_string(seqs2.size()) \
-					+ " background sequences trimmed back to " \
-						+ to_string(seqs2[0].size()) + " bases ");
+	            if (first != 1 || last != 0) 
+				{
+					seqs2 = sub_sequences(seqs2,first,last);
+	            	message( to_string(seqs2.size()) \
+					+ " background sequences remain after trimming");
+				}
 	        }
     
 	        if (markov_order > -1)
@@ -461,10 +584,10 @@ int main(int argc, char* argv[]) {
 	        }
 	    }
 
-	    if(markov_order > -1 && save_to_file.size()>0) 
+	    if( (markov_order > -1 || mmmodel_str.size()>0)  && save_to_file) 
 	    {   
-	        markov.print(save_to_file);
-	        message("Markov model saved to: "+save_to_file);
+	        markov.print(output+".markov.model");
+	        message("Markov model saved to: "+output+".markov.model");
 	    }
 	}
 
@@ -475,35 +598,116 @@ int main(int argc, char* argv[]) {
     int seq_len1 = seqs1[0].size();
     int seq_len2;
 
-    // make sure all sequences have the same size, only necessary when neither -first nor -last is used
-    if (first < 0 && last < 0)
-    { 
-        // sequences in foreground
-		vector<int> removed = filter_sequences_by_size(seqs1);
-		nSeq1 = seqs1.size();
-		if (removed.size() > 0) 
+    // make sure all sequences have the same size
+    // sequences in foreground
+	vector<int> removed = filter_sequences_by_size(seqs1);
+	nSeq1 = seqs1.size();
+	if (removed.size() > 0) 
+	{
+		message(to_string(nSeq1)+" sequences left after filtering by size");
+		if(analysis == "weighted")
 		{
-			message(to_string(nSeq1)+" sequences left after filtering by size");
-			if(analysis == "weighted")
+			for(int i=0;i<removed.size();i++)
 			{
-				for(int i=0;i<removed.size();i++)
-				{
-					weights.erase(weights.begin()+removed[i]);
-				}
-				// save the data
-				ofstream tmpout("tmp.txt");
-				for(int i=0;i<seqs1.size();i++)
-					tmpout << seqs1[i] << "\t" << weights[i] << endl;
-				tmpout.close();
+				weights.erase(weights.begin()+removed[i]);
+			}
+			// save the data
+			//ofstream tmpout("tmp.txt");
+			//for(int i=0;i<seqs1.size();i++)
+			//	tmpout << seqs1[i] << "\t" << weights[i] << endl;
+			//tmpout.close();
+		}
+	}
+        
+	if(seqs1.size()>1) 
+	{
+		if(seqs2.size()>1) 
+		{
+			filter_sequences_by_size(seqs2,seqs1[0].size());
+			if(seqs2.size()<2)
+			{
+				message("ERROR: less than 2 background sequences left after filtering by size");
+				exit(1);
 			}
 		}
-        
-        if (seqfile2.size()>0 && markov_order <0) // only check other sequences in background if not genrated by shuffling
-        {
-            filter_sequences_by_size(seqs2,seqs1[0].size());
-        }  
+	}
+    else
+	{
+		message("ERROR: less than 2 input sequences left after filtering by size");
+		exit(1);
+	}
+
+  // filter sequences
+	if (select_pkmers.size()>0)
+	{
+		message("selecting sequences with positional kmers: "+select_pkmers);
+		vector<positional_kmer> select_pkmers_vector = positional_kmer_vector_from_string(select_pkmers,define_IUPAC());
+		vector<string> positives;
+    	vector<bool> is_positive = filter_sequences_by_kmer(seqs1, positives, select_pkmers_vector);
+		if(seqs1.size()>0) // some sequene was removed
+		{
+			// remove weight
+			if(analysis == "weighted")
+			{
+				for(int i=is_positive.size()-1;i>=0;i--)
+				{
+					if(is_positive[i] == false) weights.erase(weights.begin()+i);
+				}
+			}
+		}
+        seqs1 = positives;
+        message(to_string(seqs1.size())+" sequences left after filtering by kmer");
+	}
+    if (remove_pkmers.size()>0)
+    {
+        message("removing sequences with positional kmers: "+remove_pkmers);
+        vector<positional_kmer> remove_pkmers_vector = positional_kmer_vector_from_string(remove_pkmers,define_IUPAC());
+        vector<string> positives;
+        vector<bool> is_positive = filter_sequences_by_kmer(seqs1, positives, remove_pkmers_vector);
+        if(positives.size()>0) // some sequene was removed
+        {   
+            // remove weight
+            if(analysis == "weighted")
+            {   
+                for(int i=is_positive.size()-1;i>=0;i--)
+                {  
+                    if(is_positive[i] == true) weights.erase(weights.begin()+i);
+                }
+            }
+        }
+        message(to_string(seqs1.size())+" sequences left after filtering by kmer");
     }
 
+
+
+	message("making frequency logo...");
+    boost::numeric::ublas::matrix<double> pwm2 = create_position_weight_matrix_from_seqs(seqs1,alphabet);
+    generate_ps_logo_from_pwm(pwm2, output+".freq.eps",alphabet,fixed_position, fixed_letter,colors,1,startPos,fontsize,"Frequency",sqrt(seq_len1)/3.0,0,bottom_up);
+    system_run("ps2pdf -dEPSCrop "+output+".freq.eps "+output+".freq.pdf");
+    system_run("convert "+output+".freq.eps "+output+".freq.png");
+
+    message("making information content logo...");
+    generate_ps_logo_from_pwm(pwm2, output+".info.eps",alphabet,fixed_position, fixed_letter,colors,1,startPos,fontsize,"Bits",sqrt(seq_len1)/3.0,small_sample_correction * seqs1.size(),bottom_up);
+    system_run("ps2pdf -dEPSCrop "+output+".info.eps "+output+".info.pdf");
+    system_run("convert "+output+".info.eps "+output+".info.png");
+	
+	// extract fixed position and letter
+	for (int i=0;i<pwm2.size1();i++)
+	{
+		for (int j=0;j<pwm2.size2();j++)
+		{
+			if ( pwm2(i,j) > maxFrac )
+			{
+				fixed_position.push_back(j);
+				fixed_letter.push_back(alphabet.substr(i,1));
+			}
+		}
+	}
+	if(fixed_position.size()>0)
+	{
+		message("fixed position: "+to_string(fixed_position));
+		message("fixed letter  : "+to_string(fixed_letter));
+	}
 
 ///////////////////////////////////////////////////////////////
 //         part 4:  prediction mode
@@ -516,8 +720,6 @@ int main(int argc, char* argv[]) {
 		message("building model from file: "+prefix+".pass.p.cutoff.txt");		
 		vector<positional_kmer> ranked_kmers = build_model_from_PKA_output(prefix+".pass.p.cutoff.txt",startPos);
 		message("- " + to_string(ranked_kmers.size())+" positional kmers included in the model");
-		save_model_to_file(ranked_kmers, "model.txt");
-		
 	
 		// save the model to file
 		// save_model_to_file(ranked_kmers, output+".model.txt");	
@@ -526,30 +728,22 @@ int main(int argc, char* argv[]) {
 		message("scoring input sequences using the model...");
 		string scoreFile = prefix+".score";
 	    ofstream out1(scoreFile.c_str());
-		//load_weighted_sequences_to_vectors(inputfile,seqs,weights,skip,cSeq,cWeight);
+		//load_weighted_sequences_to_vectors(inputfile,seqs,weights,cSeq,cWeight);
 		for (int i=0;i<seqs1.size();i++)
 		{
 			//cout << i << seqs1[i] << endl;
 			double score = score_sequence_using_PKA_model(ranked_kmers, seqs1[i]);
-			out1 << seqs1[i] << "\t" << weights[i] << "\t" << score << endl;		
+			if(weights.size()>0)
+				out1 << seqs1[i] << "\t" << weights[i] << "\t" << score << endl;	
+			else
+                out1 << seqs1[i] << "\t"  << score << endl;	
 		}
 		out1.close();
 		message("- done");
 		
-		/**/
-		/**/
-		/**/
 		// writing feature matrix
-		//vector<string> sig_kmers;
-		//vector<int> sig_positions;
-		//read_significant_positional_kmer_from_PKA2_output( outfile, sig_kmers, sig_positions);
-		//significant_feature_matrix_PKA2(seqs, weights, sig_kmers, sig_positions, output+".sig.feature.txt", shift);
-    
-		//significant_feature_matrix_PKA2(seqs, weights, ranked_kmers, output+".sig.feature.txt");
+		significant_feature_matrix_PKA2(seqs1, weights, ranked_kmers, output+".feat.mat");
 	
-	
-		/**/
-		
 		if (pair == false) return 0;
 		
 		message("loading paired monomers from file: "+prefix+".significant.pair");
@@ -644,6 +838,7 @@ WriteFasta(seqs1,"implanted.fa");
     // tmp output file for significnt kmers' frequency, for B significant kmers
     string output_freq = output+".Bonferroni.significant.frequency.txt";
 
+    string header = "#kmer\tposition\tshift\tstatistics\tp-value\tcorrected.p";
 
 	if(analysis != "default")
 	{
@@ -656,8 +851,9 @@ WriteFasta(seqs1,"implanted.fa");
 			else nSig = find_significant_kmer_from_ranked_sequences(
 				seqs1, kmers,outtmp, nTest, pCutoff, Bonferroni, min_shift, max_shift,startPos,minCount);
 		}
-		else 
+		else // weighted sequecnes 
 		{
+			header += "\tn1\tmean1\tstd1\tn2\tmean2\tstd2";
 			if(degenerate) nSig = find_significant_kmer_from_weighted_sequences(
 				seqs1, weights, dkmers, outtmp, nTest, pCutoff, Bonferroni, min_shift, max_shift, startPos,minCount);
 			else nSig = find_significant_kmer_from_weighted_sequences(
@@ -692,16 +888,7 @@ WriteFasta(seqs1,"implanted.fa");
 	}
 	else
 	{
-	    // prepare output files
-	    ofstream fout;
-	    fout.open(out.c_str());
-	    // data format
-	    fout.precision(3);
-	    // header
-	    string header = "kmer\tposition\tshift\tz_score\tp\tBonferroni\tfrac1\tfrac2\tratio\tlocal_r\tFDR";
-	    fout << header << endl;
-	    fout.close();
-    
+        header += "\tfrac.obs\tfrac.exp\tobs/exp\tlocal.r";
 		if(local)
 		{
 			if(degenerate) nSig = find_significant_degenerate_shift_kmer_from_one_set_unweighted_sequences(
@@ -709,7 +896,7 @@ WriteFasta(seqs1,"implanted.fa");
 			else nSig = find_significant_degenerate_shift_kmer_from_one_set_unweighted_sequences(
 				seqs1, kmers,outtmp, nTest, pCutoff,Bonferroni, min_shift, max_shift,startPos,minCount);
 		}
-	    else if (markov_order < 0){
+	    else if (seqs2.size()>0){
 	        // find significant kmers by comparing two set of sequences
 	        nSig = find_significant_kmer_from_two_seq_sets(
 				seqs1,seqs2,kmers,dkmers,min_shift,max_shift,degenerate,
@@ -731,8 +918,11 @@ WriteFasta(seqs1,"implanted.fa");
 ///////////////////////////////////////////////////////////////
 //			part 7: post-processing	
 ///////////////////////////////////////////////////////////////
+
+	// use the last letter's position as the motif position
+	if(last_letter) use_end_position(outtmp);
 	
-	if(Bonferroni == false)
+	if(Bonferroni == false || plot == "f")
 	{
 		////   calculating FDR
     	message("adjusting p-values using FDR...");
@@ -751,43 +941,81 @@ WriteFasta(seqs1,"implanted.fa");
 	system_run("sort -k5,5gr "+outtmp+" > "+out);
 
 	// most significant at each position
-    system_run(" cat "+out +" | sort -k2,2g -k5,5gr  > "+outtmp);
-    remove_duplicates(outtmp,output+".most.significant.each.position.txt",2,1,"");	
+    //system_run(" cat "+out +" | sort -k2,2g -k5,5gr  > "+outtmp);
+    //remove_duplicates(outtmp,output+".most.significant.each.position.txt",2,1,"");	
 	
-	/*
-    system_run(" cat "+out +" | awk '$4>0' | sort -k2,2g -k5,5gr  > "+outtmp);
+	/**/
+    system_run(" cat "+out +" | awk '$4>0' | sort -k2,2g -k5,5gr -k4,4gr  > "+outtmp);
     remove_duplicates(outtmp,outtmp+".most.enriched",2,1,"");	
-    system_run(" cat "+out +" | awk '$4<0' | sort -k2,2g -k5,5gr  > "+outtmp);
+    system_run(" cat "+out +" | awk '$4<0' | sort -k2,2g -k5,5gr -k4,4g  > "+outtmp);
     remove_duplicates(outtmp,outtmp+".most.depleted",2,1,"");	
-	system_run(" cat "+outtmp+".most* > "+output+".most.significant.each.position.txt");
-	*/
+	system_run(" cat "+outtmp+".most.enriched "+outtmp+".most.depleted > "+output+".most.significant.each.position.txt");
+	/**/
 	
     //remove intermediate files
     system_run("rm "+outtmp+"*");
 	
     message("plotting the most significant kmer at each position...");
 
-	// column to plot
-	int col = 6; // Bonferroni
-	if (Bonferroni == false)
-	{
-	    if (analysis == "ranked") col = 7;
-		else if (analysis == "weighted") col = 13;
-		else col = 11;
-	}
-	
-    string plotfilename = output+".most.significant.each.position.pdf";
+	// column to plot, 1 based
+	int cScore = 6; // bonferroni
+	string ylabel = "-log10(p)";
+	double score_cutoff = -log10(pCutoff_corrected);
 
-    plot_most_significant_kmers(output+".most.significant.each.position.txt", output+".most.significant.each.position.pdf", seq_len1, col,startPos);
+	if (plot == "f") // fdr
+	{
+	    if (analysis == "ranked") cScore = 7;
+		else if (analysis == "weighted") cScore = 13;
+		else cScore = 11;
+	}
+	else if (plot == "p") 
+	{
+		cScore = 5;
+		score_cutoff = -log10(pCutoff_corrected/nTest);
+	}
+	else if (plot == "s")
+	{
+		cScore = 4;
+		ylabel = "test statistic";
+		score_cutoff = 1e300;
+	}
+    //string plotfilename = output+".most.significant.each.position.pdf";
+
+    //plot_most_significant_kmers(output+".most.significant.each.position.txt", output+".most.significant.each.position.pdf", seq_len1, cScore,startPos);
 	
+	postscript_logo_from_PKA_output(output+".most.significant.each.position.txt", output+".most.significant.each.position.eps",colors, seq_len1, score_cutoff, startPos, fontsize,cScore,ylabel,sqrt(seq_len1)/1.5);	
+
 	// if monomer is included in the analysis
 	if(min_k < 2) 
 	{
 		message("plotting single nucleotide profile...");
-		plot_nucleotide_profile( out,  output+".nucleotide.profile.pdf",  seq_len1, col, startPos);
+		//plot_nucleotide_profile( out,  output+".nucleotide.profile.pdf",  seq_len1, cScore, startPos);
+		
+		boost::numeric::ublas::matrix<double> pwm = position_weight_matrix_from_PKA_output(out,alphabet, seq_len1, startPos, cScore);
+
+		//print_matrix(pwm);
+
+	    generate_ps_logo_from_pwm(pwm, output+".eps",alphabet,fixed_position, fixed_letter,colors,score_cutoff,startPos,fontsize,ylabel,sqrt(seq_len1)/1.5,0,bottom_up);	
 	}
+
+		
+	system_run("ps2pdf -dEPSCrop "+output+".eps "+output+".pdf");
+	system_run("ps2pdf -dEPSCrop "+output+".most.significant.each.position.eps "+output+".most.significant.each.position.pdf");
 	
+	// merge pdf
+	system_run("gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile="+output+".all.pdf "+output+"*.pdf");
+	
+	// ps to png
+	system_run("convert "+output+".eps "+output+".png");
+	system_run("convert "+output+".most.significant.each.position.eps "+output+".most.significant.each.position.png");
+	
+	// add header to data file
+	insert_header(out,header);
+	insert_header(output+".most.significant.each.position.txt",header);
     message("Done!");
+
+	// send email once done
+	if(email.size()>1) system_run("echo '"+content+"' | mailx -s '"+subject+"' "+email);
 
     return 0;
 } 

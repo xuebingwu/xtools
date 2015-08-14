@@ -70,10 +70,21 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 
-	/*
+	/**/
 	map<string,string> seqs1 = ReadFasta(input); 
-    map<string,string> seqs2 = shuffle_seqs_preserving_k_let(seqs1,n,k);
-	WriteFasta(seqs2,output);
-*/
+    ofstream fout;
+    fout.open(output.c_str());
+
+	srand(time(NULL));
+
+    for (map<string,string>::iterator it=seqs1.begin(); it!=seqs1.end(); ++it)
+    {
+		for(int i=0;i<n;i++)
+		{		
+			string str = shuffle_seq_preserving_k_let(it->second,k);
+			fout << ">" << it->first << "-" << i+1 << endl << str << endl;
+		}
+    }
+	fout.close();
     return 0;
 }
