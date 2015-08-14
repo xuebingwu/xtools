@@ -9,7 +9,7 @@
 2. [R](http://www.r-project.org/) is required for making figures.
 
 ## Installation
-1. Download the source code from xtools page on github: https://github.com/xuebingwu/xtools
+1. Download the source code from xtools page on github: https://github.com/xuebingwu/xtools (bottom right, "Download ZIP")
 2. Unzip and then enter the subfolder 'include':
 
 ```sh
