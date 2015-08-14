@@ -1,0 +1,276 @@
+#include "structure.h"
+#include "utility.h"
+#include "text.h"
+#include <iostream>
+
+void help()
+{
+    string str =
+	"\n"
+    "mirscan4: de novo pre-micoRNA prediction\n"
+	"	- Xuebing Wu (wuxb07@gmail.com)\n"
+    "\n"
+    "Usage: mirscan4 -i input -o output \n"
+    "\n"
+    "Options:\n"
+    "\n"
+    "   -i  <fasta>             input fasta file\n"
+    "   -o  <output>            output file prefix\n"
+    "   -extend  <integer>      number of flanking nucleotides to consider, default 20\n"
+	"   -minHairpin <integer>   minimum hairpin length (all nucleotides), default=50\n"
+	"   -maxLoop <integer>      maximum loop length, default=20\n"
+	"   -minStem <integer>      minimum stem length, default=30\n"
+	"   -maxStem <integer>      maximum stem length, default=80\n"
+	"   -lfold_opts \"options\" RNALfold options, quoted, default=\"-L 100 -z\"\n"
+	"training mode =============\n"
+	"   -bowtieIndex <ebwt>     bowtie index for mapping and identifying flanking sequences, default hg19\n"
+	"   -genomeFasta <fasta>    whole genome fasta file, default hg19\n"
+	"prediction mode ===========\n"
+	"   -predict  <file>          model file prefix. If not specified, run training mode\n"
+		
+	"\n"
+    "\n";
+
+    cerr << str;
+
+    exit(0);
+}
+/* pipeline
+
+# for positives, take 30nt flanking cut site and fold
+cd /lab/bartel1_ata/wuxbl/projects/wenwen/top56hexamer/4col_species
+python convert_4col_to_fasta.py hsa_4col 30 > hsa.ext.30.fa
+
+# fold 
+RNAfold --noPS   < hsa.ext.30.fa > hsa.ext.30.fold
+
+
+
+*/
+
+int main(int argc, char* argv[]) {
+
+    // default
+    string input;
+    string output;
+	string lfold_opts = "-L 120 -z-5";
+/*	string bowtie_index;
+	string bowtie_index_default="/nfs/genomes/human_gp_feb_09_no_random/bowtie/hg19";
+	string genome_fasta;
+	string genome_fasta_default="/nfs/genomes/human_gp_feb_09_no_random/fasta_whole_genome/hg19.fa";
+	*/
+	string model;
+	
+	int ext=20;
+	int min_hairpin_length = 50;
+	int max_loop_length = 100;
+	int min_stem_length = 25;
+	int max_stem_length = 80;
+	
+	double mfe = -30; // minimum MFE
+	
+	// stem of this length if flanked by unpaired region of this length or longer, will become unpaired
+	int max_short_stem_length = 20; 
+	int min_pairs_left=25; // after removing short stems, at least this number of paired bases
+	int max_bulge = 10; // largest bulge allowed
+	int profile_length = 50;
+	
+	// rnalfold:
+	int max_overlap_allowed = 20;
+		
+	if (argc < 2) help();
+	
+    // parse arguments
+    string str;
+    for (int i = 1; i < argc; i++) { 
+        if (i != argc) { 
+            str=argv[i];
+            if (str == "-i") {  
+                input = argv[i + 1];
+                i=i+1;
+            } else if (str == "-o") { 
+                output = argv[i + 1];
+                i=i+1;
+            } else if (str == "-predict") { 
+                model = argv[i + 1];
+                i=i+1;
+            } else if (str == "-extend") { 
+                ext = stoi(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-minHairpin") { 
+                min_hairpin_length = stoi(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-maxLoop") { 
+                max_loop_length = stoi(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-maxBulge") { 
+                max_bulge = stoi(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-minStem") { 
+                min_stem_length = stoi(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-maxStem") { 
+                max_stem_length = stoi(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-maxShortStem") { 
+                max_short_stem_length = stoi(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-minPairedLeft") { 
+                min_pairs_left = stoi(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-profileLength") { 
+                profile_length = stoi(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-mfe") { 
+                mfe = stof(argv[i + 1]);
+                i=i+1;
+            } else if (str == "-lfold_opts") { 
+                lfold_opts = argv[i + 1];
+                i=i+1;
+ /*           } else if (str == "-bowtieIndex") { 
+                bowtie_index = argv[i + 1];
+                i=i+1;
+            } else if (str == "-genomeFasta") { 
+                genome_fasta = argv[i + 1];
+                i=i+1;
+  */          } else if (str == "-h" || str == "--help") { 
+                help();
+            } else {
+                message("unknown option: "+str);   
+                help();        
+            }
+        }
+    }   
+	
+	
+	// training mode only
+	if(model.size() == 0)
+	{
+		message("training mode on...");
+		/*
+		if (ext > 0) // map to genome and identify flanking sequences
+		{
+			if (bowtie_index.size() == 0) bowtie_index = bowtie_index_default;
+			if (genome_fasta.size() == 0) genome_fasta = genome_fasta_default;
+			
+			message("mapping sequence back to genome: "+bowtie_index);			
+			system_run("~/scripts/sequence/fasta2bed -i "+input+" -g "+bowtie_index+" -o "+output+".bed");
+			
+			message("extending intervals...");
+			system_run("python ~/scripts/interval/bed_resize.py "+output+".bed start-"+to_string(ext)+" end+"+to_string(ext)+" strand > "+output+".ext.bed");
+			
+			message("extracting flanking sequences...");
+			system_run("bedtools getfasta -fi "+genome_fasta+" -fo "+output+".fa -bed "+output+".ext.bed -s -name ");
+			input = output+".fa";
+		}
+		*/
+		if (input.substr(input.size()-5,5) != ".fold")
+		{
+			message("folding sequences using RNAfold...");
+			//system_run("RNAfold --noPS --noClosingGU < "+input+" > "+output+".fold");
+			system_run("RNAfold --noPS < "+input+" > "+output+".fold");
+			
+		}
+		else 
+		{
+			system_run("ln -s "+input+" "+output+".fold");
+		}
+	}
+	else
+	{
+		message("prediction mode on...");
+		message("runing RNALfold to find local structures...");
+		
+		if (input.substr(input.size()-6,6) != ".lfold") 
+		{
+    		system_run("RNALfold "+lfold_opts+" < "+input+" > "+output+".lfold");
+		}
+		else 
+		{
+			system_run("ln -s "+input+" "+output+".lfold");
+		}
+		
+		message("converting RNALfold output to RNAfold output format...");//except the free energy goes to sequence id
+		RNALfold_to_RNAfold(output+".lfold",output+".fold",min_hairpin_length,ext,mfe);
+	}
+	
+	// remove short stems
+	message("removing short stems...");
+	remove_short_stem_from_file(output+".fold", output+".fold.no.short.stem", max_short_stem_length, min_pairs_left,max_bulge);
+	
+	message("identifying the longest stem and plot the structure...");
+    system_run("perl /lab/bartel1_ata/wuxbl/scripts/plothairpin/RNA-HairpinFigure-master/plotHairpin.pl "+output+".fold.no.short.stem  > "+output+".fold.plot");
+	
+	message("parse and filter hairpins by loop and stem length");
+	system_run("python /lab/bartel1_ata/wuxbl/scripts/plothairpin/parseHairpinPlot.py "+output+".fold.plot "+to_string(max_loop_length)+" "+to_string(min_stem_length)+" "+to_string(max_stem_length)+" "+output+".fold.filtered > "+output+".fold.plot.summary");
+    system_run("perl /lab/bartel1_ata/wuxbl/scripts/plothairpin/RNA-HairpinFigure-master/plotHairpin.pl "+output+".fold.filtered > "+output+".fold.filtered.plot");
+	
+	message("generating feature sequences...");
+	if(model.size() == 0)
+	system_run("python /lab/bartel1_ata/wuxbl/scripts/plothairpin/mirscan4_train.py "+output+".fold.plot.summary "+to_string(ext+1)+" "+to_string(-ext)+" "+to_string(profile_length)+" 7 > "+output+".data");
+	else
+		system_run("python /lab/bartel1_ata/wuxbl/scripts/plothairpin/mirscan4_train.py "+output+".fold.plot.summary "+to_string(ext+1)+" "+to_string(-ext)+" "+to_string(min_hairpin_length+ext)+" 7 > "+output+".data");
+		
+	
+	// model training
+	if(model.size() == 0)
+	{
+		message("running PKA to build models...");
+		// generate profile
+		system_run("cat "+output+".data | awk '{print \">\"$1\"\\n\"$4}' > "+output+".profile.str");
+		system_run("cat "+output+".data | awk '{print \">\"$1\"\\n\"$2}' > "+output+".profile.top");
+		system_run("cat "+output+".data | awk '{print \">\"$1\"\\n\"$3}' > "+output+".profile.bot");
+		system_run("cat "+output+".data | awk '{print \">\"$1\"\\n\"$6}' > "+output+".profile.loop");		
+		// run PKA and save model
+		system_run("PKA "+output+".profile.str -alphabet ABCDEO -max_k 3 -o "+output+".str");
+		// can skip O in alphabet for top and bot since loop position already captured by str
+		system_run("PKA "+output+".profile.top -alphabet ACGUIO -max_k 3  -o "+output+".top"); // skip O
+		system_run("PKA "+output+".profile.bot -alphabet ACGUIO -max_k 3  -o "+output+".bot"); // skip O
+		system_run("PKA "+output+".profile.loop -alphabet ACGUX -max_k 3  -o "+output+".loop");	
+	} 
+	else // predict
+	{/*
+		message("loading PKA models...");
+		vector<positional_kmer> model_str = load_model_from_file(model+".str.model.txt");
+		vector<positional_kmer> model_top = load_model_from_file(model+".top.model.txt");
+		vector<positional_kmer> model_bot = load_model_from_file(model+".bot.model.txt");
+		vector<positional_kmer> model_loop = load_model_from_file(model+".loop.model.txt");
+		
+		// how to use loop model if 
+		message("scoring hairpins...");
+		hairpin_scoring(output+".data",output+".score", model_str, model_top, model_bot, model_loop, profile_length);
+		*/
+	}
+	
+	
+	//
+	message("generating bed file for filtered hairpins...");
+	system_run("cat "+output+".fold.filtered | grep -v '((' | sed 's/U/T/g' > "+output+".fold.filtered.fa");
+	system_run("/lab/bartel1_ata/wuxbl/scripts/sequence/fasta2bed -i "+output+".fold.filtered.fa -g /nfs/genomes/human_gp_feb_09_no_random/bowtie/hg19 -o "+output+".fold.filtered.bed");
+	select_multi_lines(output+".fold.filtered.plot", output+".fold.filtered.bed",output+".fold.filtered.bed.plot",8, 4, ">");
+	
+	
+	// most long stems are from repeats
+	
+	// make test data
+	
+	
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
