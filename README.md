@@ -5,7 +5,7 @@
 
 ## Prerequisite Software/Package
 
-1. To compile locally, one should have a recent version of GCC that is compatible with the g++ option -std=c++11. 
+1. To compile locally, one should have a recent version of GCC that is compatible with the g++ option -std=c++11. For Mac users, this can be done by installing the most recent version of [Xcode](https://developer.apple.com/xcode/downloads/).
 2. [R](http://www.r-project.org/) is required for making figures.
 
 ## Installation
