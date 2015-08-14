@@ -64,7 +64,7 @@ array<double,4>  kmer_rank_test(string kmer, vector<string> seqs, vector<double>
 	{
 		utest = {{0,1}};
 	}
-	array<double,4> res = {{double(seqs.size()),double(ranks_with_kmer.size()),utest[0],utest[0]/fabs(utest[0])*log10(utest[1])}};
+	array<double,4> res = {{double(seqs.size()),double(ranks_with_kmer.size()),-utest[0],utest[0]/fabs(utest[0])*log10(utest[1])}};
 	return res;
 }
 

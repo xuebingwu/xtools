@@ -14,31 +14,31 @@ void help()
     string str =
 	"\n"
     "MatchScan\n"
-	"	a program to find significant matches between a query sequence and a set of target sequences,\n"
-	"   where the frequency of the matched sequences in targets correlates with target scores\n"
+	"    a program to find significant matches between a query sequence and a set of target sequences,\n"
+	"    where the frequency of the matched sequences in targets correlates with target scores\n"
 	"\n"
-	"	- Xuebing Wu (wuxb07@gmail.com)\n"
+	"    - Xuebing Wu (wuxb07@gmail.com)\n"
     "\n"
-    "Usage: MatchScan -q query.fasta -t target.fasta -s score.tab -o output [ options ]\n"
+    "Usage\n"
+	"    MatchScan -q query.fasta -t target.fasta -s score.tab -o output [ options ]\n"
     "\n"
     "Options:\n"
     "\n"
-    "   -q  file   fasta file containing a single query sequence\n"
-    "   -t  file   fasta file containing all possible target sequences\n"
-    "   -s  file   tab-delimited score file (target name in column 1, score in column 2)\n"
-	"              target name should match those in target fasta file, can be a subset\n"
-	"   -o  file   prefix for output files (tabular data and PDF figure)\n"
-	"   -h  file   query sequences to highlight in green\n"
-	"   -k  num(s) length of subsequence to scan at each step (i.e. k-mer)\n"
-	"              e.g. to search for hexamer: -k 6; for k from 6 to 10 (default): -k 6,10\n"		
-	"   -m  num    max number of target sequences to use (top and bottom)\n"		
-	"              default 10000, i.e. top 5000 and bottom 5000 based on scores\n"		
-		
+    "    -q  file   fasta file containing a single query sequence\n"
+    "    -t  file   fasta file containing all possible target sequences\n"
+    "    -s  file   tab-delimited score file (target name in column 1, score in column 2)\n"
+	"               target name should match those in target fasta file, can be a subset\n"
+	"    -o  file   prefix for output files (tabular data and PDF figure)\n"
+	"    -h  file   query sequences to highlight in green\n"
+	"    -k  num(s) length of subsequence to scan at each step (i.e. k-mer)\n"
+	"               e.g. to search for hexamer: -k 6; for k from 6 to 10 (default): -k 6,10\n"		
+	"    -m  num    max number of target sequences to use (top and bottom)\n"		
+	"               default 10000, i.e. top 5000 and bottom 5000 based on scores\n"		
     "\n"
-	"Example:\n"
-	" MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC\n"
-	" MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC -k 10 \n"
-	" MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC -h terc_probe.fa.rc \n";
+	"Example\n"
+	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC\n"
+	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC -k 10 \n"
+	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC -h terc_probe.fa.rc \n";
 
     cerr << str;
 
@@ -109,9 +109,6 @@ int main(int argc, char* argv[]) {
 	if(kmer_lens.size()>1) k_max = stoi(kmer_lens[1]);
 	else k_max = k_min;
 	
-	message("kmer length from "+to_string(k_min)+" to "+to_string(k_max));
-	
-	
 	// load query sequence, one seq only
 	
 	message("loading query sequence...");
@@ -132,7 +129,7 @@ int main(int argc, char* argv[]) {
 	message("	query length: "+ to_string(querySeq.size()));
 	
 	
-	// intersecting score file and target file, to find targets with both sequence and score
+	message("find targets with both sequences and scores, and sort by scores...");
 	srand(time(NULL));
     string tmp = outputFile+random_string(20); // a random string for temp files
 	// get all IDs in target fasta files
@@ -141,27 +138,28 @@ int main(int argc, char* argv[]) {
 	intersectTab(scoreFile, "target."+tmp, "selected."+tmp);
 	system_run("cat selected."+tmp+" | sort -nrk 2 > sorted."+tmp);
 	// if too many sequences, only take top and bottom
-	if(count_lines("sorted."+tmp) > max_target_num)
-	{
-		system_run("head -n "+to_string(int(max_target_num/2))+" sorted."+tmp+" > "+scoreFile+".processed");
-		system_run("tail -n "+to_string(int(max_target_num/2))+" sorted."+tmp+" >> "+scoreFile+".processed");
+	int total_targets = count_lines("sorted."+tmp);
+	message("    total target sequences sorted: "+to_string(total_targets));
+	
+	if(total_targets > max_target_num)
+	{	
+		int to_be_kept = int(max_target_num/2);
+		message("Only keep the top "+to_string(to_be_kept)+" and the bottom "+to_string(to_be_kept)+" sequences");
+		system_run("head -n "+to_string(to_be_kept)+" sorted."+tmp+" > "+scoreFile+".processed");
+		system_run("tail -n "+to_string(to_be_kept)+" sorted."+tmp+" >> "+scoreFile+".processed");
 	} else system_run("mv sorted."+tmp +" "+scoreFile+".processed");
 	
 	system_run("rm *"+tmp);
-	
-	// load score
-	message("loading scores...");
+
+	message("loading target scores...");
 	message("	score file: "+ scoreFile+".processed");
 	
 	vector<string> targetNames;
 	vector<double> targetScores;
 	int total = load_scores(scoreFile+".processed", targetNames, targetScores, 0,1);
-	message("	total targets loaded: "+to_string(total));
-
 
 	message("loading target sequences...");
-	message("	target file: "+ targetFile);
-	
+	message("	sequence file: "+ targetFile);
 	map<string,string> allseqs = ReadFasta(targetFile);
 		
 	// sort target sequences by their score, ignore sequences without scores
@@ -217,7 +215,7 @@ int main(int argc, char* argv[]) {
 	}
 	*/
 	
-	message("scanning query sequences and calcualting correlation scores for each kmer...");
+	message("scanning query sequences and calcualting p values...");
 	
 	//map<string,string> calculated_kmers; // kmer to cors
 	
@@ -225,6 +223,11 @@ int main(int argc, char* argv[]) {
 	{
 		string outputfilename = outputFile+"."+to_string(k);
 		ofstream fout(outputfilename.c_str());
+		
+		string header = "position\tkmer_seq\tn_total_seq\tn_with_match\tz_score\tlog10_p_value";
+		if (hltSeqs.size()>0) header = header + "\thighlight";
+	
+		fout << header << endl;
 		
 		message("    processing k="+to_string(k));
 		for(int i = 0; i <= querySeq.size()-k;i++)
@@ -272,7 +275,7 @@ int main(int argc, char* argv[]) {
 		string script = 
 	    "pdf('"+outputfilename+".pdf',width=10,height=5) \n"
 		"par(cex=1.5,mar=c(5, 5, 1, 1))\n"
-	    "x  = read.table('"+outputfilename+"', header=F) \n"
+	    "x  = read.table('"+outputfilename+"', header=T) \n"
 			"col=rep('blue',nrow(x))\n"
 			"if(ncol(x)>6){\n"
 			"col[x[,7] != 'none'] = 'green'\n"
@@ -285,12 +288,11 @@ int main(int argc, char* argv[]) {
 		"#for(i in 8:17){\n"
 		"# lines(x[,i],type='h',col=rgb(1,0,0,0.3))\n"
 		"#}\n"
-	    "dev.off() \n";
+	    "dev.off() \n"
+		"write.table(x[order(x[,6],decreasing=T),],file='"+outputfilename+"',sep='\t',append=F,quote=F,row.names=F)\n"
+		"\n";
 
-		R_run(script);
-		
-		system_run("sort -nrk 6 "+outputfilename + " > "+tmp);
-		system_run("mv "+tmp+" "+outputfilename);
+		R_run(script);		
 		
 	}
 	

@@ -249,8 +249,9 @@ void intersectTab(string file1, string file2, string outputfile, unsigned col1/*
 		}
 	}          
 	
-	if (subtract) cout << diff << " of " << total << " lines unique to " << file1 << endl;
-	else cout << comm << " of " << total << " lines shared" << endl;
+	
+	//if (subtract) cout << diff << " of " << total << " lines unique to " << file1 << endl;
+	//else cout << comm << " of " << total << " lines shared" << endl;
 	
     f1.close();  
 	out.close();         
