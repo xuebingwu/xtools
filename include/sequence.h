@@ -28,11 +28,18 @@ extern "C"{
 
 using namespace std;
 
+boost::numeric::ublas::matrix<double> initialize_pwm_from_one_seq(string seq);
+double score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int> letter2pos, string seq);
+double best_score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int> letter2pos, string seq, int &pos);
+boost::numeric::ublas::matrix<double> update_pwm_from_seqs(vector<string> seqs, vector<double> scores, boost::numeric::ublas::matrix<double> pwm,  map<char,int> letter2pos);
+
+
 void to_upper(vector<string> &seqs);
 
 vector<int> motif_counts_in_seqs(string motif, vector<string> seqs);
 
 array<double,4> kmer_rank_test(string kmer, vector<string> targetSeqs, vector<double> score_ranks);
+void kmer_cdf(string kmer, vector<string> seqs, vector<double> scores, string outputfile);
 
 string reverse(string str);
 

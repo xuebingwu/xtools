@@ -33,7 +33,9 @@ void help()
 	"    -k  num(s) length of subsequence to scan at each step (i.e. k-mer)\n"
 	"               e.g. to search for hexamer: -k 6; for k from 6 to 10 (default): -k 6,10\n"		
 	"    -m  num    max number of target sequences to use (top and bottom)\n"		
-	"               default 10000, i.e. top 5000 and bottom 5000 based on scores\n"		
+	"               default 10000, i.e. top 5000 and bottom 5000 based on scores\n"
+	"    -c  seqs   cdf plots for a list of k-mers, separated by comma, such as CAAACC,TTTACG\n"
+	"               when specified, will ignore all options except -q,-t,-s, and -o\n"
     "\n"
 	"Example\n"
 	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC\n"
@@ -51,12 +53,14 @@ void help()
 int main(int argc, char* argv[]) {
 
     // default
-    string queryFile="query";
-    string targetFile="target";
-    string scoreFile="score";
+    string queryFile="";
+    string targetFile="";
+    string scoreFile="";
 	string outputFile="output";
     string highlightFile="";
 	string backgroundFile="";
+	
+	string kmers = "";
 	
 	int max_target_num = 10000;
 
@@ -91,6 +95,9 @@ int main(int argc, char* argv[]) {
             } else if (str == "-k") { 
                 kmer_len = argv[i + 1];
                 i=i+1;
+            } else if (str == "-c") { 
+                kmers = argv[i + 1];
+                i=i+1;
             } else if (str == "-m") { 
                 max_target_num = atoi(argv[i + 1]);
                 i=i+1;
@@ -109,25 +116,47 @@ int main(int argc, char* argv[]) {
 	if(kmer_lens.size()>1) k_max = stoi(kmer_lens[1]);
 	else k_max = k_min;
 	
-	// load query sequence, one seq only
+	vector<string> allkmers;
+	vector<int> kmer_pos;
+	if(queryFile.size()>0)
+	{
+		// load query sequence, one seq only
 	
-	message("loading query sequence...");
-	message("	query file: "+ queryFile);
+		message("loading query sequence...");
+		message("	query file: "+ queryFile);
 	
-	ifstream fin(queryFile.c_str());
-	string queryName, querySeq;
-	ReadOneSeqFromFasta(fin,queryName,querySeq);
-	fin.close();
-	querySeq = to_upper(querySeq);
+		ifstream fin(queryFile.c_str());
+		string queryName, querySeq;
+		ReadOneSeqFromFasta(fin,queryName,querySeq);
+		fin.close();
+		querySeq = to_upper(querySeq);
 	
-	if (querySeq.size() == 0) 
+		if (querySeq.size() == 0) 
+			{
+				message("query file empty!");
+				exit(1);
+			}
+		message("	query name: "+ queryName);
+		message("	query length: "+ to_string(querySeq.size()));
+		
+		// generate kmers
+		for(int k=k_max;k >= k_min;k--)
 		{
-			message("query file empty!");
-			exit(1);
+			for(int i = 0; i <= querySeq.size()-k;i++)
+			{
+					allkmers.push_back(querySeq.substr(i,k));
+					kmer_pos.push_back(i);
+			}
 		}
-	message("	query name: "+ queryName);
-	message("	query length: "+ to_string(querySeq.size()));
-	
+	} else // enumerate all possible kmers
+	{
+		allkmers = generate_kmers(k_min, "ACGT");
+		for(int k=k_min+1;k <= k_max;k++)
+		{
+			allkmers += generate_kmers(k, "ACGT");	
+		}
+		for(int i=0;i<allkmers.size();i++) kmer_pos.push_back(i);
+	}
 	
 	message("find targets with both sequences and scores, and sort by scores...");
 	srand(time(NULL));
@@ -141,7 +170,7 @@ int main(int argc, char* argv[]) {
 	int total_targets = count_lines("sorted."+tmp);
 	message("    total target sequences sorted: "+to_string(total_targets));
 	
-	if(total_targets > max_target_num)
+	if(total_targets > max_target_num && kmers.size() == 0)
 	{	
 		int to_be_kept = int(max_target_num/2);
 		message("Only keep the top "+to_string(to_be_kept)+" and the bottom "+to_string(to_be_kept)+" sequences");
@@ -199,6 +228,16 @@ int main(int argc, char* argv[]) {
 		targetScores.insert(targetScores.end(), bgScores.begin(), bgScores.end());
 	}
 	
+	if(kmers.size()>0)
+	{
+		vector<string> kmers_all = string_split(kmers,",");
+		for(int i=0;i<kmers_all.size();i++)
+		{
+			kmer_cdf(kmers_all[i], targetSeqs, targetScores, outputFile+"-"+kmers_all[i]);
+		}
+		return 0;
+	}
+	
 	message("ranking sequences by scores...");
 	
 	vector<double> score_ranks = get_ranks(targetScores,true);
@@ -215,89 +254,115 @@ int main(int argc, char* argv[]) {
 	}
 	*/
 	
+	/* 
+	// normalize scores
+	double max_score = max(targetScores);
+	double min_score = min(targetScores);
+	cout << max_score <<","<<min_score << endl;
+	double range = max_score - min_score;
+	for(int i=0;i<targetScores.size();i++) 
+	{
+		cout << targetScores[i] << "\t";
+		targetScores[i] = (targetScores[i] - min_score) / range;
+		cout << targetScores[i] << endl;
+	}
+	
+    // nucleotide to position
+    map<char,int> letter2pos;
+    letter2pos['A'] = 0;
+    letter2pos['C'] = 1;
+    letter2pos['G'] = 2;
+    letter2pos['T'] = 3;
+	boost::numeric::ublas::matrix<double> pwm = initialize_pwm_from_one_seq(querySeq);
+	print_matrix(pwm);
+	pwm = update_pwm_from_seqs(targetSeqs, targetScores, pwm,  letter2pos);
+	print_matrix(pwm);
+	*/
+		
 	message("scanning query sequences and calcualting p values...");
 	
 	//map<string,string> calculated_kmers; // kmer to cors
+
+	ofstream fout(outputFile.c_str());
 	
-	for(int k=k_max;k >= k_min;k--)
+	string header = "position\tkmer_seq\tn_total_seq\tn_with_match\tz_score\tlog10_p_value";
+	if (hltSeqs.size()>0) header = header + "\thighlight";
+
+	fout << header << endl;
+	
+	for(int i = 0; i < allkmers.size();i++)
 	{
-		string outputfilename = outputFile+"."+to_string(k);
-		ofstream fout(outputfilename.c_str());
+		string kmer_cors = to_string(kmer_pos[i])+"\t"+allkmers[i];
 		
-		string header = "position\tkmer_seq\tn_total_seq\tn_with_match\tz_score\tlog10_p_value";
-		if (hltSeqs.size()>0) header = header + "\thighlight";
-	
-		fout << header << endl;
+		// rank sum test
+		array<double,4> utest = kmer_rank_test(allkmers[i], targetSeqs, score_ranks);
+		kmer_cors = kmer_cors+"\t"+to_string(int(utest[0]))+"\t"+to_string(int(utest[1]))+"\t"+to_string(utest[2])+"\t"+to_string(utest[3]) + "\t";
 		
-		message("    processing k="+to_string(k));
-		for(int i = 0; i <= querySeq.size()-k;i++)
+		/*
+		if(calculated_kmers.find(kmer) == calculated_kmers.end()) //  a new kmer
+		{
+			vector<int> counts = motif_counts_in_seqs(kmer, targetSeqs);
+			vector<double> count_ranks = get_ranks(counts,true);
+			kmer_cors = kmer_cors + to_string(cor(count_ranks,score_ranks));
+			for (int j=0;j<10;j++) kmer_cors = kmer_cors + "\t" + to_string(cor(count_ranks,score_ranks_shuffled[j]));
+			*/
+			// high lights
+			if (hltSeqs.size()>0)
 			{
-				string kmer = querySeq.substr(i,k);
-				string kmer_cors = to_string(i)+"\t"+kmer;
-				
-				// rank sum test
-				array<double,4> utest = kmer_rank_test(kmer, targetSeqs, score_ranks);
-				kmer_cors = kmer_cors+"\t"+to_string(int(utest[0]))+"\t"+to_string(int(utest[1]))+"\t"+to_string(utest[2])+"\t"+to_string(utest[3]) + "\t";
-				
-				/*
-				if(calculated_kmers.find(kmer) == calculated_kmers.end()) //  a new kmer
+				string highlight = "none";
+				for(int j=0;j<hltSeqs.size();j++)
 				{
-					vector<int> counts = motif_counts_in_seqs(kmer, targetSeqs);
-					vector<double> count_ranks = get_ranks(counts,true);
-					kmer_cors = kmer_cors + to_string(cor(count_ranks,score_ranks));
-					for (int j=0;j<10;j++) kmer_cors = kmer_cors + "\t" + to_string(cor(count_ranks,score_ranks_shuffled[j]));
-					*/
-					// high lights
-					if (hltSeqs.size()>0)
+					if (hltSeqs[j].find(allkmers[i]) != std::string::npos) 
 					{
-						string highlight = "none";
-						for(int j=0;j<hltSeqs.size();j++)
-						{
-							if (hltSeqs[j].find(kmer) != std::string::npos) 
-							{
-								highlight = hltNames[j];
-								break;
-							}
-						}
-						kmer_cors = kmer_cors + "\t" + highlight ;
+						highlight = hltNames[j];
+						break;
 					}
-					/*
-					
-					calculated_kmers[kmer] = kmer_cors;
-				} else { // not a new kmer
-					kmer_cors = calculated_kmers[kmer];
 				}
-				*/
-				fout << kmer_cors << endl;
-			}	
-		fout.close();
-		
-		string script = 
-	    "pdf('"+outputfilename+".pdf',width=10,height=5) \n"
-		"par(cex=1.5,mar=c(5, 5, 1, 1))\n"
-	    "x  = read.table('"+outputfilename+"', header=T) \n"
-			"col=rep('blue',nrow(x))\n"
-			"if(ncol(x)>6){\n"
-			"col[x[,7] != 'none'] = 'green'\n"
-				"}\n"
-		"plot(x[,6],type='h',col=col, bty='n',xlab='5 prime end of match in query (nucleotides)', ylab='-log10(p)') \n"	
-		"#avg = apply(x[,8:17],1,mean,rm.nan=T) \n"
-		"#err = apply(x[,8:17],1,sd) \n"
-		"#plot(x[,7],type='h',col=col, bty='n',xlab='5 prime end of match in query (nucleotides)', ylab='spearman correlation') \n"
-		"#arrows(1:length(avg),avg-err,1:length(avg),avg+err, code=3, angle=90, length=0,col=rgb(1,0,0,0.5),lwd=0.1) \n"
-		"#for(i in 8:17){\n"
-		"# lines(x[,i],type='h',col=rgb(1,0,0,0.3))\n"
-		"#}\n"
-	    "dev.off() \n"
-		"write.table(x[order(x[,6],decreasing=T),],file='"+outputfilename+"',sep='\t',append=F,quote=F,row.names=F)\n"
-		"\n";
+				kmer_cors = kmer_cors + "\t" + highlight ;
+			}
+			/*
+			
+			calculated_kmers[kmer] = kmer_cors;
+		} else { // not a new kmer
+			kmer_cors = calculated_kmers[kmer];
+		}
+		*/
+		fout << kmer_cors << endl;
+	}	
+	fout.close();
+	
+	string script = 
+    "pdf('"+outputFile+".pdf',width=10,height=5) \n"
+	"par(cex=1.5,mar=c(5, 5, 1, 1))\n"
+    "x  = read.table('"+outputFile+"', header=T) \n"
+		"col=rep('blue',nrow(x))\n"
+		"if(ncol(x)>6){\n"
+		"col[x[,7] != 'none'] = 'green'\n"
+			"}\n"
+	"x = x[order(x[,6],decreasing=T),]\n"
+	"plot(x[,1],x[,6],type='h',col=col, bty='n',xlab='5 prime end of match in query (nucleotides)', ylab='-log10(p)') \n"	
+	"# top 3\n"
+	"text(x[1,1],x[1,6],labels=x[1,2],pos=4,cex=0.5,offset=0.1)\n"
+	"text(x[2,1],x[2,6],labels=x[2,2],pos=4,cex=0.5,offset=0.1)\n"
+	"text(x[3,1],x[3,6],labels=x[3,2],pos=4,cex=0.5,offset=0.1)\n"
+	"n = nrow(x)\n"
+	"text(x[n,1],x[n,6],labels=x[n,2],pos=4,cex=0.5,offset=0.1)\n"
+	"text(x[n-1,1],x[n-1,6],labels=x[n-1,2],pos=4,cex=0.5,offset=0.1)\n"
+	"text(x[n-2,1],x[n-2,6],labels=x[n-2,2],pos=4,cex=0.5,offset=0.1)\n"	
+	"#avg = apply(x[,8:17],1,mean,rm.nan=T) \n"
+	"#err = apply(x[,8:17],1,sd) \n"
+	"#plot(x[,7],type='h',col=col, bty='n',xlab='5 prime end of match in query (nucleotides)', ylab='spearman correlation') \n"
+	"#arrows(1:length(avg),avg-err,1:length(avg),avg+err, code=3, angle=90, length=0,col=rgb(1,0,0,0.5),lwd=0.1) \n"
+	"#for(i in 8:17){\n"
+	"# lines(x[,i],type='h',col=rgb(1,0,0,0.3))\n"
+	"#}\n"
+    "dev.off() \n"
+	"write.table(x[order(x[,6],decreasing=T),],file='"+outputFile+"',sep='\t',append=F,quote=F,row.names=F)\n"
+	"\n";
 
-		R_run(script);		
-		
-	}
+	R_run(script);		
 	
 
-	
 	message("Done");
 		
     return 0;

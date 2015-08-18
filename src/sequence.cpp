@@ -32,6 +32,126 @@ extern "C"{
 
 using namespace std;
 
+
+// initialize a pwm from a sequence
+boost::numeric::ublas::matrix<double> initialize_pwm_from_one_seq(string seq)
+{
+    // nucleotide to position
+    map<char,int> letter2pos;
+    letter2pos['A'] = 0;
+    letter2pos['C'] = 1;
+    letter2pos['G'] = 2;
+    letter2pos['T'] = 3;
+	
+    boost::numeric::ublas::matrix<double> pwm (4,seq.size());
+    for (int i = 0; i < pwm.size1(); ++ i) 
+		for (int j = 0; j < pwm.size2(); ++ j) 
+			pwm(i,j) = 0;
+    for (int i = 0; i < pwm.size2(); ++ i) pwm(letter2pos[seq[i]],i) = 1.0;
+  
+    return pwm;
+}
+
+// score a sequence by pwm
+double score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int> letter2pos, string seq)
+{
+	double score = 0;
+	for (int i = 0; i < pwm.size2(); ++ i) score += pwm(letter2pos[seq[i]],i);
+	return score;
+}
+
+// find best match by pwm in a seq
+// pos: position of best match
+// return best match score
+double best_score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int> letter2pos, string seq, int &pos)
+{
+	double max_score = -100000;
+	double score;
+	int motif_size = int(pwm.size2());
+	for(int i=0;i< int(seq.size())-motif_size;i++)
+	{
+		//cout << i << "," << seq.size()-motif_size << "," << motif_size << endl;
+		score =  score_by_pwm(pwm,letter2pos,seq.substr(i,motif_size));
+		if (score > max_score)
+		{
+			max_score = score;
+			pos = i;
+		}
+	}
+	return max_score;
+}
+
+// update pwm from sequences
+// scores: normalized to 0-1 ()
+// weight from each sequence: pwm score of the match * sequence score
+boost::numeric::ublas::matrix<double> update_pwm_from_seqs(vector<string> seqs, vector<double> scores, boost::numeric::ublas::matrix<double> pwm,  map<char,int> letter2pos)
+{
+	// initialize a zero matrix
+    boost::numeric::ublas::matrix<double> pwm2 (4,pwm.size2());
+    for (int i = 0; i < pwm2.size1(); ++ i) 
+		for (int j = 0; j < pwm2.size2(); ++ j) 
+			pwm2(i,j) = 0;
+	
+	// update from each sequence
+	int max_pos;
+	double max_score;
+	double composite_score;
+	for(int i=0;i<seqs.size();i++)
+	{
+		max_score = best_score_by_pwm(pwm,letter2pos,seqs[i],max_pos);
+		composite_score = max_score * scores[i];
+		for (int j = 0; j < pwm2.size2(); ++ j) pwm2(letter2pos[seqs[i][max_pos+j]],j) += composite_score; 
+	}
+
+	// normalize so that each column sum up to 1
+	for(int c=0;c<pwm2.size2();c++) // for each column
+	{
+		double row_sum = 0;
+		for(int r=0;r<pwm2.size1();r++)
+			row_sum += pwm2(r,c);
+		for(int r=0;r<pwm2.size1();r++)
+			pwm2(r,c) = pwm2(r,c)/row_sum;
+	}
+	
+    return pwm2;
+}
+
+
+/*
+
+// smith-waterman scoring without gap
+// a and b should be of the same size
+// mismatch_penalty: negative number
+double smith_waterman_score(string a, string b, double mismatch_penalty)
+{
+	double score = 0;
+	double score_max = 0;
+	for(int i=0;i<a.size();i++)
+	{
+		if(a[i] == b[i]) score++;
+		else score += mismatch_penalty;
+		if (score > score_max) score_max = score;
+	}
+	return score_max;
+}
+
+void find_best_smith_waterman_match(string motif, string seq, double mismatch_penalty, int &pos, double &score)
+{
+	pos = 0;
+	score = -10000000;
+	for(int i = 0;i<seq.size()-motif.size();i++)
+	{
+		double s = smith_waterman_score(motif, seq, mismatch_penalty);
+		if (s > score) 
+		{
+			score = s;
+			pos = i;
+		}
+	}
+}
+
+*/
+
 /********* for regression motif analysis ********/
 
 // for each motif, count frequency in each target sequence
@@ -67,6 +187,39 @@ array<double,4>  kmer_rank_test(string kmer, vector<string> seqs, vector<double>
 	array<double,4> res = {{double(seqs.size()),double(ranks_with_kmer.size()),-utest[0],utest[0]/fabs(utest[0])*log10(utest[1])}};
 	return res;
 }
+
+
+void kmer_cdf(string kmer, vector<string> seqs, vector<double> scores, string outputfile)
+{
+	ofstream fout(outputfile.c_str());
+	for(int i=0;i<seqs.size();i++)
+	{
+		if(seqs[i].find(kmer) != string::npos) fout << "1\t" << scores[i]  << endl;
+		else fout << "0\t" << scores[i] << endl;
+	}
+	fout.close();
+	
+	string script = 
+    "pdf('"+outputfile+".pdf',width=5,height=5) \n"
+	"par(cex=1)\n"
+    "x  = read.table('"+outputfile+"', header=F) \n"
+	"pos = x[x[,1]==1,2]\n"
+	"neg = x[x[,1]==0,2]\n"
+	"kstest = ks.test(pos,neg,alternative='greater')\n"
+	"p = kstest$p.value\n"
+	"ecdf_pos = ecdf(pos)\n"
+	"ecdf_neg = ecdf(neg)\n"
+	"xtick = sort(c(pos[(length(pos)*0.01):(length(pos)*0.99)],neg[(length(neg)*0.01):(length(neg)*0.99)]))\n"
+	"plot(xtick,ecdf_pos(xtick),type='l',col='blue', bty='n',main=paste('ks test p=',format(p,digits=2),sep=''),xlab='score', ylab='cdf') \n"	
+	"lines(xtick,ecdf_neg(xtick),col='red')\n"
+	"legend('topleft',c(paste(length(pos),' with "+kmer+"',sep=''),paste(length(neg),' without "+kmer+"',sep='')),col=c('blue','red'),box.lty=0,lty=1,cex=1)\n"
+		
+    "dev.off() \n"
+	"\n";
+
+	R_run(script);		
+}
+
 
 string reverse(string str)
 {
