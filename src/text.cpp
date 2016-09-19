@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <cmath>
 #include <algorithm>
-
+#include <set>
 #include "utility.h"
 #include "text.h"
 #include "time.h"
@@ -255,8 +255,49 @@ void intersectTab(string file1, string file2, string outputfile, unsigned col1/*
 	
     f1.close();  
 	out.close();         
-}
+} 
 
+/*
+// intersect  multiple tab files based on key columns
+int intersectMultipleTabFiles(vector<string> files, vector<unsigned> key_cols, bool header, bool intersect)
+{
+	// first find common keys 
+	map<string> common_keys;
+	for(int i=0;i<files.size();i++)
+	{
+		ifstream f(files[i].c_str());
+		string line;
+		if(header) getline(f,line);
+		while(f)
+		{
+			getline(f,line);
+			if(line.length()==0) continue;
+			flds = string_split(line,"\t");
+			common_keys.insert(flds[key_cols[i]]);
+		}
+		f.close();
+	}
+	
+	// combine data
+	data = {}
+	for(int i=0;i<files.size();i++)
+	{
+		ifstream f(files[i].c_str());
+		string line;
+		if(header) getline(f,line);
+		while(f)
+		{
+			getline(f,line);
+			if(line.length()==0) continue;
+			flds = string_split(line,"\t");
+			if
+		}
+		f.close();
+	}
+	
+	return common_keys.size();
+}
+*/
 void mergeTab(string file1, string file2, string outputfile, unsigned col1/*=0*/, unsigned col2/*=0*/, bool header/*=false*/, string fill/*="None"*/)
 {
 	/*
@@ -289,7 +330,8 @@ void mergeTab(string file1, string file2, string outputfile, unsigned col1/*=0*/
     unsigned n2 = data2.size();
     unsigned nc = flds.size();
 	
-	//cout << n2 << "," << nc << endl;
+	message(to_string(n2) + " lines from " +file2);
+	// cout << n2 << "," << nc << endl;
 	
     // match and add to file1
 	ifstream f1;
@@ -334,6 +376,10 @@ void mergeTab(string file1, string file2, string outputfile, unsigned col1/*=0*/
 	}          
     f1.close();      
 	out.close();     
+	message(to_string(n1) + " lines from " +file1);
+	message(to_string(n3) + " lines in common ");
+	
+	
 }
 
 

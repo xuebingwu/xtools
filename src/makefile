@@ -5,7 +5,7 @@
 # 'make clean'  removes all .o and executable files
 #
 
-PROGS = xtools kShuffle seqMatch PKA geneFeature geneSet geneScore TopN intersectTab example pValueLookUp alignSW mirscan4 split_file_for_cross_validation cross_validation pairwise_similarity uniqLines sequence_feature selMultiLines MatchScan
+PROGS = xtools kShuffle seqMatch PKA geneFeature geneSet geneScore TopN intersectTab example pValueLookUp alignSW mirscan4 split_file_for_cross_validation cross_validation pairwise_similarity uniqLines sequence_feature selMultiLines MatchScan polyAcluster flipStrand iFeat
 
 # define the C++ compiler to use
 CC = g++
@@ -72,6 +72,15 @@ example: utility.o  example.o sequence.o stat.o ushuffle.o container.o structure
 	$(CC) $(CFLAGS) $^ -o $@
 
 MatchScan: utility.o  sequence.o stat.o ushuffle.o positional_kmer.o container.o text.o MatchScan.o
+	$(CC) $(CFLAGS) $^ -o $@
+	
+polyAcluster: utility.o  container.o text.o polyAcluster.o interval.o stat.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+flipStrand: utility.o interval.o flipStrand.o text.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+iFeat: utility.o interval.o iFeat.o text.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 pValueLookUp: utility.o pValueLookUp.o

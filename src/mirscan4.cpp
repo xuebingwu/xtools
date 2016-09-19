@@ -7,27 +7,48 @@ void help()
 {
     string str =
 	"\n"
-    "mirscan4: de novo pre-micoRNA prediction\n"
+    "mirscan4: de novo pri-microRNA prediction\n"
 	"	- Xuebing Wu (wuxb07@gmail.com)\n"
     "\n"
     "Usage: mirscan4 -i input -o output \n"
     "\n"
     "Options:\n"
     "\n"
-    "   -i  <fasta>             input fasta file\n"
-    "   -o  <output>            output file prefix\n"
-    "   -extend  <integer>      number of flanking nucleotides to consider, default 20\n"
-	"   -minHairpin <integer>   minimum hairpin length (all nucleotides), default=50\n"
-	"   -maxLoop <integer>      maximum loop length, default=20\n"
-	"   -minStem <integer>      minimum stem length, default=30\n"
-	"   -maxStem <integer>      maximum stem length, default=80\n"
-	"   -rnafold_opts \"options\" RNAfold options, quoted, default=\"--noPS --noClosingGU\"\n"
-	"training mode =============\n"
+    "   -i  <input>              input file (*.fa, *.fasta, *.lfold, *.fold, *.hairpin.fold)\n"
+    "   -o  <output>             output file prefix\n"
+	"   -min_len <integer>       minimum hairpin length (all nucleotides), default=50\n"
+	"   -max_loop <integer>      maximum loop length, default=100\n"
+	"   -min_stem <integer>      minimum stem length, default=20\n"
+	"   -max_stem <integer>      maximum stem length, default=80\n"
+	"   -short_stem <integer>    maximum stem length to unpair, default=20\n"
+	"   -max_bulge <integer>     maximum bulge size, default=10\n"	
+	"   -mfe <double>            remove structures with minimum free energy higher than this, default=-30\n"			
+	"   -profile_len <integer>   profile length, default=50\n"	
+	"   -extend  <integer>       number of flanking nucleotides to consider, default=30\n"	
+	"   -rnafold_opts \"options\" RNAfold options, quoted, default=\"--noPS --noClosingGU\"\n"	
+/*	"training mode =============\n"
 	"   -bowtieIndex <ebwt>     bowtie index for mapping and identifying flanking sequences, default hg19\n"
 	"   -genomeFasta <fasta>    whole genome fasta file, default hg19\n"
 	"prediction mode ===========\n"
-	"   -predict  <file>          model file prefix. If not specified, run training mode\n"
-		
+	"   -predict  <file>        model file prefix. If not specified, run training mode\n"
+*/	"\n"
+	"Workflow:\n"
+	"\n"
+	"     sequence (*.fa, *.fasta)   -OR-  locally stable fold (*.lfold by RNALfold)    	\n"
+	"                    \\                          /										\n"
+	"        RNAfold -->  \\                        / <-- filter and reformat  				\n"
+	"                      v                      v                          				\n"	
+	"                     filtered structure (*.fold)			    						\n"
+	"                               |														\n"
+	"                               | force to fold as a single hairpin (by RNAduplex)		\n"
+	"                               v  													\n"
+	"                      single hairpin fold (*.hairpin.fold)                            	\n"
+	"                               | 														\n"
+	"                               | remove short stems									\n"	
+	"                               v                                                       \n"
+	"                   1. feature matrix for machine learning    							\n"
+	"                   2. position on the genome (*.bed)	        						\n"
+	"                   3. visualize structure              		    					\n"		
 	"\n"
     "\n";
 
@@ -91,34 +112,31 @@ int main(int argc, char* argv[]) {
             } else if (str == "-o") { 
                 output = argv[i + 1];
                 i=i+1;
-            } else if (str == "-predict") { 
-                model = argv[i + 1];
-                i=i+1;
+           // } else if (str == "-predict") { 
+           //     model = argv[i + 1];
+           //     i=i+1;
             } else if (str == "-extend") { 
                 ext = stoi(argv[i + 1]);
                 i=i+1;
-            } else if (str == "-minHairpin") { 
+            } else if (str == "-min_len") { 
                 min_hairpin_length = stoi(argv[i + 1]);
                 i=i+1;
-            } else if (str == "-maxLoop") { 
+            } else if (str == "-max_loop") { 
                 max_loop_length = stoi(argv[i + 1]);
                 i=i+1;
-            } else if (str == "-maxBulge") { 
+            } else if (str == "-max_bulge") { 
                 max_bulge = stoi(argv[i + 1]);
                 i=i+1;
-            } else if (str == "-minStem") { 
+            } else if (str == "-min_stem") { 
                 min_pairs_left = stoi(argv[i + 1]);
                 i=i+1;
-            } else if (str == "-maxStem") { 
+            } else if (str == "-max_stem") { 
                 max_stem_length = stoi(argv[i + 1]);
                 i=i+1;
-            } else if (str == "-maxShortStem") { 
+            } else if (str == "-short_stem") { 
                 max_short_stem_length = stoi(argv[i + 1]);
                 i=i+1;
-            } else if (str == "-minPairedLeft") { 
-                min_pairs_left = stoi(argv[i + 1]);
-                i=i+1;
-            } else if (str == "-profileLength") { 
+             } else if (str == "-profile_len") { 
                 profile_length = stoi(argv[i + 1]);
                 i=i+1;
             } else if (str == "-mfe") { 
@@ -145,19 +163,29 @@ int main(int argc, char* argv[]) {
 	bool noClosingGU = false;
 	if(rnafold_opts.find("noClosingGU") != std::string::npos) noClosingGU = true;
 		
-	if (input.substr(input.size()-13,13) != ".hairpin.fold")
-	{		
-		if (input.substr(input.size()-5,5) == ".fold")
+	/*
+	determine input type so that the program can start from intermediate outputs of a previous run
+	1. *.fa/*.fasta: raw sequences
+	2. *.lfold: output from RNALfold
+	3. *.fold: convert *.lfold format to *.fold format
+	4. *.hairpin.fold: remove branches and re-fold as a hairpin using RNAduplex
+	*/
+		
+	//if (input.substr(input.size()-13,13) != ".hairpin.fold")
+	if(ends_with(input,".hairpin.fold")){
+		system_run("ln -s "+input+" "+output+".hairpin.fold");	
+	} else {		
+		if (ends_with(input,".fold"))
 		{
 			system_run("ln -s "+input+" "+output+".fold");
-		} else if (input.substr(input.size()-6,6) == ".lfold") 
+		} else if (ends_with(input,".lfold")) 
 		{
 			message("filter RNALfold output...");//except the free energy goes to sequence id
 			RNALfold_to_RNAfold(input,output+".fold",min_hairpin_length,min_pairs_left,ext,mfe);
 			// refold after extension
 			//message("fold again including flanking sequences...");
 			//system_run("RNAfold --noPS " + rnafold_opts + " < "+output+".lfold.filtered > "+output+".fold");
-		} else if (input.substr(input.size()-3,3) == ".fa" || input.substr(input.size()-6,6) == ".fasta")
+		} else if (ends_with(input,".fa") || ends_with(input,".fasta"))
 		{
 			// starting from fasta
 			message("fold sequences...");
@@ -167,9 +195,7 @@ int main(int argc, char* argv[]) {
 		message("remove branches and re-fold hairpin using RNAduplex");
 		hairpin_RNAduplex(output+".fold", output, rnafold_opts);
 		RNAduplex_to_RNAfold(output+".duplex", output+".hairpin.fold");
-	} else {
-		system_run("ln -s "+input+" "+output+".hairpin.fold");
-	}
+	} 
 		
 	//message("generating plots...");
     //system_run("perl /lab/bartel1_ata/wuxbl/scripts/plothairpin/RNA-HairpinFigure-master/plotHairpin.pl "+output+".hairpin.fold > "+output+".hairpin.fold.plot");

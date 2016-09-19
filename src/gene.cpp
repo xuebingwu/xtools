@@ -431,7 +431,9 @@ int find_sig_gene_sets_weighted(vector<string> genes, vector<double> scores, str
 		}
 		if (foreground.size()<3 || background.size() < 3) continue;	
 		
-		// test
+		// debug
+        //cout << flds[0] << "\t" << flds[1] << "\t" << foreground.size() << "\t" << background.size() << endl;
+
 		array<double,6> ttest = t_test(foreground, background);
 		if(ttest[1] > p_cutoff) continue;
 		fout << flds[0] << "\t" << flds[1] << "\t" << ttest[1] <<  "\t" << ttest[0] << "\t" << foreground.size() << "\t" << ttest[2] << "\t" << ttest[3] << "\t" << background.size() << "\t" << ttest[4] << "\t"  << ttest[5] << endl;

@@ -474,7 +474,8 @@ int hairpin_RNAduplex(string infile, string outfile, string options)
 	fin.close();
 	fout.close();
 	system_run("RNAduplex "+options+ " < " + outfile + ".tmp > " + outfile+".duplex");
-	
+	// clean up
+	system_run("rm "+outfile+".tmp");
 	return 1;
 }
 
@@ -1072,7 +1073,7 @@ int mirna_loop_definition(string id, string seq, string fold, int stem_len, ofst
 	
 	out << id << "\t" << total_stem_length << "\t" << actual_stem_length << "\t" << loop_size << "\t" << bulge_count << "\t" << bulge_imbalance_count  << "\t" << bulge_imbalance_length << "\t" << mismatch_count << "\t" << mismatch_longest << "\t" << pairing_score  << "\t" << basal_U << "\t" << basal_G << "\t" << basal_UG << "\t" << to_string(CNNC) << "\t" << to_string(apical_UGU) << "\t" << to_string(apical_GUG) << "\t" << G7<< "\t" << H8 << "\t" << G9 << "\t" << GHG7 << "\t" << to_string(pairing) << "\t" << to_string(bulge_size) << endl;
 
-	/**/
+	/**
 	// plot flanking sequences
 	stem_5p = flank_5p + stem_5p;
 	stem_3p = reverse(flank_3p) + stem_3p;
@@ -1187,10 +1188,10 @@ int mirna_loop_definition(string id, string seq, string fold, int stem_len, ofst
 	cleavage3.replace(i,1,1,'-');
 
 	
-	/**/
+	/**
 	cout << id << endl;//<< seq << endl << fold << endl;
 	cout << cleavage5 << endl << stem_5p << endl << paired << string(loop_mid_point, ' ') << ")"  << endl << stem_3p << endl << cleavage3 << endl << endl;
-	
+	/**/
 
 	return 0;
 	

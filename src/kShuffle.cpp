@@ -20,11 +20,14 @@ void help()
 	"   -k  <integer>  preserve k-mer frequency, default=2, \n"
 	"                  i.e. dinucleotide frequency is preserved \n"
     "   -n  <integer>  number of shuffled copies to generate from each \n"
-	"                  input sequence, default=1. Output sequences will \n"
-	"                  have names like >name-1, >name-2, ..., etc \n"
+	"                  input sequence, default=1 \n"
+	"   -sameID        Shuffled sequences will have names like >name-1, \n"
+    "                  >name-2, etc if -sameID is not specified \n"
     "\n";
 
     cerr << str;
+	
+	exit(1);
 }
 
 int main(int argc, char* argv[]) {
@@ -34,6 +37,7 @@ int main(int argc, char* argv[]) {
     string output;
     int n=1;
 	int k=2;
+	bool sameID = false;
 
 	if (argc < 2) help();
 	
@@ -54,6 +58,8 @@ int main(int argc, char* argv[]) {
             } else if (str == "-k") { 
                 k = atoi(argv[i + 1]);
                 i=i+1;
+            } else if (str == "-sameID") {
+				sameID=true;
             } else if (str == "-h" || str == "--help") { 
                 help();
             } else {
@@ -82,7 +88,8 @@ int main(int argc, char* argv[]) {
 		for(int i=0;i<n;i++)
 		{		
 			string str = shuffle_seq_preserving_k_let(it->second,k);
-			fout << ">" << it->first << "-" << i+1 << endl << str << endl;
+			if(sameID)fout << ">" << it->first << endl << str << endl;
+			else fout << ">" << it->first << "-" << i+1 << endl << str << endl;
 		}
     }
 	fout.close();

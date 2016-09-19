@@ -5,8 +5,6 @@
 #include "container.h"
 #include "stat.h"
 
-
-
 using namespace std;
 
 void help()
@@ -28,6 +26,7 @@ void help()
     "    -t  file   fasta file containing all possible target sequences\n"
     "    -s  file   tab-delimited score file (target name in column 1, score in column 2)\n"
 	"               target name should match those in target fasta file, can be a subset\n"
+	"    -i  file   single input file (seq in column 1 and score in column 2)\n"	
 	"    -o  file   prefix for output files (tabular data and PDF figure)\n"
 	"    -h  file   query sequences to highlight in green\n"
 	"    -k  num(s) length of subsequence to scan at each step (i.e. k-mer)\n"
@@ -41,6 +40,9 @@ void help()
 	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC\n"
 	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC -k 10 \n"
 	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC -h terc_probe.fa.rc \n";
+	"Other usage\n"
+	" 	1. when no query provided, will test all possibe kmers\n"
+	"   2. use -i to combine sequence and score in a single file and test all kmers\n";
 
     cerr << str;
 
@@ -56,6 +58,7 @@ int main(int argc, char* argv[]) {
     string queryFile="";
     string targetFile="";
     string scoreFile="";
+	string inputFile="";
 	string outputFile="output";
     string highlightFile="";
 	string backgroundFile="";
@@ -83,6 +86,9 @@ int main(int argc, char* argv[]) {
             } else if (str == "-t") { 
                 targetFile = argv[i + 1];
                 i=i+1;
+            } else if (str == "-i") { 
+                inputFile = argv[i + 1];
+                i=i+1;
             } else if (str == "-h") { 
                 highlightFile = argv[i + 1];
                 i=i+1;
@@ -109,6 +115,11 @@ int main(int argc, char* argv[]) {
             }
         }
     }   
+	
+	vector<string> targetSeqs;
+	vector<double> targetScores;
+	vector<string> targetNames;
+	
 	
 	// determine k
 	vector<string> kmer_lens = string_split(kmer_len,",");
@@ -150,6 +161,7 @@ int main(int argc, char* argv[]) {
 		}
 	} else // enumerate all possible kmers
 	{
+		message("No query sequence specified. Use all possible kmers");
 		allkmers = generate_kmers(k_min, "ACGT");
 		for(int k=k_min+1;k <= k_max;k++)
 		{
@@ -158,45 +170,55 @@ int main(int argc, char* argv[]) {
 		for(int i=0;i<allkmers.size();i++) kmer_pos.push_back(i);
 	}
 	
-	message("find targets with both sequences and scores, and sort by scores...");
-	srand(time(NULL));
-    string tmp = outputFile+random_string(20); // a random string for temp files
-	// get all IDs in target fasta files
-	system_run("cat "+targetFile + " | grep '>' | sed 's/>//g' > target."+tmp);
-	// select lines in score file whose id is present in target fasta file, sort based on score
-	intersectTab(scoreFile, "target."+tmp, "selected."+tmp);
-	system_run("cat selected."+tmp+" | sort -nrk 2 > sorted."+tmp);
-	// if too many sequences, only take top and bottom
-	int total_targets = count_lines("sorted."+tmp);
-	message("    total target sequences sorted: "+to_string(total_targets));
-	
-	if(total_targets > max_target_num && kmers.size() == 0)
-	{	
-		int to_be_kept = int(max_target_num/2);
-		message("Only keep the top "+to_string(to_be_kept)+" and the bottom "+to_string(to_be_kept)+" sequences");
-		system_run("head -n "+to_string(to_be_kept)+" sorted."+tmp+" > "+scoreFile+".processed");
-		system_run("tail -n "+to_string(to_be_kept)+" sorted."+tmp+" >> "+scoreFile+".processed");
-	} else system_run("mv sorted."+tmp +" "+scoreFile+".processed");
-	
-	system_run("rm *"+tmp);
-
-	message("loading target scores...");
-	message("	score file: "+ scoreFile+".processed");
-	
-	vector<string> targetNames;
-	vector<double> targetScores;
-	int total = load_scores(scoreFile+".processed", targetNames, targetScores, 0,1);
-
-	message("loading target sequences...");
-	message("	sequence file: "+ targetFile);
-	map<string,string> allseqs = ReadFasta(targetFile);
-		
-	// sort target sequences by their score, ignore sequences without scores
-	vector<string> targetSeqs;
-	for(int i =0;i<targetNames.size();i++)
+	if(inputFile.size() == 0) // 
 	{
-		targetSeqs.push_back(to_upper(allseqs[targetNames[i]]));
+		message("find targets with both sequences and scores, and sort by scores...");
+		srand(time(NULL));
+	    string tmp = outputFile+random_string(20); // a random string for temp files
+		// get all IDs in target fasta files
+		system_run("cat "+targetFile + " | grep '>' | sed 's/>//g' > target."+tmp);
+		// select lines in score file whose id is present in target fasta file, sort based on score
+		intersectTab(scoreFile, "target."+tmp, "selected."+tmp);
+		system_run("cat selected."+tmp+" | sort -grk 2 > sorted."+tmp);
+		// if too many sequences, only take top and bottom
+		int total_targets = count_lines("sorted."+tmp);
+		message("    total target sequences sorted: "+to_string(total_targets));
+	
+		if(total_targets > max_target_num && kmers.size() == 0)
+		{	
+			int to_be_kept = int(max_target_num/2);
+			message("Only keep the top "+to_string(to_be_kept)+" and the bottom "+to_string(to_be_kept)+" sequences");
+			system_run("head -n "+to_string(to_be_kept)+" sorted."+tmp+" > "+scoreFile+".processed");
+			system_run("tail -n "+to_string(to_be_kept)+" sorted."+tmp+" >> "+scoreFile+".processed");
+		} else system_run("mv sorted."+tmp +" "+scoreFile+".processed");
+	
+		system_run("rm *"+tmp);
+
+		message("loading target scores...");
+		message("	score file: "+ scoreFile+".processed");
+	
+		int total = load_scores(scoreFile+".processed", targetNames, targetScores, 0,1);
+
+		message("loading target sequences...");
+		message("	sequence file: "+ targetFile);
+		map<string,string> allseqs = ReadFasta(targetFile);
+		
+		// sort target sequences by their score, ignore sequences without scores
+		for(int i =0;i<targetNames.size();i++)
+		{
+			targetSeqs.push_back(to_upper(allseqs[targetNames[i]]));
+		}
+		//debug
+		//cout << targetSeqs[0] << endl;
+		//exit(1);
 	}
+	else
+	{
+		message("loading combined sequence and score file...");
+		int total = load_scores(inputFile, targetSeqs, targetScores, 0,1);
+	}
+	
+
 	
 	// load highlight sequences if provided
 	vector<string> hltNames, hltSeqs;
@@ -204,11 +226,11 @@ int main(int argc, char* argv[]) {
 	{
 		message("loading highlight sequences...");
 		message("	highlight file: "+ highlightFile);
-		
+	
 		ReadFastaToVectors( highlightFile, hltNames, hltSeqs );
 		to_upper(hltSeqs);
 		message("	number of highlight sequences: "+ to_string(hltSeqs.size()));
-		
+	
 	}
 
 	//background if provided
@@ -218,11 +240,11 @@ int main(int argc, char* argv[]) {
 	{
 		message("loading background sequences...");
 		message("	background file: "+ backgroundFile);
-		
+	
 		ReadFastaToVectors( backgroundFile, bgNames, bgSeqs );
 		to_upper(bgSeqs);
 		message("	number of background sequences: "+ to_string(bgSeqs.size()));
-		
+	
 		message("merge with background sequences...");
 		targetSeqs.insert(targetSeqs.end(), bgSeqs.begin(), bgSeqs.end());
 		targetScores.insert(targetScores.end(), bgScores.begin(), bgScores.end());
@@ -233,6 +255,7 @@ int main(int argc, char* argv[]) {
 		vector<string> kmers_all = string_split(kmers,",");
 		for(int i=0;i<kmers_all.size();i++)
 		{
+			message("generating CDF plot for kmer "+kmers_all[i]);
 			kmer_cdf(kmers_all[i], targetSeqs, targetScores, outputFile+"-"+kmers_all[i]);
 		}
 		return 0;
@@ -280,6 +303,7 @@ int main(int argc, char* argv[]) {
 	*/
 		
 	message("scanning query sequences and calcualting p values...");
+	message("	"+to_string(allkmers.size())+" kmer to be processed...");
 	
 	//map<string,string> calculated_kmers; // kmer to cors
 
@@ -292,9 +316,10 @@ int main(int argc, char* argv[]) {
 	
 	for(int i = 0; i < allkmers.size();i++)
 	{
+	    cout <<"\r["<<current_time()<<"] 	" << i+1 << " kmers processed"  ;
+	
 		string kmer_cors = to_string(kmer_pos[i])+"\t"+allkmers[i];
 		
-		// rank sum test
 		array<double,4> utest = kmer_rank_test(allkmers[i], targetSeqs, score_ranks);
 		kmer_cors = kmer_cors+"\t"+to_string(int(utest[0]))+"\t"+to_string(int(utest[1]))+"\t"+to_string(utest[2])+"\t"+to_string(utest[3]) + "\t";
 		

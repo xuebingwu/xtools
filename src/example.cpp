@@ -1,11 +1,6 @@
 #include "utility.h"
 #include "iostream"
 
-
-#include "structure.h"
-#include "sequence.h"
-
-
 using namespace std;
 
 void help()
@@ -64,7 +59,7 @@ int main(int argc, char* argv[]) {
         }
     }   
 	
-	plot_hairpin_from_file(input);
+	//plot_hairpin_from_file(input);
 		
 	
 	

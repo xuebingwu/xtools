@@ -129,6 +129,12 @@ vector<string>  string_split(string str, string separator){
 }
 */
 
+bool ends_with(string const & value, string const & ending)
+{
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
 vector<string>  string_split(string str, string separator/*="\t,| "*/){
 	vector<string> parts;
 	boost::split(parts, str, boost::is_any_of(separator));
@@ -153,10 +159,10 @@ string current_time()
 }
 
 // write message to standard error
-void message(string text, bool stdout/*=false*/)
+void message(string text, bool stdout/*=false*/, string pre/*=""*/)
 {
-	if (stdout) cout <<  "["<<current_time()<<"] " + text << endl;
-	else cerr <<  "["<<current_time()<<"] " + text << endl;
+	if (stdout) cout << pre + "["<<current_time()<<"] " + text << endl;
+	else cerr << pre + "["<<current_time()<<"] " + text << endl;
 }
 
 // run system command
