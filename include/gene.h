@@ -12,6 +12,8 @@ using namespace std;
 // load gene names 
 set<string> load_gene_list(string filename, bool toupper=true, int skip=0, int col=0);
 
+int find_sig_gene_sets_correlate_two_scores(map<string,double> scores1, map<string,double> scores2, string geneSetFile, string outputfile, double r_cutoff);
+
 void load_weighted_gene_list(string filename, vector<string> &genes, vector<double> &scores, bool toupper=true, int skip=0, int col1=0, int col2=1);
 
 void load_weighted_gene_list(string filename, map<string, double> &scores, bool toupper=true, int skip=0, int col1=0, int col2=1);

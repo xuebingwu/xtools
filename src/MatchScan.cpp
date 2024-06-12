@@ -5,6 +5,14 @@
 #include "container.h"
 #include "stat.h"
 
+#include <filesystem>
+
+// for vector sum
+#include <boost/range/numeric.hpp>
+
+// for getting filename from a path
+//#include <boost/filesystem.hpp>
+
 using namespace std;
 
 void help()
@@ -12,8 +20,9 @@ void help()
     string str =
 	"\n"
     "MatchScan\n"
-	"    a program to find significant matches between a query sequence and a set of target sequences,\n"
+	"    A program to find significant matches between a query sequence and a set of target sequences,\n"
 	"    where the frequency of the matched sequences in targets correlates with target scores\n"
+    "    If no query given, will test all k-mers\n"
 	"\n"
 	"    - Xuebing Wu (wuxb07@gmail.com)\n"
     "\n"
@@ -22,34 +31,38 @@ void help()
     "\n"
     "Options:\n"
     "\n"
-    "    -q  file   fasta file containing a single query sequence\n"
+    "    -i  file   Input file (sequence in column 1 and score in column 2)\n"	
+ 	"    -o  file   prefix for output files (tabular data and PDF figure). Default:output\n"
+    "    -q  file   fasta file containing either a long sequence or multiple kmer sequences. \n "
+    "               If not given, will test all possible kmers with length(s) specified by -k \n"
     "    -t  file   fasta file containing all possible target sequences\n"
     "    -s  file   tab-delimited score file (target name in column 1, score in column 2)\n"
 	"               target name should match those in target fasta file, can be a subset\n"
-	"    -i  file   single input file (seq in column 1 and score in column 2)\n"	
-	"    -o  file   prefix for output files (tabular data and PDF figure)\n"
 	"    -h  file   query sequences to highlight in green\n"
 	"    -k  num(s) length of subsequence to scan at each step (i.e. k-mer)\n"
 	"               e.g. to search for hexamer: -k 6; for k from 6 to 10 (default): -k 6,10\n"		
 	"    -m  num    max number of target sequences to use (top and bottom)\n"		
-	"               default 10000, i.e. top 5000 and bottom 5000 based on scores\n"
+	"               default 100000, i.e. top 50000 and bottom 50000 based on scores\n"
+    "    -r         match by reverse complement. Default is identical match\n"
 	"    -c  seqs   cdf plots for a list of k-mers, separated by comma, such as CAAACC,TTTACG\n"
 	"               when specified, will ignore all options except -q,-t,-s, and -o\n"
+    "    -d         score sequence using median difference instead of -log10(p)\n"
     "\n"
 	"Example\n"
 	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC\n"
 	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC -k 10 \n"
-	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC -h terc_probe.fa.rc \n";
-	"Other usage\n"
-	" 	1. when no query provided, will test all possibe kmers\n"
-	"   2. use -i to combine sequence and score in a single file and test all kmers\n";
-
+	"    MatchScan -q TERC.fa -t TERC-ChIRP.fa -s TERC-ChIRP.score.txt -o TERC -h terc_probe.fa.rc \n"
+    "    MatchScan -i HEK1.txt -o tmp -q ~/scripts/C++/test/MatchScan/human-mirna-seed.fa -r       \n";
+    "Scoring sequences using motifs from a previous run (fixed k):\n"
+    "    MatchScan -t <target_fasta> -o <finished_run>\n";
     cerr << str;
 
     exit(0);
 }
 
 
+// 
+// more miR_Family_Info.txt  | grep hsa | cut -f -2 | sort | uniq | awk '{print ">"$1"\n"$2}' > human-mirna-seed.fa
 
 
 int main(int argc, char* argv[]) {
@@ -65,11 +78,15 @@ int main(int argc, char* argv[]) {
 	
 	string kmers = "";
 	
-	int max_target_num = 10000;
+	int max_target_num = 100000;
 
 	int k_min,k_max;
 	string kmer_len="6,10";
 	
+    bool revcomp = false;
+
+    bool score_with_median_dif = false;
+        
 	if (argc < 3) help();
 	
     // parse arguments
@@ -83,6 +100,10 @@ int main(int argc, char* argv[]) {
             } else if (str == "-s") { 
                 scoreFile = argv[i + 1];
                 i=i+1;
+            } else if (str == "-r") { 
+                revcomp = true;
+            } else if (str == "-d") { 
+                score_with_median_dif = true;
             } else if (str == "-t") { 
                 targetFile = argv[i + 1];
                 i=i+1;
@@ -119,46 +140,128 @@ int main(int argc, char* argv[]) {
 	vector<string> targetSeqs;
 	vector<double> targetScores;
 	vector<string> targetNames;
+
+    // if only target sequence is given, score the sequences
+    if (queryFile == "" && scoreFile == "" && inputFile == "")
+    {
+        // score sequences
+        message("Loading kmer scores");
+
+        // score column: 5=median difference; 6=-log10(p)
+        int c = 6;
+        if (score_with_median_dif) c = 5;
+
+        map<string,double> kmer_scores = load_weight(outputFile, 2, c,true);
+
+        message("loading target sequences...");
+		message("	sequence file: "+ targetFile);
+		map<string,string> targetSeqs = ReadFasta(targetFile);
+        message("	"+to_string(targetSeqs.size())+" target sequences loaded");
+        
+        message("Scoring target sequences");
+
+        string targetFileName = targetFile.substr(targetFile.find_last_of("/\\") + 1);
+        string score_profile_file = outputFile+"-"+targetFileName+".profile.txt";
+        ofstream fout(score_profile_file.c_str()); 
+
+        int n = 0;
+        for (auto i = targetSeqs.begin(); i != targetSeqs.end(); i++)
+            {
+                cout <<"\r["<<current_time()<<"]	" << ++n << " sequences processed             "  ;
+                vector<double> scores = score_a_sequence(i->second,kmer_scores);
+                //double sum = boost::accumulate(scores, 0);
+                fout << i->first << "\t" << i->second << "\t" ;
+                for(int j=0;j<scores.size();j++)
+                    {
+                        fout << "\t" << scores[j];
+                    }
+                fout << endl;
+            }
+        fout.close();
+        
+        cout << endl;
+    
+    	message("Done");
+        return 0;
+    }
+
 	
-	
-	// determine k
+	string queryName, querySeq;
+    map<string, string> seq2name; // map kmer sequence to name
+    
+	// determine k-mer length (k)
 	vector<string> kmer_lens = string_split(kmer_len,",");
 	k_min = stoi(kmer_lens[0]);
 	if(kmer_lens.size()>1) k_max = stoi(kmer_lens[1]);
 	else k_max = k_min;
 	
+    // generate or load all kmers
+    // if an input file is specified by -q
+    //    if only a singe sequence is in the file, generate all kmers from the file
+    //    else: assume each sequence is a short kmer motif
+    // else
+    //    generate all possible kmers given k
 	vector<string> allkmers;
 	vector<int> kmer_pos;
 	if(queryFile.size()>0)
 	{
-		// load query sequence, one seq only
+		// load query sequence(s)
 	
-		message("loading query sequence...");
+		message("loading query sequence(s)...");
 		message("	query file: "+ queryFile);
-	
-		ifstream fin(queryFile.c_str());
-		string queryName, querySeq;
-		ReadOneSeqFromFasta(fin,queryName,querySeq);
-		fin.close();
-		querySeq = to_upper(querySeq);
-	
-		if (querySeq.size() == 0) 
-			{
-				message("query file empty!");
-				exit(1);
-			}
-		message("	query name: "+ queryName);
-		message("	query length: "+ to_string(querySeq.size()));
-		
-		// generate kmers
-		for(int k=k_max;k >= k_min;k--)
-		{
-			for(int i = 0; i <= querySeq.size()-k;i++)
-			{
-					allkmers.push_back(querySeq.substr(i,k));
-					kmer_pos.push_back(i);
-			}
-		}
+        
+        map<string,string> querySeqs = ReadFasta(queryFile);
+        
+        message("	" + to_string(querySeqs.size()) + " query sequences loaded" );
+        
+        // map from seq to name    
+
+        for (map<string, string>::iterator i = querySeqs.begin(); i != querySeqs.end(); ++i)
+        {
+            queryName = i->first;
+            querySeq = i->second;
+            querySeq = to_upper(querySeq);
+            replace(querySeq.begin(),querySeq.end(),'U','T'); // rna to dna
+            if (revcomp) querySeq = reverseComplement(querySeq);
+            seq2name[querySeq] = queryName + "|" + querySeq;
+        }
+        
+        if (querySeqs.size() == 1) // a single query sequence
+        {
+            ifstream fin(queryFile.c_str());
+            ReadOneSeqFromFasta(fin,queryName,querySeq);
+            fin.close();
+            querySeq = to_upper(querySeq);
+
+            if (querySeq.size() == 0) 
+                {
+                    message("query file empty!");
+                    exit(1);
+                }
+            message("	query name: "+ queryName);
+            message("	query length: "+ to_string(querySeq.size()));
+
+            // generate kmers
+            for(int k=k_max;k >= k_min;k--)
+            {
+                for(int i = 0; i <= querySeq.size()-k;i++)
+                {
+                    if (revcomp) allkmers.push_back(reverseComplement(querySeq.substr(i,k))); 
+                    else allkmers.push_back(querySeq.substr(i,k));
+                    kmer_pos.push_back(i);
+                    seq2name[allkmers[i]] = allkmers[i]; // default: name=seq
+                }
+            }
+        } else { // loaded mulitple sequences. assum each one is a query kmer
+            int i = 0;
+            map<string, string>::iterator it;
+            for (it = seq2name.begin(); it != seq2name.end(); ++it)
+            {
+                allkmers.push_back(it->first);
+                kmer_pos.push_back(i);
+                i = i + 1;
+            }
+        }
 	} else // enumerate all possible kmers
 	{
 		message("No query sequence specified. Use all possible kmers");
@@ -167,7 +270,11 @@ int main(int argc, char* argv[]) {
 		{
 			allkmers += generate_kmers(k, "ACGT");	
 		}
-		for(int i=0;i<allkmers.size();i++) kmer_pos.push_back(i);
+		for(int i=0;i<allkmers.size();i++) 
+        {
+            kmer_pos.push_back(i);
+            seq2name[allkmers[i]] = allkmers[i]; // default: name=seq
+        }
 	}
 	
 	if(inputFile.size() == 0) // 
@@ -198,16 +305,27 @@ int main(int argc, char* argv[]) {
 		message("	score file: "+ scoreFile+".processed");
 	
 		int total = load_scores(scoreFile+".processed", targetNames, targetScores, 0,1);
-
+        message("	"+to_string(total)+" scores loaded");
+        
 		message("loading target sequences...");
 		message("	sequence file: "+ targetFile);
 		map<string,string> allseqs = ReadFasta(targetFile);
+        message("	"+to_string(allseqs.size())+" target sequences loaded");
 		
-		// sort target sequences by their score, ignore sequences without scores
+		// match target sequences with their scores, ignore sequences without scores
+        int not_found = 0;
 		for(int i =0;i<targetNames.size();i++)
 		{
-			targetSeqs.push_back(to_upper(allseqs[targetNames[i]]));
+            if (allseqs.find(targetNames[i]) == allseqs.end() ) // not found
+            {
+                not_found ++;
+            } else {
+    			targetSeqs.push_back(to_upper(allseqs[targetNames[i]]));
+            }
 		}
+        message("	"+to_string(targetSeqs.size())+" target sequences with scores");
+        if (not_found > 0)
+            message("	"+to_string(not_found)+" target sequences have no scores");
 		//debug
 		//cout << targetSeqs[0] << endl;
 		//exit(1);
@@ -230,7 +348,6 @@ int main(int argc, char* argv[]) {
 		ReadFastaToVectors( highlightFile, hltNames, hltSeqs );
 		to_upper(hltSeqs);
 		message("	number of highlight sequences: "+ to_string(hltSeqs.size()));
-	
 	}
 
 	//background if provided
@@ -256,7 +373,10 @@ int main(int argc, char* argv[]) {
 		for(int i=0;i<kmers_all.size();i++)
 		{
 			message("generating CDF plot for kmer "+kmers_all[i]);
-			kmer_cdf(kmers_all[i], targetSeqs, targetScores, outputFile+"-"+kmers_all[i]);
+			array<int,3> totals = kmer_cdf2(kmers_all[i], targetSeqs, targetScores, outputFile+"-"+kmers_all[i]);
+            message("    "+to_string(totals[0])+" sequences with no match");
+            message("    "+to_string(totals[1])+" sequences with a single match");
+            message("    "+to_string(totals[2])+" sequences with multiple matchs");
 		}
 		return 0;
 	}
@@ -309,7 +429,7 @@ int main(int argc, char* argv[]) {
 
 	ofstream fout(outputFile.c_str());
 	
-	string header = "position\tkmer_seq\tn_total_seq\tn_with_match\tz_score\tlog10_p_value";
+	string header = "position\tkmer_seq\tn_total_seq\tn_with_match\tmedian_diff\tlog10_p_value";
 	if (hltSeqs.size()>0) header = header + "\thighlight";
 
 	fout << header << endl;
@@ -317,11 +437,15 @@ int main(int argc, char* argv[]) {
 	for(int i = 0; i < allkmers.size();i++)
 	{
 	    cout <<"\r["<<current_time()<<"] 	" << i+1 << " kmers processed"  ;
-	
-		string kmer_cors = to_string(kmer_pos[i])+"\t"+allkmers[i];
+        
+		string kmer_cors = to_string(kmer_pos[i])+"\t"+seq2name[allkmers[i]];
 		
-		array<double,4> utest = kmer_rank_test(allkmers[i], targetSeqs, score_ranks);
-		kmer_cors = kmer_cors+"\t"+to_string(int(utest[0]))+"\t"+to_string(int(utest[1]))+"\t"+to_string(utest[2])+"\t"+to_string(utest[3]) + "\t";
+		//array<double,4> utest = kmer_rank_test(allkmers[i], targetSeqs, score_ranks);
+        //kmer_cors = kmer_cors+"\t"+to_string(int(utest[0]))+"\t"+to_string(int(utest[1]))+"\t"+to_string(utest[2])+"\t"+to_string(utest[3]) + "\t";
+
+        array<double,5> utest = kmer_rank_test_with_median(allkmers[i], targetSeqs, score_ranks,targetScores);
+        kmer_cors = kmer_cors+"\t"+to_string(int(utest[0]))+"\t"+to_string(int(utest[1]))+"\t"+to_string(utest[4])+"\t"+to_string(utest[3]) + "\t";
+
 		
 		/*
 		if(calculated_kmers.find(kmer) == calculated_kmers.end()) //  a new kmer
@@ -387,7 +511,8 @@ int main(int argc, char* argv[]) {
 
 	R_run(script);		
 	
-
+    cout << endl;
+    
 	message("Done");
 		
     return 0;

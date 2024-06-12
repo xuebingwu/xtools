@@ -21,10 +21,12 @@ void help()
 	"    geneScore     correlate your gene scores to gene features and / or gene sets\n"
 	"\n"
 	"Sequence analysis ======\n"
+    "    seqFreq       Generate sequence composition matrix\n"
 	"    kShuffle      Shuffle sequences preserving k-nucleotide (kmer) frequency\n"
 	"    seqMatch      Find sequence match allowing certain number of mismatches\n"
 	"    alignSW       Smith-waterman local sequence alignment\n"
-    "    MatchScan     \n"
+    "    MatchScan     Find match between query and weighted target sequences\n"
+	"    kpLogo        Positional kmer analysis from aligned sequences\n"
 	"\n"
 	"Interval analysis ======\n"
 	"    makeBigWig    Make bigWig file from bed or bam\n"
@@ -32,12 +34,11 @@ void help()
 	"    sampleBam     Randomly sample a fraction of reads from a Bam file\n"
 	"    pe2seBam      Convert paired-end Bam file to single-end\n"
 	"    bedLength     Total nucleotides length of intervals in a bed file\n"
-    "    flipStrand    flip interval strand\n"
-    "    iFeat         assign intervals to gene features\n"
 	"\n"	
 	"Text ===================\n"
 	"    intersectTab  Intersection/subtraction/merge between two tabular files based on a shared key column\n"
 	"    TopN          Keep the first N lines for each unique value in a given column\n"
+    "    selMultiLines Select multi-line records from a file\n"
     "\n";
 
     cerr << str;
@@ -49,7 +50,7 @@ int main(int argc, char* argv[]) {
 
 	if (argc < 2) help();
 	
-	string valid_cmds = "geneFeature, geneSet, geneScore, PKA, PKA2, PKA2_predict, intersectTab, TopN, kShuffle, seqMatch, smithWaterman, makeBigWig, compareBigWig, sampleBam, pe2seBam, bedLength, iFeat, flipStrand, MatchScan, ";
+	string valid_cmds = "geneFeature, geneSet, geneScore, PKA, PKA2, PKA2_predict, intersectTab, TopN, seqFeat, kShuffle, seqMatch, smithWaterman, makeBigWig, compareBigWig, sampleBam, pe2seBam, bedLength, ";
 	
 	string cmd(argv[1]);
 	

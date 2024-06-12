@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     cout << "==========\n";
     cout << "  -motif    <motif.fa>	required, motif file, fasta format, could include multiple sequences\n";
     cout << "  -seq      <seq.fa>	required, sequence file, fasta format, could include multiple sequences\n";
-	cout << "  -out      <output>   output file name. Default: seqmatch_output.txt\n";
+	cout << "  -out      <output>   output file name\n";
     cout << "  -mismatch <n>	    max number of mismatches allowed. default 0\n";
     cout << "  -rc	                also search on reverse complement strand\n";
     cout << "  -bed	                to output BED format. Only if sequence have id like: >chr1:34197116-34197217(+), i.e. output of bedtools getfasta\n";
@@ -36,8 +36,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   
-        string motiffile, seqfile, str;
-        string outfile = "seqmatch_output.txt";
+        string motiffile, seqfile, outfile, str;
         int nmismatch=0;
         bool rc = false;
         bool bed = false;
@@ -94,11 +93,10 @@ int main(int argc, char* argv[]) {
     cout <<"["<<current_time()<<"] creating BED format output..."<<endl;
     string bedfile = outfile;
     bedfile += ".bed";
-    tab2bed(outfile,bedfile);
-    //if (tab2bed(outfile,bedfile))
-    //{
-    // rename(bedfile.c_str(),outfile.c_str());
-    //}
+    if (tab2bed_bedtools(outfile,bedfile))
+    {
+      rename(bedfile.c_str(),outfile.c_str());
+    }
   }
   cout <<"["<<current_time()<<"] Done"<<endl;
   return 0;

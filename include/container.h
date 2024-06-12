@@ -111,6 +111,8 @@ vector<double> matrix_column_max(boost::numeric::ublas::matrix<double> x);
 // print a matrix
 void print_matrix(boost::numeric::ublas::matrix<double> m);
 
+void save_matrix(boost::numeric::ublas::matrix<double> m, string filename);
+
 double matrix_min(boost::numeric::ublas::matrix<double> x);
 
 double matrix_max(boost::numeric::ublas::matrix<double> x);

@@ -57,12 +57,21 @@ void load_weighted_gene_list(string filename, vector<string> &genes, vector<doub
 	int i=0;
 	while(fin && i++ < skip) getline(fin,line);
 	
+	int min_col = col2+1;
+	if(col1>col2) min_col = col1+1;
+
 	while(fin)
 	{
 		getline(fin,line);
 		if(line.length() == 0)
 			continue;
-		flds = string_split(line,"\t");
+		flds = string_split(line);
+		if(flds.size()<min_col)
+		{
+		    message("Each row should have at least "+to_string(min_col)+" columns, splited by tab, comma, space, or bar(|)");
+		    message(line);
+                    exit(1);
+		}
 		//cout << flds[col1] << ","<< to_upper(flds[col1]) << endl;
 		if (toupper) genes.push_back(to_upper(flds[col1]));
 		else genes.push_back(flds[col1]);
@@ -81,6 +90,9 @@ void load_weighted_gene_list(string filename, map<string, double> &scores, bool 
 	string line;
 	vector<string> flds;
 	
+	int min_col = col2+1;
+        if(col1>col2) min_col = col1+1;
+
 	int i=0;
 	while(fin && i++ < skip) getline(fin,line);
 	
@@ -89,7 +101,14 @@ void load_weighted_gene_list(string filename, map<string, double> &scores, bool 
 		getline(fin,line);
 		if(line.length() == 0)
 			continue;
-		flds = string_split(line,"\t");
+		flds = string_split(line); // split by tab, space, comma, or |
+		                flds = string_split(line);
+                if(flds.size()<min_col)
+                {
+                    message("Each row should have at least "+to_string(min_col)+" columns, splited by tab, comma, space, or bar(|)");
+                    message(line);
+                    exit(1);
+                }
 		if (toupper) scores[to_upper(flds[col1])] = stof(flds[col2]);
 		else scores[flds[col1]] = stof(flds[col2]);
 	}
@@ -388,6 +407,70 @@ int find_sig_gene_sets(set<string> genes, string geneSetFile, string outputfile,
 	
 	return nSig;
 }
+
+
+
+// find gene sets where two lists of scores correlate
+int find_sig_gene_sets_correlate_two_scores(map<string,double> scores1, map<string,double> scores2, string geneSetFile, string outputfile, double r_cutoff)
+{	
+	ifstream fin;
+	fin.open(geneSetFile.c_str());
+	
+	ofstream fout;
+	fout.open(outputfile.c_str());
+
+	string line;
+	vector<string> flds;
+	
+	int nSig = 0;
+	
+	int i = 1;
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length() == 0)
+			continue;
+		// replace space with underscore
+		replace(line.begin(),line.end(),' ','_');
+		replace(line.begin(),line.end(),',',';');
+		flds = string_split(line,"\t");
+		//message("processing gene set "+to_string(i++)+": "+flds[0]);
+		//cout << flds[0] << "\t" << flds[1] << endl;	
+		set<string> geneSet(flds.begin()+3,flds.end());
+		//cout << geneSet.size() <<" genes in gene set" << endl;
+		
+		vector<double> scoresA;
+		vector<double> scoresB;
+		
+		map<string,double>::iterator it;
+			
+		for (set<string>::iterator it1=geneSet.begin(); it1!=geneSet.end(); ++it1)
+		{
+			it = scores1.find(*it1);
+			if(it != scores1.end())
+			{
+				scoresA.push_back(scores1[*it1]);
+				scoresB.push_back(scores2[*it1]);
+			}
+		}
+		if (scoresA.size()<10) continue;	
+		
+		// debug
+        //cout << flds[0] << "\t" << flds[1] << "\t" << foreground.size() << "\t" << background.size() << endl;
+
+		double r = cor(scoresA, scoresB);
+		if(r < r_cutoff && r > -r_cutoff) continue;
+		fout << r <<  "\t"  << scoresA.size() << "\t" << flds[0] << "\t" << flds[1] << endl;
+		nSig ++;
+		//geneSet.clear();
+	}
+	fin.close();
+	fout.close();
+	
+	return nSig;
+}
+
+
 
 // treat each gene set as foreground do two sample t test
 int find_sig_gene_sets_weighted(vector<string> genes, vector<double> scores, string geneSetFile, string outputfile, double p_cutoff)

@@ -1,0 +1,2 @@
+hg38_mane_ENST00000641515.2 range=chr1	71456	71461	query	5	-	hg38_mane_ENST00000641515.2 range=chr1:70009-71585 5'pad=0 3'pad=0 strand=+ repeatMasking=none	1	6	19	AGGCC	1447	1452	1577	AGGCC
+hg38_mane_ENST00000616016.5 range=chr1	944213	944220	query	7	-	hg38_mane_ENST00000616016.5 range=chr1:944154-944574 5'pad=0 3'pad=0 strand=+ repeatMasking=none	2	9	19	GGCCCTG	59	66	421	GGCCCTG

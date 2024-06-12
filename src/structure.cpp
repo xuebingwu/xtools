@@ -2397,9 +2397,9 @@ void hairpin_scoring(string infile, string outfile, vector<positional_kmer> mode
 		// for each position
 		for(int i=0; i <= top.size() - profile_length;i++)
 		{
-			double score_str = score_sequence_using_PKA_model(model_str, str.substr(i,profile_length));
-			double score_top = score_sequence_using_PKA_model(model_top, top.substr(i,profile_length));
-			double score_bot = score_sequence_using_PKA_model(model_bot, bot.substr(i,profile_length));
+			double score_str = score_sequence_using_kpLogo_model(model_str, str.substr(i,profile_length));
+			double score_top = score_sequence_using_kpLogo_model(model_top, top.substr(i,profile_length));
+			double score_bot = score_sequence_using_kpLogo_model(model_bot, bot.substr(i,profile_length));
 			/*
 			double score_total = score_str + score_top + score_bot;
 			if (score_total > best_score)
@@ -2410,7 +2410,7 @@ void hairpin_scoring(string infile, string outfile, vector<positional_kmer> mode
 			*/
 			fout << id << "\t" << i << "\t" << str.substr(i,profile_length) << "\t" << score_str << "\t" << top.substr(i,profile_length) << "\t" << score_top << "\t" << bot.substr(i,profile_length) << "\t" << score_bot << endl;
 		}
-		//double score_loop = score_sequence_using_PKA_model(model_loop, loop);
+		//double score_loop = score_sequence_using_kpLogo_model(model_loop, loop);
 		//fout << id << "\t" << best_score << "\t" << best_pos << "\t" << score_loop << endl;
 	}
 	fin.close();

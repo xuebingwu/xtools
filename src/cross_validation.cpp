@@ -10,11 +10,11 @@ void help()
 {
     string str =
 	"\n"
-    "cross_validation: cross-validadtion for PKA2 models\n"
+    "cross_validation: cross-validadtion for kpLogo2 models\n"
 	"	- Xuebing Wu (wuxb07@gmail.com)\n"
     "\n"
     "Usage: cross_validation -data data -train_cmd cmd -test_cmd cmd -nfold n\n"
-	"       example : cross_validation -data PKA2_test_Doench2014.txt  -train_cmd \"PKA2 data.train.@ -seq 1 -weight 2  -o output.@ -upto $k -shift_max $shift -pair 2>> log \" -test_cmd \"PKA2 data.test.@ -seq 1 -weight 2 -pCutoff_B 2 -predict output.@ -pair 2>> log\" -nfold 10 \n\n"
+	"       example : cross_validation -data kpLogo2_test_Doench2014.txt  -train_cmd \"kpLogo2 data.train.@ -seq 1 -weight 2  -o output.@ -upto $k -shift_max $shift -pair 2>> log \" -test_cmd \"kpLogo2 data.test.@ -seq 1 -weight 2 -pCutoff_B 2 -predict output.@ -pair 2>> log\" -nfold 10 \n\n"
     "Options:\n"
     "\n"
     "   -data      data   data file\n"
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
 	    for shift in 0 1 2
 	    do
 	    echo $k, $shift
-	    rm log; cross_validation -data PKA2_test_Doench2014.txt  -train_cmd "PKA data.train.@ -o output.@ -max_k $k -max_shift $shift -weighted 2>> log " -test_cmd "PKA data.test.@ -predict output.@ -weighted 2>> log" -nfold 10
+	    rm log; cross_validation -data kpLogo2_test_Doench2014.txt  -train_cmd "kpLogo data.train.@ -o output.@ -max_k $k -max_shift $shift -weighted 2>> log " -test_cmd "kpLogo data.test.@ -predict output.@ -weighted 2>> log" -nfold 10
 	    rm tmp
 	    cat output.*.score | grep -v inf > tmp
 	    Rscript cor.r

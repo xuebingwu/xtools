@@ -14,6 +14,7 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/lexical_cast.hpp>
 
+
 	
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,97 @@ extern "C"{
 
 using namespace std;
 
+// protein sequence alignment scoring using BLOSUM
+
+// load pwm from file, contain only the matrix
+/*
+A	R	N	D	C	Q	E	G	H	I	L	K	M	F	P	S	T	W	Y	V	B	Z	X	*
+4	-1	-2	-2	0	-1	-1	0	-2	-1	-1	-1	-1	-2	-1	1	0	-3	-2	0	-2	-1	0	-4
+-1	5	0	-2	-3	1	0	-2	0	-3	-2	2	-1	-3	-2	-1	-1	-3	-2	-3	-1	0	-1	-4
+-2	0	6	1	-3	0	0	0	1	-3	-3	0	-2	-3	-2	1	0	-4	-2	-3	3	0	-1	-4
+-2	-2	1	6	-3	0	2	-1	-1	-3	-4	-1	-3	-3	-1	0	-1	-4	-3	-3	4	1	-1	-4
+0	-3	-3	-3	9	-3	-4	-3	-3	-1	-1	-3	-1	-2	-3	-1	-1	-2	-2	-1	-3	-3	-2	-4
+-1	1	0	0	-3	5	2	-2	0	-3	-2	1	0	-3	-1	0	-1	-2	-1	-2	0	3	-1	-4
+-1	0	0	2	-4	2	5	-2	0	-3	-3	1	-2	-3	-1	0	-1	-3	-2	-2	1	4	-1	-4
+0	-2	0	-1	-3	-2	-2	6	-2	-4	-4	-2	-3	-3	-2	0	-2	-2	-3	-3	-1	-2	-1	-4
+-2	0	1	-1	-3	0	0	-2	8	-3	-3	-1	-2	-1	-2	-1	-2	-2	2	-3	0	0	-1	-4
+-1	-3	-3	-3	-1	-3	-3	-4	-3	4	2	-3	1	0	-3	-2	-1	-3	-1	3	-3	-3	-1	-4
+-1	-2	-3	-4	-1	-2	-3	-4	-3	2	4	-2	2	0	-3	-2	-1	-2	-1	1	-4	-3	-1	-4
+-1	2	0	-1	-3	1	1	-2	-1	-3	-2	5	-1	-3	-1	0	-1	-3	-2	-2	0	1	-1	-4
+-1	-1	-2	-3	-1	0	-2	-3	-2	1	2	-1	5	0	-2	-1	-1	-1	-1	1	-3	-1	-1	-4
+-2	-3	-3	-3	-2	-3	-3	-3	-1	0	0	-3	0	6	-4	-2	-2	1	3	-1	-3	-3	-1	-4
+-1	-2	-2	-1	-3	-1	-1	-2	-2	-3	-3	-1	-2	-4	7	-1	-1	-4	-3	-2	-2	-1	-2	-4
+1	-1	1	0	-1	0	0	0	-1	-2	-2	0	-1	-2	-1	4	1	-3	-2	-2	0	0	0	-4
+0	-1	0	-1	-1	-1	-1	-2	-2	-1	-1	-1	-1	-2	-1	1	5	-2	-2	0	-1	-1	0	-4
+-3	-3	-4	-4	-2	-2	-3	-2	-2	-3	-2	-3	-1	1	-4	-3	-2	11	2	-3	-4	-3	-2	-4
+-2	-2	-2	-3	-2	-1	-2	-3	2	-1	-1	-2	-1	3	-3	-2	-2	2	7	-1	-3	-2	-1	-4
+0	-3	-3	-3	-1	-2	-2	-3	-3	3	1	-2	1	-1	-2	-2	0	-3	-1	4	-3	-2	-1	-4
+-2	-1	3	4	-3	0	1	-1	0	-3	-4	0	-3	-3	-2	0	-1	-4	-3	-3	4	1	-1	-4
+-1	0	0	1	-3	3	4	-2	0	-3	-3	1	-1	-3	-1	0	-1	-3	-2	-2	1	4	-1	-4
+0	-1	-1	-1	-2	-1	-1	-1	-1	-1	-1	-1	-1	-1	-2	0	0	-2	-1	-1	-1	-1	-1	-4
+-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	-4	1
+*/
+map<char,map<char,int>> LoadScoreMat(string filename){
+	
+	map<char,map<char,int>> scoreMat;
+		
+ 	ifstream fin(filename.c_str());
+	string line;
+	string alphabet;
+	vector<string> flds;
+	
+	// read line 1
+	getline(fin,line);
+	if(line.length() == 0){
+		message("ERROR! line 1 empty in scoring file: "+filename);
+		system_run("touch exit_with_error");exit(1);
+	}
+	flds = string_split(line);
+	int N=flds.size();
+	for(int i=0;i<N;i++) alphabet[i]=flds[i][0];
+
+	int i=0;
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length() == 0) continue;
+		flds = string_split(line);
+		if (N != flds.size())
+		{
+			message("ERROR! rows have different number of columns in scoring file: "+filename);
+			system_run("touch exit_with_error");exit(1);
+		}
+		for(int j=0;j<N;j++) {
+			scoreMat[alphabet[i]][alphabet[j]]=stoi(flds[j]);
+			//cout << alphabet[i] << "\t" << alphabet[j] << "\t" << scoreMat[alphabet[i]][alphabet[j]] << endl;
+		}
+		i = i + 1;
+		if(i > N)
+		{
+			message("ERROR! scoring file has too many rows: "+filename);
+			system_run("touch exit_with_error");exit(1);
+		}
+	}
+	fin.close();
+
+	return scoreMat;
+}
+
+// score two sequences for alignment score
+//
+int seqAlignmentScore(map<char,map<char,int>> M, string seq1, string seq2)
+{
+	if(seq1.size() != seq2.size()){
+		message("ERROR! the two sequences are different in size: \n"+seq1+"\n"+seq2);
+		system_run("touch exit_with_error");exit(1);
+	} 
+	int score=0;
+	for(int i=0;i<seq1.size();i++) score += M[seq1[i]][seq2[i]];
+	return score;
+}
+
+
+
 // return position of the char in str that is not found in alphabet
 // if no such char, return -1
 int bad_char(string str, string alphabet)
@@ -43,7 +135,11 @@ int bad_char(string str, string alphabet)
 		{
 			if (str[i] == alphabet[j]) break;
 		}
-		if (j == alphabet.size()) return i;
+		if (j == alphabet.size()) 
+			{ 
+				//message(str+"_"+to_string(i)+"_"+str[i]+"_");
+				return i; 
+			}
 	}
 	return -1; // if not found
 }
@@ -69,33 +165,33 @@ vector<int> bad_char(vector<string> str, string alphabet)
 boost::numeric::ublas::matrix<double> initialize_pwm_from_one_seq(string seq)
 {
     // nucleotide to position
-    map<char,int> letter2pos;
-    letter2pos['A'] = 0;
-    letter2pos['C'] = 1;
-    letter2pos['G'] = 2;
-    letter2pos['T'] = 3;
+    map<char,int> residual2pos;
+    residual2pos['A'] = 0;
+    residual2pos['C'] = 1;
+    residual2pos['G'] = 2;
+    residual2pos['T'] = 3;
 	
     boost::numeric::ublas::matrix<double> pwm (4,seq.size());
     for (int i = 0; i < pwm.size1(); ++ i) 
 		for (int j = 0; j < pwm.size2(); ++ j) 
 			pwm(i,j) = 0;
-    for (int i = 0; i < pwm.size2(); ++ i) pwm(letter2pos[seq[i]],i) = 1.0;
+    for (int i = 0; i < pwm.size2(); ++ i) pwm(residual2pos[seq[i]],i) = 1.0;
   
     return pwm;
 }
 
 // score a sequence by pwm
-double score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int> letter2pos, string seq)
+double score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int> residual2pos, string seq)
 {
 	double score = 0;
-	for (int i = 0; i < pwm.size2(); ++ i) score += pwm(letter2pos[seq[i]],i);
+	for (int i = 0; i < pwm.size2(); ++ i) score += pwm(residual2pos[seq[i]],i);
 	return score;
 }
 
 // find best match by pwm in a seq
 // pos: position of best match
 // return best match score
-double best_score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int> letter2pos, string seq, int &pos)
+double best_score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int> residual2pos, string seq, int &pos)
 {
 	double max_score = -100000;
 	double score;
@@ -103,7 +199,7 @@ double best_score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int
 	for(int i=0;i< int(seq.size())-motif_size;i++)
 	{
 		//cout << i << "," << seq.size()-motif_size << "," << motif_size << endl;
-		score =  score_by_pwm(pwm,letter2pos,seq.substr(i,motif_size));
+		score =  score_by_pwm(pwm,residual2pos,seq.substr(i,motif_size));
 		if (score > max_score)
 		{
 			max_score = score;
@@ -116,7 +212,7 @@ double best_score_by_pwm(boost::numeric::ublas::matrix<double> pwm, map<char,int
 // update pwm from sequences
 // scores: normalized to 0-1 ()
 // weight from each sequence: pwm score of the match * sequence score
-boost::numeric::ublas::matrix<double> update_pwm_from_seqs(vector<string> seqs, vector<double> scores, boost::numeric::ublas::matrix<double> pwm,  map<char,int> letter2pos)
+boost::numeric::ublas::matrix<double> update_pwm_from_seqs(vector<string> seqs, vector<double> scores, boost::numeric::ublas::matrix<double> pwm,  map<char,int> residual2pos)
 {
 	// initialize a zero matrix
     boost::numeric::ublas::matrix<double> pwm2 (4,pwm.size2());
@@ -130,9 +226,9 @@ boost::numeric::ublas::matrix<double> update_pwm_from_seqs(vector<string> seqs, 
 	double composite_score;
 	for(int i=0;i<seqs.size();i++)
 	{
-		max_score = best_score_by_pwm(pwm,letter2pos,seqs[i],max_pos);
+		max_score = best_score_by_pwm(pwm,residual2pos,seqs[i],max_pos);
 		composite_score = max_score * scores[i];
-		for (int j = 0; j < pwm2.size2(); ++ j) pwm2(letter2pos[seqs[i][max_pos+j]],j) += composite_score; 
+		for (int j = 0; j < pwm2.size2(); ++ j) pwm2(residual2pos[seqs[i][max_pos+j]],j) += composite_score; 
 	}
 
 	// normalize so that each column sum up to 1
@@ -214,8 +310,7 @@ array<double,4>  kmer_rank_test(string kmer, vector<string> seqs, vector<double>
 		utest = Mann_Whitney_U_test(ranks_with_kmer, seqs.size()); // z, p
 	} else
 	{
-		utest = {{0,1}};
-		
+		utest = {{0,1}};	
 	}
 	array<double,4> res = {{double(seqs.size()),double(ranks_with_kmer.size()),-utest[0],utest[0]/fabs(utest[0])*log10(utest[1])}};
 
@@ -229,7 +324,59 @@ array<double,4>  kmer_rank_test(string kmer, vector<string> seqs, vector<double>
 	return res;
 }
 
+array<double,5>  kmer_rank_test_with_median(string kmer, vector<string> seqs, vector<double> ranks, vector<double> targetScores)
+{
+	vector<double> ranks_with_kmer;
+	array<double,2> utest;
 
+    vector<double> pos_scores;
+    vector<double> neg_scores;
+    double median_dif = 0;
+    
+	for(int i=0;i<seqs.size();i++)
+	{
+		if(seqs[i].find(kmer) != string::npos) {
+            ranks_with_kmer.push_back(ranks[i]);
+            pos_scores.push_back(targetScores[i]);
+        } else {
+            neg_scores.push_back(targetScores[i]);
+        }
+	}
+	if (ranks_with_kmer.size()>2 && ranks_with_kmer.size() < seqs.size()-1 ) // cannot have too few or too many 
+	{
+		utest = Mann_Whitney_U_test(ranks_with_kmer, seqs.size()); // z, p
+        median_dif = median(pos_scores) - median(neg_scores);
+	} else {
+		utest = {{0,1}};	
+	}
+	array<double,5> res = {{double(seqs.size()),double(ranks_with_kmer.size()),-utest[0],utest[0]/fabs(utest[0])*log10(utest[1]),median_dif}};
+
+	// debug
+	//cout << "debug" << endl;
+	//cout << seqs.size() << endl;
+	//cout << seqs[0] << endl;
+	//cout << kmer << endl;
+	//cout << ranks_with_kmer.size() << endl;
+	
+	return res;
+}
+
+double median(vector<double> vec)
+{
+        typedef vector<double>::size_type vec_sz;
+
+        vec_sz size = vec.size();
+        if (size == 0)
+                throw domain_error("median of an empty vector");
+
+        sort(vec.begin(), vec.end());
+
+        vec_sz mid = size/2;
+
+        return size % 2 == 0 ? (vec[mid] + vec[mid-1]) / 2 : vec[mid];
+}
+
+// cdf plot for one kmer, only presence or absence
 void kmer_cdf(string kmer, vector<string> seqs, vector<double> scores, string outputfile)
 {
 	ofstream fout(outputfile.c_str());
@@ -257,7 +404,7 @@ void kmer_cdf(string kmer, vector<string> seqs, vector<double> scores, string ou
 	"ecdf_pos = ecdf(pos)\n"
 	"ecdf_neg = ecdf(neg)\n"
 	"xtick = sort(c(pos[(length(pos)*0.01):(length(pos)*0.99)],neg[(length(neg)*0.01):(length(neg)*0.99)]))\n"
-	"plot(xtick,ecdf_pos(xtick),type='l',col='blue', bty='n',main=paste('ks test p=',format(p,digits=2),'\nmedian dif = ',round(median_p-median_n,digits=3),'=',median_p,'-',median_n,sep=''),xlab='score', ylab='cdf') \n"	
+	"plot(xtick,ecdf_pos(xtick),type='l',col='blue', bty='l',main=paste('ks test p=',format(p,digits=2),'\nmedian dif = ',round(median_p-median_n,digits=3),' (',median_p,',',median_n,')',sep=''),xlab='score', ylab='cdf') \n"	
 	"lines(xtick,ecdf_neg(xtick),col='red')\n"
 	"legend('topleft',c(paste(length(pos),' with "+kmer+"',sep=''),paste(length(neg),' without "+kmer+"',sep='')),col=c('blue','red'),box.lty=0,lty=1,cex=1)\n"
 		
@@ -265,6 +412,78 @@ void kmer_cdf(string kmer, vector<string> seqs, vector<double> scores, string ou
 	"\n";
 
 	R_run(script);		
+}
+
+
+// cdf plot for one kmer, motif counts
+array<int,3> kmer_cdf2(string kmer, vector<string> seqs, vector<double> scores, string outputfile)
+{
+    // two column output file: kmer count and target score
+	ofstream fout(outputfile.c_str());
+
+    // number of sequences with zero, single, or multiple kmer matches
+    array<int,3> totals = {{0,0,0}};
+
+    // count
+    int count;
+	for(int i=0;i<seqs.size();i++)
+	{
+        count = count_non_overlap(seqs[i],kmer);
+		fout << count << "\t" << scores[i] << endl;
+        if (count > 1) count = 2;
+        totals[count] ++;
+	}
+	fout.close();
+
+    // continue only when there are at least 3 sequences with 0 or 1 match
+    if (totals[0] >= 3 && totals[1] >= 3){
+    	string script = 
+        "pdf('"+outputfile+".pdf',width=5,height=5) \n"
+    	"par(cex=1)\n"
+        "x  = read.table('"+outputfile+"', header=F) \n"
+        "mtp = x[x[,1]>1,2]\n"
+    	"pos = x[x[,1]==1,2]\n"
+    	"neg = x[x[,1]==0,2]\n"
+        "median_p = round(median(pos),digits=3)\n"
+    	"median_n = round(median(neg),digits=3)\n"
+        "if(median_p < median_n){\n"
+    	"    kstest_p = ks.test(pos,neg,alternative='greater')\n"
+        "} else {\n"
+        "    kstest_p = ks.test(pos,neg,alternative='less')\n "
+        "}\n"
+    	"ecdf_pos = ecdf(pos)\n"
+    	"ecdf_neg = ecdf(neg)\n"
+        "title = paste('1 vs 0: p=',format(kstest_p$p.value,digits=2),', dif=',round(median_p-median_n,digits=3),sep='')\n"
+        "if (length(mtp)>2) {\n"
+            "median_m = round(median(mtp),digits=3)\n"
+            "if(median_m < median_n){\n"
+        	"    kstest_m = ks.test(mtp,neg,alternative='greater')\n"
+            "} else {\n"
+            "    kstest_m = ks.test(mtp,neg,alternative='less')\n "
+            "}\n"
+            "ecdf_mtp = ecdf(mtp)\n"
+            "title = paste('1 vs 0: p=',format(kstest_p$p.value,digits=2),', dif=',round(median_p-median_n,digits=3),'\n>1 vs 0: p=', format(kstest_m$p.value,digits=2),', dif=',round(median_m-median_n,digits=3),sep='')\n"
+        "}\n"
+    	"xtick = sort(c(mtp[(length(mtp)*0.01):(length(mtp)*0.99)],pos[(length(pos)*0.01):(length(pos)*0.99)],neg[(length(neg)*0.01):(length(neg)*0.99)]))\n"
+    	"plot(xtick,ecdf_pos(xtick),type='l',col='blue', bty='l',ylim=c(0,1),main=title,xlab='score', ylab='cdf') \n"	
+    	"lines(xtick,ecdf_neg(xtick),col='black')\n"
+        "if (length(mtp)>2){\n"
+            "lines(xtick,ecdf_mtp(xtick),col='red')\n"
+        "}\n"
+    	"legend('topleft',c(paste(' 0 "+kmer+"',', n=',length(neg),sep=''),paste(' 1 "+kmer+"',', n=',length(pos),sep=''),paste(' >1 "+kmer+"',', n=',length(mtp),sep='')),col=c('black','blue','red'),box.lty=0,lty=1,cex=1)\n"
+    		
+        "dev.off() \n"
+    	"\n";
+    
+    	R_run(script);	
+    } else {
+        message("Not enough sequences:");
+        message("    "+to_string(totals[0])+" sequences with no match");
+        message("    "+to_string(totals[1])+" sequences with a single match");
+        message("    "+to_string(totals[2])+" sequences with multiple matchs");
+    }
+    
+    return totals;
 }
 
 
@@ -322,15 +541,15 @@ string reverse(string str)
 	return res;
 }
 
-// seq can not have letters not in valid_letters
-bool valid_sequence(string seq, string valid_letters)
+// seq can not have residuals not in valid_residuals
+bool valid_sequence(string seq, string valid_residuals)
 {
 	for (int i=0;i<seq.size();i++)
 	{
 		bool valid = false;
-		for(int j=0;j<valid_letters.size();j++)
+		for(int j=0;j<valid_residuals.size();j++)
 		{
-			if (seq[i] == valid_letters[j])
+			if (seq[i] == valid_residuals[j])
 			{
 				valid = true;
 				break;
@@ -341,9 +560,9 @@ bool valid_sequence(string seq, string valid_letters)
 	return true;
 }
 
-// homopolymer: find the longest runs of any letter of letters in s
+// homopolymer: find the longest runs of any residual of residuals in s
 // return length and start position (0-based)
-array<int,2> find_longest_run(string s, string letters)
+array<int,2> find_longest_run(string s, string residuals)
 {
 	int max_L = 0;
 	int start=-1;
@@ -351,12 +570,12 @@ array<int,2> find_longest_run(string s, string letters)
 	// starting at each position
 	for(int i =0;i<s.size();i++)
 	{
-		if (letters.find(s[i])!=std::string::npos) 
+		if (residuals.find(s[i])!=std::string::npos) 
 		{
 			int j;
 			for(j=i+1;j<s.size();j++)
 			{
-				if (letters.find(s[j])==std::string::npos) break;
+				if (residuals.find(s[j])==std::string::npos) break;
 			}
 			L = j - i;
 			if(L > max_L)
@@ -791,7 +1010,8 @@ int find_significant_kmer_from_ranked_sequences(
 	int min_shift/*=0*/, 
 	int max_shift/*=0*/,
 	int startPos/*=0*/,
-	int minCount/*=5*/ )
+	int minCount/*=5*/,
+	string alphabet/*=ACGT*/ )
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -814,7 +1034,10 @@ int find_significant_kmer_from_ranked_sequences(
 	{
 		// expand a degenerate kmer to all possible element/exact kmers
 		//cout << kmers[i] << endl;
-        vector<string> exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
+		vector<string> exp_kmers;
+		if (alphabet == "ACGT") exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
+		else exp_kmers = {kmers[i]};
+		
 		int k = kmers[i].size();
 		for (int shift = min_shift; shift <= max_shift; shift ++)
 		{
@@ -875,6 +1098,7 @@ int find_significant_kmer_from_ranked_sequences(
 			}
 		}
 	}
+	outstream.close();
 
     return nSig;
 } // end of function
@@ -894,7 +1118,8 @@ int find_significant_kmer_from_weighted_sequences(
 	int min_shift/*=0*/, 
 	int max_shift/*=2*/,
 	int startPos/*=0*/,
-	int minCount/*=5*/) 
+	int minCount/*=5*/,
+	string alphabet/*="ACGT"*/) 
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -913,10 +1138,12 @@ int find_significant_kmer_from_weighted_sequences(
 	outstream.open(outfile.c_str());
 
 	// start of kmer counting and test
+	vector<string> exp_kmers;
 	for( int i=0; i<kmers.size();i++) // for each kmer
 	{
-		// expand a degenerate kmer to all possible element/exact kmers		
-        vector<string> exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
+		// expand a degenerate kmer to all possible element/exact kmers	
+		if(alphabet=="ACGT") exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
+		else exp_kmers = {kmers[i]};
 		int k = kmers[i].size();
 		for (int shift = min_shift; shift <= max_shift; shift ++)
 		{
@@ -984,7 +1211,7 @@ int find_significant_kmer_from_weighted_sequences(
 			}
 		}
 	}
-
+	outstream.close();
     return nSig;
 } // end of function
 
@@ -1000,8 +1227,11 @@ int find_significant_degenerate_shift_kmer_from_one_set_unweighted_sequences(
 	int min_shift/*=0*/, 
 	int max_shift/*=2*/,
 	int startPos/*=0*/,
-	int minCount/*=5*/) 
+	int minCount/*=5*/,
+	string alphabet/*=ACGT*/) 
 {
+	//message(alphabet);
+	
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
 	
@@ -1022,7 +1252,13 @@ int find_significant_degenerate_shift_kmer_from_one_set_unweighted_sequences(
 	for( int i=0; i<kmers.size();i++) // for each kmer
 	{
 		// expand a degenerate kmer to all possible element/exact kmers		
-        vector<string> exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
+        //vector<string> exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
+		
+		vector<string> exp_kmers;
+		if (alphabet == "ACGT") exp_kmers = expand_degenerate_kmer(kmers[i],define_iupac);
+		else exp_kmers = {kmers[i]};
+		
+		
 		int k = kmers[i].size();
 		for (int shift = min_shift; shift <= max_shift; shift ++)
 		{
@@ -1095,7 +1331,7 @@ int find_significant_degenerate_shift_kmer_from_one_set_unweighted_sequences(
 			}
 		}
 	}
-
+	outstream.close();
     return nSig;
 } // end of function
 
@@ -1140,7 +1376,8 @@ int find_significant_pairs_from_weighted_sequences(
 	double pCutoff/*=0.05*/, 
 	bool Bonferroni/*=true*/,
 	int startPos/*=0*/,
-	int minCount/*=5*/) 
+	int minCount/*=5*/,
+	string alphabet) 
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -1205,10 +1442,11 @@ int find_significant_pairs_from_weighted_sequences(
 			}
 		}
 	}
+	outstream.close();
     return nSig;
 } // end of function
 
-// nucleotide plot from PKA2 weighted output
+// nucleotide plot from kpLogo2 weighted output
 // no shift, k=1
 // plot column 
 void plot_nucleotide_profile(string infile, string outfile, int lSeq, int column, int startPos){
@@ -1269,11 +1507,11 @@ void plot_most_significant_kmers(string infile, string outfile, int lSeq, int co
 		"dnaColor[[\"T\"]] = \"magenta\"\n"
 
 		"color_dna <-function(x,y,txt,col,cex) {  \n"
-		"    letters=unlist(strsplit(txt,'')) \n"
+		"    residuals=unlist(strsplit(txt,'')) \n"
 		"    thisy<-y \n"
-		"    for(txtstr in 1:length(letters)) { \n"
-		"        text(x,thisy,letters[txtstr],col=col[[letters[txtstr]]],adj=0,srt=90,cex=cex) \n"
-		"        thisy<-thisy+strheight(letters[txtstr],cex=cex)*1.1 \n"
+		"    for(txtstr in 1:length(residuals)) { \n"
+		"        text(x,thisy,residuals[txtstr],col=col[[residuals[txtstr]]],adj=0,srt=90,cex=cex) \n"
+		"        thisy<-thisy+strheight(residuals[txtstr],cex=cex)*1.1 \n"
 		"    } \n"
 		"} \n"
 			
@@ -1417,7 +1655,7 @@ void use_end_position(string filename)
 }
 
 // note input should be sorted by weight
-vector<positional_kmer> build_model_from_PKA_output(string filename, int startPos)
+vector<positional_kmer> build_model_from_kpLogo_output(string filename, int startPos)
 {
 	int cKmer = 0;
 	int cStart = 1;
@@ -1507,6 +1745,7 @@ vector<positional_kmer> build_model_from_PKA_output(string filename, int startPo
 			}
 		}
 	}
+	fin.close();
 	return ranked_kmers;
 }
 
@@ -1585,12 +1824,26 @@ vector<positional_kmer> load_model_from_file(string filename)
 		positional_kmer x(flds[0],stoi(flds[1]),stoi(flds[2]),stof(flds[3]),stoi(flds[4]));
 		ranked_kmers.push_back(x);
 	}
+	fin.close();
 	return ranked_kmers;
 }
 
+// matchScan
+// score one sequence
+vector<double> score_a_sequence(string seq, map<string,double> kmer_scores)
+{
+    int k = kmer_scores.begin()->first.size();
+    
+    vector<double> scores;
+    for(int i=0;i<seq.size()-k;i++)
+        {
+            scores.push_back(kmer_scores[seq.substr(i,k)]);
+        }
+    return scores;
+}
 
 // ignore group information
-double score_sequence_using_PKA_model(vector<positional_kmer> ranked_kmers,  string seq)
+double score_sequence_using_kpLogo_model(vector<positional_kmer> ranked_kmers,  string seq)
 {
 	double score = 0;
 	for( int i=0;i<ranked_kmers.size();i++)
@@ -1639,7 +1892,7 @@ double score_sequence_using_paired_kmer_model(vector<paired_kmer> model,  string
 }
 
 // use group information, worse
-double score_sequence_using_PKA_model_use_group(vector<positional_kmer> ranked_kmers,  string seq)
+double score_sequence_using_kpLogo_model_use_group(vector<positional_kmer> ranked_kmers,  string seq)
 {
 	double score = 0;
 	set<int> scored;
@@ -1662,8 +1915,8 @@ double score_sequence_using_PKA_model_use_group(vector<positional_kmer> ranked_k
 	return score;
 }
 
-// for both PKA and PKA2
-void score_fasta_using_PKA_model(string seqfile, string outputfile, vector<positional_kmer> ranked_kmers)
+// for both kpLogo and kpLogo2
+void score_fasta_using_kpLogo_model(string seqfile, string outputfile, vector<positional_kmer> ranked_kmers)
 {
     ifstream fin(seqfile.c_str());
 	ofstream fout(outputfile.c_str());
@@ -1672,7 +1925,7 @@ void score_fasta_using_PKA_model(string seqfile, string outputfile, vector<posit
     while(fin.good())
     {
 		ReadOneSeqFromFasta(fin,name,seq);
-     	double score = score_sequence_using_PKA_model(ranked_kmers, seq);
+     	double score = score_sequence_using_kpLogo_model(ranked_kmers, seq);
   		fout << name << "\t" << seq << "\t" << score << endl;		
     }
     fin.close();
@@ -1680,7 +1933,7 @@ void score_fasta_using_PKA_model(string seqfile, string outputfile, vector<posit
 }
 
 // sequence in column col, 1 based
-void score_tabular_using_PKA_model(string tabfile, int col, string outputfile, vector<positional_kmer> ranked_kmers)
+void score_tabular_using_kpLogo_model(string tabfile, int col, string outputfile, vector<positional_kmer> ranked_kmers)
 {
 	col = col - 1;
 	
@@ -1695,7 +1948,7 @@ void score_tabular_using_PKA_model(string tabfile, int col, string outputfile, v
 		getline(fin,line);
 		if(line.length() == 0) continue;
 		flds = string_split(line);
-     	double score = score_sequence_using_PKA_model(ranked_kmers, flds[col]);
+     	double score = score_sequence_using_kpLogo_model(ranked_kmers, flds[col]);
   		fout << line << "\t" << score << endl;		
     }
     fin.close();
@@ -1771,9 +2024,10 @@ void save_feature_matrix(map<string,string> seqs, vector<string> kmers, string o
 		}
 		outstream << endl;
 	}
+	outstream.close();
 } // end of function
 
-// read PKA output into two vectors
+// read kpLogo output into two vectors
 void read_significant_positional_kmer_from_file(string inputfile, vector<string> &kmers, vector<int> &positions)
 {
 	ifstream fin;
@@ -1797,8 +2051,8 @@ void read_significant_positional_kmer_from_file(string inputfile, vector<string>
 	fin.close();
 }
 
-// read PKA2 output into two vectors
-void read_significant_positional_kmer_from_PKA2_output(string inputfile, vector<string> &kmers, vector<int> &positions)
+// read kpLogo2 output into two vectors
+void read_significant_positional_kmer_from_kpLogo2_output(string inputfile, vector<string> &kmers, vector<int> &positions)
 {
 	ifstream fin;
 	fin.open(inputfile.c_str());
@@ -1887,7 +2141,7 @@ void significant_feature_matrix(map<string,string> seqs, vector<string> kmers, v
 
 
 // should work for ranked kmer with degenerate nucleotides
-void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights, vector<positional_kmer> ranked_kmers, string outfile)
+void significant_feature_matrix_kpLogo2(vector<string> seqs, vector<double> weights, vector<positional_kmer> ranked_kmers, string outfile)
 {
     int nSeq = seqs.size();		// total number of sequences
 	int lSeq = seqs[0].size(); // length of the first sequence, assume all have the same length
@@ -1942,7 +2196,7 @@ void significant_feature_matrix_PKA2(vector<string> seqs, vector<double> weights
 	outstream.close();
 } // end of function
 
-// PKA: remove overlapping motifs
+// kpLogo: remove overlapping motifs
 // input: all significant motifs
 int non_overlapping_sig_motifs(string inputfile, string outputfile)
 {
@@ -2135,23 +2389,23 @@ map<char,string> interpret_IUPAC()
 }
 */
 
-// generate all possible combinations of letters in alphabet of fixed length k, i.e. kmer
+// generate all possible combinations of residuals in alphabet of fixed length k, i.e. kmer
 vector<string> generate_kmers(int k, string alphabet)
 {
     vector<string> kmers;
     
-    // first position, each letter in alphabet
+    // first position, each residual in alphabet
     for(int i = 0; i< alphabet.size(); i++)
     {
         string s(1,alphabet[i]);
         kmers.push_back(s);
     }
 
-    // for the rest k-1 positions, fill all possible letters 
+    // for the rest k-1 positions, fill all possible residuals 
     for(int i = 0; i< k-1;i++)
     {
         int n = kmers.size();
-        // for each current kmer, append all possible letters
+        // for each current kmer, append all possible residuals
         for(int j=0; j< n; j++)
         {
             string tmp = kmers[j];
@@ -2194,7 +2448,7 @@ string degenerate_kmer_to_regex(string kmer,map<char,string> iupac)
 
 // expand a degenerate kmer to all possible exact kmers
 vector<string> expand_degenerate_kmer(string seq, map<char,string> iupac)
-{
+{	
     vector<string> res (1,"");
     vector<string> tmp;
 
@@ -2236,7 +2490,7 @@ void implant_motif(map<string,string> &seqs, int position, string motif, double 
 
 
 // for max_shift > 0: take the most strongest
-boost::numeric::ublas::matrix<double> position_weight_matrix_from_PKA_output(string filename, string alphabet, int seqLen, int startPos, int cScore)
+boost::numeric::ublas::matrix<double> position_weight_matrix_from_kpLogo_output(string filename, string alphabet, int seqLen, int startPos, int cScore)
 {
 	int cSeq = 0;
 	int cPos = 1; 
@@ -2252,10 +2506,10 @@ boost::numeric::ublas::matrix<double> position_weight_matrix_from_PKA_output(str
     //cout << "matrix initiaze ok" << endl;
 
     // nucleotide to position
-    map<string,int> letter2pos;
+    map<string,int> residual2pos;
 	for(int i=0;i<alphabet.size();i++)
 	{
-		letter2pos[alphabet.substr(i,1)] = i;
+		residual2pos[alphabet.substr(i,1)] = i;
 	}
  
  	ifstream fin(filename.c_str());
@@ -2266,7 +2520,7 @@ boost::numeric::ublas::matrix<double> position_weight_matrix_from_PKA_output(str
 		getline(fin,line);
 		if(line.length() == 0) continue;
 		flds = string_split(line);
-		if(letter2pos.find(flds[cSeq]) != letter2pos.end())
+		if(residual2pos.find(flds[cSeq]) != residual2pos.end())
 		{
 			double score = stof(flds[cScore]);
 			if (stof(flds[cStat]) < 0) 
@@ -2277,9 +2531,9 @@ boost::numeric::ublas::matrix<double> position_weight_matrix_from_PKA_output(str
 			if (pos < 0) pos += 1;
 			pos = pos + startPos - 2;
 			//cout << pos << "," << line << endl;
-			if(abs(pwm(letter2pos[flds[cSeq]],pos)) < abs(score)) // for multiple shift values
+			if(abs(pwm(residual2pos[flds[cSeq]],pos)) < abs(score)) // for multiple shift values
 			{
-				pwm(letter2pos[flds[cSeq]],pos) = score;
+				pwm(residual2pos[flds[cSeq]],pos) = score;
 			}
 		}
 	}
@@ -2322,8 +2576,8 @@ string postscript_line(double x1, double y1, double x2, double y2)
 // if nSeq == 0, do not calculate information content
 // if nSeq < 0, calculate info content without small sample correction
 // small sample correction: subtract the following term from each value: (alphabet.size-1)/ln2/2/n
-// descending: false. if true, will put important letter at the bottom
-void generate_ps_logo_from_pwm(boost::numeric::ublas::matrix<double> pwm, string filename, string alphabet,vector<int> fixed_position, vector<string> fixed_letter, map<char,string> colors, double score_cutoff, int startPos, int fontsize, string y_label, double max_scale, int nSeq, int bottom_up)
+// descending: false. if true, will put important residual at the bottom
+void generate_ps_logo_from_pwm(boost::numeric::ublas::matrix<double> pwm, string filename, string alphabet,vector<int> fixed_position, vector<string> fixed_residual, map<char,string> colors, double score_cutoff, int startPos, int fontsize, string y_label, double max_scale, int nSeq, int bottom_up)
 {
 
 	// fontsize
@@ -2367,6 +2621,7 @@ void generate_ps_logo_from_pwm(boost::numeric::ublas::matrix<double> pwm, string
 		}
 	}
 
+	// debug
 	//print_matrix(pwm);
 
 
@@ -2381,9 +2636,9 @@ void generate_ps_logo_from_pwm(boost::numeric::ublas::matrix<double> pwm, string
 	{
 		for(int j=0;j<alphabet.size();j++)
 		{
-			if(fixed_letter[i] == alphabet.substr(j,1))
+			if(fixed_residual[i] == alphabet.substr(j,1))
 			{
-				pwm(j,fixed_position[i]) = 1.5 * max_col_sum;
+				pwm(j,fixed_position[i]) = 1.1 * max_col_sum;
 			}
 			else pwm(j,fixed_position[i]) = 0 ;
 		}
@@ -2426,7 +2681,7 @@ void generate_ps_logo_from_pwm(boost::numeric::ublas::matrix<double> pwm, string
 	string header = ""
 		"%!PS-Adobe-3.0 EPSF-3.0            \n"
 		"%%Title: Sequence Logo : Logo      \n"
-		"%%Creator: PKA 					\n"
+		"%%Creator: kpLogo 					\n"
 		"%%CreationDate: "+current_time()+" \n"
 		"%%BoundingBox:   0  0  "+to_string(L * xstep + x0 * 1.5)+" "+to_string( (height_pos+height_neg + 6) * ystep )+" \n"
 		"%%Pages: 0                         \n"
@@ -2483,7 +2738,7 @@ void generate_ps_logo_from_pwm(boost::numeric::ublas::matrix<double> pwm, string
 
 		for(int j=0;j<alphabet.size();j++) w.push_back(pwm(j,i));
 		vector<size_t> idx = sort_indexes(w,bottom_up);
-		//for(int j=0;j<4;j++) cout << i << "\t" << letters[idx[j]] << "\t"<< idx[j] << "\t" << w[idx[j]] << endl;
+		//for(int j=0;j<4;j++) cout << i << "\t" << residuals[idx[j]] << "\t"<< idx[j] << "\t" << w[idx[j]] << endl;
 		
 		for(int j=0;j<alphabet.size();j++)
 		{
@@ -2591,7 +2846,7 @@ void remove_kmers_overlapping_with_fixed_positions(string infile,vector<int> fix
 }
 	
 
-void postscript_logo_from_PKA_output(string infile, string outfile, vector<int> fixed_position, vector<string> fixed_letter, map<char,string> colors, int seqLen, double score_cutoff, int startPos, int fontsize, int cScore,string y_label, double max_scale)
+void postscript_logo_from_kpLogo_output(string infile, string outfile, vector<int> fixed_position, vector<string> fixed_residual, map<char,string> colors, int seqLen, double score_cutoff, int startPos, int fontsize, int cScore,string y_label, double max_scale)
 {
 	int cSeq = 0;
 	int cPos = 1; 
@@ -2659,7 +2914,7 @@ void postscript_logo_from_PKA_output(string infile, string outfile, vector<int> 
 	string header = ""
 		"%!PS-Adobe-3.0 EPSF-3.0            \n"
 		"%%Title: Sequence Logo : Logo      \n"
-		"%%Creator: PKA 					\n"
+		"%%Creator: kpLogo 					\n"
 		"%%CreationDate: "+current_time()+" \n"
 		"%%BoundingBox:   0  0  "+to_string(L * xstep + x0 * 1.5)+" "+to_string( (height_pos+height_neg + 5) * ystep )+" \n"
 		"%%Pages: 0                         \n"
@@ -2727,9 +2982,9 @@ void postscript_logo_from_PKA_output(string infile, string outfile, vector<int> 
 	// fixed positions
 	for(int i=0;i<fixed_position.size();i++)
 	{
-		string s = string(fixed_letter[i]);
-		cout << s << endl;
-		out << postscript_kmer(s, x0+ xstep * (fixed_position[i]), y0+coord_size, fontsize, scaley, 1, 1.5*maxv/ absmax * max_scale, colors, 0);
+		string s = string(fixed_residual[i]);
+		//cout << s << endl;
+		out << postscript_kmer(s, x0+ xstep * (fixed_position[i]), y0+coord_size, fontsize, scaley, 1, 1.1*maxv/ absmax * max_scale, colors, 0);
 	}
 	
 	out << "showpage" << endl;
@@ -2739,10 +2994,50 @@ void postscript_logo_from_PKA_output(string infile, string outfile, vector<int> 
 			
 }
 
+// reverse a pwm columns
+boost::numeric::ublas::matrix<double> reverse_pwm(boost::numeric::ublas::matrix<double> pwm)
+{
+	boost::numeric::ublas::matrix<double> pwm2 (pwm.size1(),pwm.size2());
+	for (int i = 0; i < pwm.size1(); ++ i)
+	    for (int j = 0; j < pwm.size2(); ++ j)
+	        pwm2(i,j) = pwm(i,pwm.size2()-j-1);
+	return pwm2;
+}
 
 // load pwm from file, contain only the matrix
-boost::numeric::ublas::matrix<double> load_pwm_from_file(string filename,  int L, string alphabet)
-{
+boost::numeric::ublas::matrix<double> load_pwm_from_file(string filename, string alphabet){
+	// determine the size of the matrix
+ 	ifstream fin(filename.c_str());
+	string line;
+	vector<string> flds;
+	int i=0;
+	int L=0;
+	while(fin)
+	{
+		getline(fin,line);
+		if(line.length() == 0) continue;
+		flds = string_split(line);
+		if (L==0) L=flds.size();
+		else if (L != flds.size())
+		{
+			message("ERROR! rows have different number of columns in pwm file: "+filename);
+			system_run("touch exit_with_error");exit(1);
+		}
+		i = i + 1;
+				
+		if(i > alphabet.size())
+		{
+			message("ERROR! pwm file has too many rows: "+filename);
+			system_run("touch exit_with_error");exit(1);
+		}
+	}
+	fin.close();
+	if(i < alphabet.size())
+	{
+		message("ERROR! pwm file has too few rows: "+filename);
+		system_run("touch exit_with_error");exit(1);
+	}
+	
 	// initialize an empty matrix
 	boost::numeric::ublas::matrix<double> pwm (alphabet.size(),L);
 	for (int i = 0; i < alphabet.size(); ++ i)
@@ -2750,26 +3045,18 @@ boost::numeric::ublas::matrix<double> load_pwm_from_file(string filename,  int L
 	        pwm(i,j) = 0.0;
 	
     // load from file
- 	ifstream fin(filename.c_str());
-	string line;
-	vector<string> flds;
-	int i=0;
+	fin.open(filename.c_str());
+	i=0;
 	while(fin)
 	{
 		getline(fin,line);
 		if(line.length() == 0) continue;
 		flds = string_split(line);
-		if (flds.size() != L)
-		{
-			message("ERROR! PWM file should have "+to_string(L)+" columns: "+filename);
-			exit(1);
-		}
 		for (int j=0;j<L;j++)
 		{
 			pwm(i,j) = stof(flds[j]);
 		}
 		i = i + 1;
-		if(i == alphabet.size()) break;
 	}
 	fin.close();
 
@@ -2786,10 +3073,10 @@ void write_pwm_in_meme_format(boost::numeric::ublas::matrix<double> pwm, string 
     out << "MEME version 4.4\n\n";
     out << "ALPHABET= ACGT\n\n";
     out << "strands: + -\n\n";
-    out << "Background letter frequencies\n";
+    out << "Background residual frequencies\n";
     out << "A 0.25 C 0.25 G 0.25 T 0.25" << "\n\n";
     out << "MOTIF "<<motifname<<"\n\n";
-    out << "letter-probability matrix: alength= 4 w= "<<pwm.size2()<<" nsites= 1000 E= 0"<<endl;
+    out << "residual-probability matrix: alength= 4 w= "<<pwm.size2()<<" nsites= 1000 E= 0"<<endl;
     for (int i = 0; i < pwm.size2(); ++ i)
     {
         for (int j = 0; j < pwm.size1(); ++ j)
@@ -2819,14 +3106,14 @@ boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_seqs(ve
     //cout << "matrix initiaze ok" << endl;
 
     // nucleotide to position
-    map<char,int> letter2pos;
-	for(int i=0;i<alphabet.size();i++) letter2pos[alphabet[i]] = i;
+    map<char,int> residual2pos;
+	for(int i=0;i<alphabet.size();i++) residual2pos[alphabet[i]] = i;
  
     for(int k=0;k<seqs.size();k++)
     {
         for( int i =0;i<L;i++)
         {
-        	pwm(letter2pos[seqs[k][i]],i) += 1;
+        	pwm(residual2pos[seqs[k][i]],i) += 1;
         }
     }
 	
@@ -2863,11 +3150,11 @@ boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(ve
     //cout << "matrix initiaze ok" << endl;
 
     // nucleotide to position
-    map<char,int> letter2pos;
-    letter2pos['A'] = 0;
-    letter2pos['C'] = 1;
-    letter2pos['G'] = 2;
-    letter2pos['T'] = 3;
+    map<char,int> residual2pos;
+    residual2pos['A'] = 0;
+    residual2pos['C'] = 1;
+    residual2pos['G'] = 2;
+    residual2pos['T'] = 3;
  
     // expand kmer
     vector<string> dkmersexp = expand_degenerate_kmer(kmer,iupac); 
@@ -2883,7 +3170,7 @@ boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(ve
                 // update matrix
                 for( int j=start;j<=end;j++)
                 {
-                    pwm(letter2pos[seqs[k][j]],j-start) += 1;
+                    pwm(residual2pos[seqs[k][j]],j-start) += 1;
                 }                
                 total_positive_seq ++;
                 break;
@@ -2906,7 +3193,7 @@ boost::numeric::ublas::matrix<double> create_position_weight_matrix_from_kmer(ve
     return pwm;
 }
 
-//PKA : create logo for a single kmer
+//kpLogo : create logo for a single kmer
 void create_logo_for_kmer(vector<string> seqs, string kmer, int position, map<char,string> iupac, int d, int startPos,string output)
 {
     boost::numeric::ublas::matrix<double> pwm;
@@ -3068,7 +3355,7 @@ map<string,vector<int> > count_all_kmer_in_seqs(vector<string> kmers, vector<str
     return data;
 }   
 
-//PKA
+//kpLogo
 void print_kmer_positional_profile(map<string,vector<int> > data)
 {   
     for (map<string,vector<int> >::iterator it=data.begin();it!=data.end();it++)
@@ -3114,7 +3401,8 @@ int find_significant_kmer_from_one_seq_set(
 	int nTest, 
 	string outfile, 
 	string output_count_file,
-	int minCount)
+	int minCount,
+	string alphabet)
 {
     int nSeq1 = seqs1.size();
     int nSig = 0;
@@ -3266,7 +3554,7 @@ int find_significant_kmer_from_one_seq_set(
 
 
 // two file comparison, not allow shift and degenerate at the same time
-int find_significant_kmer_from_two_seq_sets(vector<string>seqs1, vector<string>seqs2, vector<string>kmers, vector<string> dkmers, int min_shift,int max_shift,bool degenerate,double pCutoff, bool Bonferroni/*=true*/,double pseudo,int startPos,int nTest, string outfile,string output_count_file,int minCount)
+int find_significant_kmer_from_two_seq_sets(vector<string>seqs1, vector<string>seqs2, vector<string>kmers, vector<string> dkmers, int min_shift,int max_shift,bool degenerate,double pCutoff, bool Bonferroni/*=true*/,double pseudo,int startPos,int nTest, string outfile,string output_count_file,int minCount,string alphabet)
 {
     int nSeq1 = seqs1.size();
     int nSeq2 = seqs2.size();
@@ -3364,7 +3652,11 @@ int find_significant_kmer_from_two_seq_sets(vector<string>seqs1, vector<string>s
 	            if ( find(kmers.begin(), kmers.end(), dkmers[i])!=kmers.end() ) continue;
 
 	            // expand a degenerate kmer to all possible element/exact kmers
-	            vector<string> dkmersexp = expand_degenerate_kmer(dkmers[i],define_iupac);
+	            //vector<string> dkmersexp = expand_degenerate_kmer(dkmers[i],define_iupac);
+				
+				vector<string> dkmersexp;
+				if (alphabet == "ACGT") dkmersexp = expand_degenerate_kmer(dkmers[i],define_iupac);
+				else dkmersexp = {kmers[i]};
 
 	            // for output only, also generate regex version of the degenerate kmer
 	            string dkmersexp_readable = degenerate_kmer_to_regex(dkmers[i],define_iupac);
@@ -3484,6 +3776,7 @@ bool is_fasta(string filename)
 	ifstream fin(filename.c_str());
 	string line;
 	getline(fin,line);
+	fin.close();
 	return line[0] == '>';
 }
 
@@ -3496,6 +3789,7 @@ void ReadOneSeqFromFasta(ifstream& infile, string& name, string& seq){
   while(infile.peek() != '>' && infile.good())
   {// before next '>' and before hitting the end of the file
         getline(infile,str);
+	    str.erase(str.find_last_not_of(" \n\r\t")+1);
         seq.append(str);
     }
   seq = to_upper(seq);
@@ -3538,6 +3832,7 @@ void WriteFasta(map<string,string> seqs, string filename){
     {
         fout << ">" << it->first << endl << it->second << endl;
     }
+	fout.close();
 }
 
 vector<string> first_n_bases(vector<string> seqs,int n){
@@ -3573,7 +3868,7 @@ vector<string> last_n_bases(vector<string> seqs,int n){
 // if a or b < 1: distance from end
 // examples
 // from position 10 to the end: a=10, b=0
-// the last 10 letters except the last one: a=-10,b=-1
+// the last 10 residuals except the last one: a=-10,b=-1
 // first 10: a=1;b=10
 // last 10: a=-9,b=0;
 vector<string> sub_sequences(vector<string> seqs, int a, int b)
@@ -3597,13 +3892,13 @@ vector<string> sub_sequences(vector<string> seqs, int a, int b)
 	if(res.size()<1)
 	{
 		message("ERROR: sub_sequences: no sequences survive the triming!");
-		exit(1);
+		system_run("touch exit_with_error");exit(1);
 	}
 
     return res;
 }
-// convert fasta file to a letter matrix
-void fasta_to_letter_matrix(string input, string output){
+// convert fasta file to a residual matrix
+void fasta_to_residual_matrix(string input, string output){
 	ofstream out(output.c_str());
 	map<string,string> seqs = ReadFasta(input);
 	
@@ -3624,8 +3919,8 @@ void fasta_to_letter_matrix(string input, string output){
 	out.close();
 }
 
-// convert fasta file to a letter matrix, no header
-void tab_seq_to_letter_matrix(string input, string output, int k_min, int k_max, int col){
+// convert fasta file to a residual matrix, no header
+void tab_seq_to_residual_matrix(string input, string output, int k_min, int k_max, int col){
 	col = col - 1;
 		
 	ifstream in(input.c_str());
@@ -3645,7 +3940,7 @@ void tab_seq_to_letter_matrix(string input, string output, int k_min, int k_max,
 		{
 			if(i != col) out << flds[i] << "\t";
 		}
-		// split sequence as letters
+		// split sequence as residuals
 		for(int k = k_min;k<=k_max;k++)
 			for(int i=0;i<=flds[col].size()-k;i++) 
 				out << flds[col].substr(i,k) << "\t" ;
@@ -3785,7 +4080,7 @@ map<string,string> ExpandMotifs(map<string,string>& motifs, int nmismatch, bool 
 array<int,2> match(string motiffile, string seqfile, string outfile, int nmismatch, bool rc, set<char> alphabet) {
   int nsite = 0; // total number of matches to report
   int nseq = 0;
-  ifstream fmotif, fseq;
+  ifstream fseq;
   ofstream fout;
   
   // load motifs
@@ -3948,94 +4243,6 @@ int tab2bed_bedtools(string infile, string outfile){
       strandness = "antisense";
     
     if (strand== "+")
-    {
-      start = start + match_start;
-      if (strandness == "antisense") 
-      {
-        strand = "-";
-      }    
-    }
-    else//sequence on the - strand of the genome
-    {
-      start = end - match_start - motifLen;
-      if (strandness == "antisense") 
-      {
-        strand = "+";
-      }
-    }
-    end = start + motifLen;
-    // number of mismatches
-    nm = string_split(flds[2],",");
-    int score = nm.size()-2;
-    if (strandness == "antisense") {score--;} 
-   
-    fout << chr <<"\t"<<start<<"\t" <<end<<"\t"<<flds[3]<< "\t"<<score <<"\t"<<strand<< "\t"<<strandness<<"\t"<<flds[2]<<"\t"<<flds[0]<<"\t"<<flds[1]<<endl;
-    
-  }
-  fin.close();
-  fout.close();
-  return 1;//return 1 if successfully created bed file
-}
-
-
-
-int tab2bed(string infile, string outfile){
-//chr1    115979701       AATAAA,AATAAA,rc        TTTATT
-//chr1    115982327       AATAAA,AATAAA,rc        TTTATT
-    
-      //chrX:20597309-20645164(-)       7533    u1,CAGGTAAGT    CAGGTAAGT
-  //chr17:70312707-70951085(+)      486494  u1,CAGGTAAGT,rc ACTTACCTG
-  //can be without strand
-
-  ifstream fin;
-  ofstream fout;
-  fin.open(infile.c_str());
-  fout.open(outfile.c_str());
-  string line,strand,chr;
-  vector<string> flds,flds0,flds1,flds2,pos,nm;
-  while(fin)
-  {
-    getline(fin,line);
-    if (line.length() == 0)
-      continue;
-    flds = string_split(line,"\t");
-      
-    int start,end;
-      
-    if (flds[0].find(":") == string::npos) //chrX 
-    {
-        chr = flds[0];
-        start = 0;
-        strand = "+";
-    }
-    else //chrX:20597309-20645164(-) 
-    {
-        flds0 = string_split(flds[0],":");
-        chr = flds0[0];
-        strand = "+";
-        // seee if there is ( 
-        if (flds0[1].find("(") == string::npos) 
-        { 
-          pos = string_split(flds0[1],"-");
-        }
-        else
-        {
-          flds1 = string_split(flds0[1],")");
-          flds2 = string_split(flds1[0],"(");
-          strand = flds2[1];
-          pos = string_split(flds2[0],"-");
-        }
-        start = atoi(pos[0].c_str());
-        end = atoi(pos[1].c_str());
-    }
-    int match_start = atoi(flds[1].c_str());
-    int motifLen = flds[3].length();
-    // check if match on the other strand
-    string strandness = "sense";
-    if (flds[2].find("rc") != string::npos)
-      strandness = "antisense";
-    
-    if (strand == "+")
     {
       start = start + match_start;
       if (strandness == "antisense") 
