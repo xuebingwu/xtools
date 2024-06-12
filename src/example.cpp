@@ -7,7 +7,7 @@ void help()
 {
     string str =
 	"\n"
-    "Example: an example program\n"
+    "Example: an example program of xtools\n"
 	"	- Xuebing Wu (wuxb07@gmail.com)\n"
     "\n"
     "Usage: example -i input -o output -n number\n"
